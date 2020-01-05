@@ -1,34 +1,44 @@
 package pt.iscte.paddle.javasde;
 
-import org.eclipse.swt.events.KeyListener;
-
+import pt.iscte.paddle.javasde.Constants.DeleteListener;
 import pt.iscte.paddle.model.IBlock;
 
-public class ControlWidget extends EditorWidget implements StatementContainer {
+public class ControlWidget extends EditorWidget implements SequenceContainer {
 	
 	private final Token keyword;
-	private final ExpressionWidget expression;
+	private ExpressionWidget expression;
 	private final SequenceWidget blockSeq;
+	private DeleteListener deleteListener;
 	
-	ControlWidget(SequenceWidget parent, Keyword keyword, String expression, IBlock block) {
+	ControlWidget(SequenceWidget parent, Keyword keyword, String guard, IBlock block) {
 		super(parent);
 		setLayout(Constants.ROW_LAYOUT_V_ZERO);
 		EditorWidget header = new EditorWidget(this);
 		header.setLayout(Constants.ROW_LAYOUT_H_ZERO);
+		
+		deleteListener = new Constants.DeleteListener(this);
 		this.keyword = new Token(header, keyword);
-		if(expression != null) {
-			new FixedToken(header, "(");
-			this.expression = new ExpressionWidget(header, expression);
-			new FixedToken(header, ")");
-		}
-		else 
-			this.expression = null;
+		Constants.addInsertLine(this.keyword);
+		
+		if(keyword == Keyword.ELSE)
+			; // TODO special case delete ELSE
+		else
+			this.keyword.addKeyListener(deleteListener);
+
+		new FixedToken(header, "(");
+		fillHeader(guard, header);
+		new FixedToken(header, ")");
 		new FixedToken(header, "{");
 		blockSeq = new SequenceWidget(this, Constants.TAB);
-//		blockSeq.addStatementCommands(block);
 		blockSeq.addActions(BlockAction.all(block));
 		blockSeq.addBlockListener(block);
+		blockSeq.setDeleteAction(index -> block.removeElement(index));
 		new FixedToken(this, "}");
+	}
+
+	void fillHeader(String expression, EditorWidget header) {
+		this.expression = new ExpressionWidget(header, expression == null ? "expression" : expression);
+		this.expression.addKeyListener(deleteListener);
 	}
 	
 	@Override
@@ -53,21 +63,20 @@ public class ControlWidget extends EditorWidget implements StatementContainer {
 		buffer.append("}").append(System.lineSeparator());
 	}
 	
-	public void accept(Visitor visitor) {
-		visitor.visit(this);
-		super.accept(visitor);
+	boolean is(Keyword keyword) {
+ 		return this.keyword.isKeyword(keyword);
 	}
 	
-	boolean is(Keyword keyword) {
- 		return this.keyword.isKeyword(keyword.toString());
+	boolean isElse() {
+ 		return this.keyword.isKeyword(Keyword.ELSE);
+	}
+	
+	public SequenceWidget getBody() {
+		return blockSeq;
 	}
 	
 	@Override
-	void addTokenKeyHandler(KeyListener listener) {
-		keyword.addKeyListener(listener);
-	}
-
-	public SequenceWidget getSequence() {
-		return blockSeq;
+	public String toString() {
+		return this.keyword.getText() + "(...)";
 	}
 }

@@ -71,6 +71,7 @@ public interface Constants {
 	Supplier<List<String>> PRIMITIVE_TYPES_VOID_SUPPLIER = () -> PRIMITIVE_TYPES_VOID;
 	List<String> UNARY_OPERATORS = Arrays.asList("!", "-", "+");  //"(int)", "(double)");
 	//	Supplier<List<String>> UNARY_OPERATORS_SUPPLIER = () -> UNARY_OPERATORS;
+	RowLayout ROW_LAYOUT_H_SHRINK = create(SWT.HORIZONTAL, -3);
 	RowLayout ROW_LAYOUT_H_ZERO = create(SWT.HORIZONTAL, 0);
 	RowLayout ROW_LAYOUT_H = create(SWT.HORIZONTAL, 3);
 	RowLayout ROW_LAYOUT_H_DOT = create(SWT.HORIZONTAL, 0);
@@ -125,21 +126,23 @@ public interface Constants {
 			HIDE_GRID.exclude = true;
 			SHOW_ROW.exclude = false;
 			HIDE_ROW.exclude = true;
+//			SHOW_ROW.width = SWT.DEFAULT;
+//			HIDE_ROW.width = 0;
 		}
 	}
-	FocusListener ADD_HIDE = new FocusListener() {
-		public void focusLost(FocusEvent e) {
-			Control c = (Control) e.widget;
-			c.setLayoutData(c.getParent().getLayout() instanceof GridLayout ? GridDatas.HIDE_GRID : GridDatas.HIDE_ROW);
-			c.requestLayout();
-		}
-
-		public void focusGained(FocusEvent e) {
-			Control c = (Control) e.widget;
-			c.setLayoutData(c.getParent().getLayout() instanceof GridLayout ? GridDatas.SHOW_GRID : GridDatas.SHOW_ROW);
-			c.requestLayout();
-		}
-	};
+//	FocusListener ADD_HIDE = new FocusListener() {
+//		public void focusLost(FocusEvent e) {
+//			Control c = (Control) e.widget;
+//			c.setLayoutData(c.getParent().getLayout() instanceof GridLayout ? GridDatas.HIDE_GRID : GridDatas.HIDE_ROW);
+//			c.requestLayout();
+//		}
+//
+//		public void focusGained(FocusEvent e) {
+//			Control c = (Control) e.widget;
+//			c.setLayoutData(c.getParent().getLayout() instanceof GridLayout ? GridDatas.SHOW_GRID : GridDatas.SHOW_ROW);
+//			c.requestLayout();
+//		}
+//	};
 
 	KeyListener LISTENER_ARROW_KEYS = new KeyAdapter() {
 		@Override
@@ -168,10 +171,6 @@ public interface Constants {
 					moveCursorDown(w);
 					e.doit = false;
 				}
-//				else if(e.character == SWT.CR) {
-//					text.traverse(SWT.TRAVERSE_TAB_NEXT);
-//					e.doit = false;
-//				}
 			}
 		}
 	};
@@ -179,6 +178,24 @@ public interface Constants {
 	static void addArrowKeys(Control control, TextWidget widget) {
 		control.addKeyListener(LISTENER_ARROW_KEYS);
 		control.setData(widget);
+	}
+	
+	KeyListener INSERT_LINE = new KeyAdapter() {
+		@Override
+		public void keyPressed(KeyEvent e) {
+			if(e.character == SWT.CR) {
+				TextWidget w = (TextWidget) e.widget.getData();
+				Control statement = w.getStatement();
+				SequenceWidget seq = (SequenceWidget) statement.getParent();
+				seq.insertLineAt(statement);
+				e.doit = false;
+			}
+		}
+	};
+	
+	static void addInsertLine(TextWidget widget) {
+		widget.getWidget().addKeyListener(INSERT_LINE);
+		widget.getWidget().setData(widget);
 	}
 
 	ModifyListener MODIFY_PACK = new ModifyListener() {
@@ -198,17 +215,38 @@ public interface Constants {
 		}
 	};
 
+	class DeleteListener extends KeyAdapter { 
+		final EditorWidget target;
+		
+		DeleteListener(EditorWidget target) {
+			this.target = target;
+		}
+		
+		public void keyPressed(KeyEvent e) {
+			if(e.widget.isDisposed())
+				return;
+			Control w = ((Control) e.widget).getParent();
+			if(e.keyCode == Constants.DEL_KEY && (!(w instanceof TextWidget) || ((TextWidget)w).isAtBeginning()) 
+					||
+					(e.stateMask & SWT.MODIFIER_MASK) == SWT.CTRL && e.keyCode == 'd'
+				) {
+				SequenceWidget parent = (SequenceWidget) target.getParent();
+				int index = parent.findModelIndex(target);
+				parent.deleteAction(index);
+			}
+		}	
+	};
 
 	private static void moveCursorUp(TextWidget widget) {
 		Control statement = widget.getStatement();
 		SequenceWidget seq = (SequenceWidget) statement.getParent();
-		seq.focusPrevious(statement);
+		seq.focusPreviousStatement(statement);
 	}
 
 	private static void moveCursorDown(TextWidget widget) {
 		Control statement = widget.getStatement();
 		SequenceWidget seq = (SequenceWidget) statement.getParent();
-		seq.focusNext(statement);
+		seq.focusNextStatement(widget);
 	}
 
 	static String matchBinaryOperator(char character) {

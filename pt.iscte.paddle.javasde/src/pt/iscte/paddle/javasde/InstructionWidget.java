@@ -1,7 +1,8 @@
 package pt.iscte.paddle.javasde;
 
-import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.widgets.Composite;
+
+import pt.iscte.paddle.javasde.Constants.DeleteListener;
 
 public class InstructionWidget extends EditorWidget {
 	private final Token keyword;
@@ -13,13 +14,20 @@ public class InstructionWidget extends EditorWidget {
 	
 	InstructionWidget(Composite parent, Keyword keyword, String expression) {
 		super(parent);
-		setLayout(Constants.ROW_LAYOUT_H_ZERO);
+		setLayout(Constants.ROW_LAYOUT_H);
+		DeleteListener deleteListener = new Constants.DeleteListener(this);
 		this.keyword = new Token(this, keyword);
-		if(expression != null)
+		this.keyword.addKeyListener(deleteListener);
+		Constants.addInsertLine(this.keyword);
+		
+		if(expression != null) {
 			expressionWidget = new ExpressionWidget(this, expression);
+			expressionWidget.addKeyListener(deleteListener);
+		}
 		else
 			expressionWidget = null;
 		new FixedToken(this, ";");
+		
 	}
 	
 	@Override
@@ -37,7 +45,8 @@ public class InstructionWidget extends EditorWidget {
 	}
 	
 	@Override
-	void addTokenKeyHandler(KeyListener listener) {
-		keyword.addKeyListener(listener);
+	public String toString() {
+		return this.keyword.getText() + ";";
 	}
+	
 }

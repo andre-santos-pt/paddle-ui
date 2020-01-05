@@ -20,7 +20,8 @@ public class ArrayElementExpression extends EditorWidget implements Expression {
 		new FixedToken(this, "[");
 		expression = new ExpressionWidget(this, f);
 		new FixedToken(this, "]");
-		insert = new InsertWidget(this);
+		insert = new InsertWidget(this, true);
+		insert.setHideMode();
 	}
 
 	void addExpressionInserts() {

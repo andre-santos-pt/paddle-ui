@@ -88,11 +88,4 @@ public class FieldWidget extends EditorWidget {
 		if(expression != null)
 			expression.setFocus();
 	}
-	
-	public void accept(Visitor visitor) {
-		visitor.visit(this);
-		super.accept(visitor);
-	}
-
-	
 }

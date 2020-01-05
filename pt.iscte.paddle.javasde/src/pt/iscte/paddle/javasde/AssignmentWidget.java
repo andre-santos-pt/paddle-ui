@@ -8,37 +8,29 @@ import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
+import pt.iscte.paddle.javasde.Constants.DeleteListener;
+
 public class AssignmentWidget extends EditorWidget {
 
 	private final ExpressionWidget id;
 	private final ExpressionWidget expression;
 
-	AssignmentWidget(Composite parent, String id, String expression, boolean statement, boolean array) {
+	AssignmentWidget(SequenceWidget parent, String id, String expression, boolean statement, boolean array) {
 		super(parent);
 		setLayout(Constants.ROW_LAYOUT_H);
+		DeleteListener deleteListener = new Constants.DeleteListener(this);
 		Function<EditorWidget, Expression> f = 
 				e -> array ? new ArrayElementExpression(this, id, "expression") : new SimpleExpressionWidget(e, id, false);
 		this.id = new ExpressionWidget(this, f);
+		this.id.addKeyListener(deleteListener);
+		if(this.id.expression instanceof TextWidget)
+			Constants.addInsertLine((TextWidget) this.id.expression);
 		new FixedToken(this, "=");
 		this.expression = new ExpressionWidget(this, "expression");
+		this.expression.addKeyListener(deleteListener);
 		if(statement)
-			new FixedToken(this, ";");
-		
-		this.id.addKeyListener(delListener);
-//		this.expression.addKeyListener(delListener);
-		
+			new FixedToken(this, ";");		
 	}
-	
-	
-	// PROblema
-	private KeyListener delListener = new KeyAdapter() {
-		public void keyPressed(KeyEvent e) {
-			if(e.keyCode == Constants.DEL_KEY && ((TextWidget) ((Control) e.widget).getParent()).isAtBeginning())
-				dispose();
-			
-			// TODO selection
-		}	
-	};
 	
 	public boolean setFocus() {
 		return id.setFocus();

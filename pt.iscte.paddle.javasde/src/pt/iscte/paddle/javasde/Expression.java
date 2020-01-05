@@ -12,4 +12,5 @@ public interface Expression {
 	void setData(Object data);
 
 	void addKeyListener(KeyListener listener);
+	
 }

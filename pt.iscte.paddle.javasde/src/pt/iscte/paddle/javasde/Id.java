@@ -41,7 +41,7 @@ public class Id extends EditorWidget implements TextWidget {
 		super(parent);
 		this.idProvider = idProvider;
 		this.type = type;
-		setLayout(Constants.ROW_LAYOUT_H_ZERO);
+		setLayout(Constants.ROW_LAYOUT_H_SHRINK);
 		initialId = id;
 		text = new Text(this, SWT.NONE);
 		text.setText(id);
@@ -50,7 +50,7 @@ public class Id extends EditorWidget implements TextWidget {
 
 		text.addVerifyListener(e -> e.doit = menuMode ||
 				//!(e.keyCode == 'z' && (( e.stateMask & SWT.MODIFIER_MASK ) == SWT.CTRL || ( e.stateMask & SWT.MODIFIER_MASK ) == SWT.COMMAND)) && // TODO UNDO to function
-				isValidCharacter(e.character) || e.character == Constants.DEL_KEY || e.character == SWT.CR);
+				isValidCharacter(e.character) || e.character == Constants.DEL_KEY || e.character == SWT.CR || e.character == SWT.SPACE);
 
 		text.addFocusListener(new FocusListener() {
 			public void focusGained(FocusEvent e) {
@@ -104,13 +104,6 @@ public class Id extends EditorWidget implements TextWidget {
 		}
 	};
 	
-//	private KeyListener enterDimListener = new KeyAdapter() {
-//		public void keyPressed(KeyEvent e) {
-//			if(e.character == SWT.CR)
-//				text.traverse(SWT.TRAVERSE_TAB_NEXT);
-//		}
-//	};
-
 	public void setEditAction(Runnable editAction) {
 		this.editAction = editAction == null ? () -> {} : editAction;
 	}

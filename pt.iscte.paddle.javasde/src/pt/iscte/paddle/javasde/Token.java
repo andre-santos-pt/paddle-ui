@@ -88,13 +88,6 @@ public class Token implements TextWidget {
 		Constants.addFocusSelectAll(text);
 	}
 
-	private static final FocusAdapter FOCUS_LISTENER = new FocusAdapter() {
-		public void focusGained(FocusEvent e) {
-			((Text) e.widget).selectAll();
-		}
-	};
-
-	
 	@Override
 	public Text getWidget() {
 		return text;
@@ -108,11 +101,6 @@ public class Token implements TextWidget {
 		text.setMenu(menu);
 	}
 
-	public void moveBelow(Control control) {
-		control.moveBelow(control);
-		control.requestLayout();
-	}
-
 	public void setVisible(boolean visible) {
 		text.setVisible(visible);
 	}
@@ -124,6 +112,10 @@ public class Token implements TextWidget {
 	
 	boolean isKeyword(String keyword) {
 		return getText().equals(keyword);
+	}
+	
+	boolean isKeyword(Keyword keyword) {
+		return getText().equals(keyword.toString());
 	}
 
 	public void setLayoutData(RowData data) {

@@ -16,36 +16,46 @@ import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.events.VerifyListener;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Text;
 
+import pt.iscte.paddle.javasde.Constants.GridDatas;
+
 public class InsertWidget extends Composite implements TextWidget {
 
 	final Text text;
 	private boolean edit;
-
+	private final boolean permanent;
 	private List<Action> actions;
-	
-	private Predicate<String> tokenAccept;
-	
-	public InsertWidget(Composite parent) {
-		this(parent, token -> false);
+
+	private final Predicate<String> tokenAccept;
+
+	public InsertWidget(Composite parent, boolean permanent) {
+		this(parent, permanent, token -> false);
 	}
-	
-	public InsertWidget(Composite parent, Predicate<String> tokenAccept) {
+
+	public InsertWidget(Composite parent, boolean permanent, Predicate<String> tokenAccept) {
 		super(parent, SWT.NONE);
-		setLayout(Constants.ROW_LAYOUT_H);
+		setLayout(Constants.ROW_LAYOUT_H_ZERO);
 		setBackground(Constants.COLOR_BACKGROUND);
-		this.text = createAddLabel(this);
+		this.permanent = permanent;
+		this.text = createInsertWidget();
 		this.actions = new ArrayList<>();
 		this.tokenAccept = tokenAccept;
 	}
 
-	private Text createAddLabel(Composite parent) {
-		Text text = new Text(parent, SWT.SINGLE);
+	public InsertWidget copyTo(Composite parent) {
+		InsertWidget w = new InsertWidget(parent, false, tokenAccept);
+		w.actions = actions;
+		return w;
+	}
+
+	private Text createInsertWidget() {
+		Text text = new Text(this, SWT.SINGLE);
 		text.setText(" ");
 		text.setForeground(Constants.FONT_COLOR);
 		text.setEditable(true);
@@ -53,10 +63,10 @@ public class InsertWidget extends Composite implements TextWidget {
 		text.addVerifyListener(new VerifyListener() {
 			public void verifyText(VerifyEvent e) {
 				e.doit = 
-								edit || Constants.isLetter(e.character) ||
-								e.character == '.' || e.character == '=' || 
-								e.character == Constants.DEL_KEY || e.character == SWT.CR ||
-								e.character == '/' || (e.character == ' ' && text.getText().startsWith("//"));
+						edit || Constants.isLetter(e.character) ||
+						e.character == '.' || //e.character == '=' || 
+						e.character == Constants.DEL_KEY || e.character == SWT.CR ||
+						e.character == '/' || (e.character == ' ' && text.getText().startsWith("//"));
 			}
 		});
 		text.addModifyListener(Constants.MODIFY_PACK);
@@ -72,8 +82,6 @@ public class InsertWidget extends Composite implements TextWidget {
 					clearTokens();
 			}
 		});
-
-		
 		text.addKeyListener(new KeyAdapter() {
 			public void keyPressed(KeyEvent e) {
 				String last = text.getText();
@@ -87,13 +95,26 @@ public class InsertWidget extends Composite implements TextWidget {
 					e.doit = false;
 					return;
 				}
-						
-				int index = SequenceWidget.findModelIndex(InsertWidget.this);
+
+				if(e.character == Constants.DEL_KEY && text.getCaretPosition() == 0 && text.getSelectionCount() == 0) {
+					if(permanent) {
+						text.traverse(SWT.TRAVERSE_TAB_PREVIOUS);
+					}
+					else {
+						dispose();
+					}
+					e.doit = false;
+					return;
+				}
+				// TODO FIX?
+				int index = getParent() instanceof SequenceWidget ? ((SequenceWidget) getParent()).findModelIndex(InsertWidget.this) : 0; 
 				List<String> tokens = getTokens();
 				for(Action a : actions) {
-					if(a.isEnabled(e.character, last, index,  text.getCaretPosition(), text.getSelectionCount(), tokens)) {
+					if(a.isEnabled(e.character, last, index, text.getCaretPosition(), text.getSelectionCount(), tokens)) {
 						a.run(e.character, last, index, text.getCaretPosition(), text.getSelectionCount(), tokens);
 						clearTokens();
+						if(!permanent)
+							dispose();
 						e.doit = false;
 						return;
 					}
@@ -101,34 +122,49 @@ public class InsertWidget extends Composite implements TextWidget {
 				Menu menu = text.getMenu();
 				if(menu != null) {
 					if (e.keyCode == Constants.MENU_KEY && !text.getText().startsWith("//"))
-						showMenu(text, menu);
+						;//showMenu(text, menu);
 
-					else if (e.keyCode == Constants.DEL_KEY && text.getText().isEmpty())
-						deleteAction(menu);
+					//					else if (e.keyCode == Constants.DEL_KEY && text.getText().isEmpty())
+					//						deleteAction(menu);
 
 					else if(e.keyCode == SWT.CR && text.getText().startsWith("//")) {
-						InsertWidget w = new InsertWidget(parent);
+						InsertWidget w = new InsertWidget(InsertWidget.this.getParent(), false);
 						w.setFocus();
 						w.text.requestLayout();
 					} 
 				}
 			}
-
 		});
 		Constants.addArrowKeys(text, TextWidget.create(text));
-//		text.addFocusListener(Constants.ADD_HIDE);
 		return text;
 	}
-	
-	private void clearTokens() {
-		Control[] children = getChildren();
-		for(int i = 0; i < children.length-1; i++)
-			children[i].dispose();
-		edit = true;
-		text.setText("");
-		edit = false;
+
+	void setHideMode() {
+		text.addFocusListener(new FocusAdapter() {
+			@Override
+			public void focusGained(FocusEvent e) {
+				setLayoutData(getParent().getLayout() instanceof GridLayout ? GridDatas.SHOW_GRID : GridDatas.SHOW_ROW);
+				requestLayout();
+			}
+			@Override
+			public void focusLost(FocusEvent e) {
+				setLayoutData(getParent().getLayout() instanceof GridLayout ? GridDatas.HIDE_GRID : GridDatas.HIDE_ROW);
+				requestLayout();
+			}
+		});
+
 	}
-	
+	private void clearTokens() {
+		if(!isDisposed()) {
+			Control[] children = getChildren();
+			for(int i = 0; i < children.length-1; i++)
+				children[i].dispose();
+			edit = true;
+			text.setText("");
+			edit = false;
+		}
+	}
+
 	public static abstract class Action {
 		final CharSequence text;
 		final char accelerator;
@@ -141,14 +177,14 @@ public class InsertWidget extends Composite implements TextWidget {
 		}
 		public abstract void run(char c, String text, int index, int caret, int selection, List<String> tokens);
 	}
-	
 
-	
+
+
 	void addAction(Action a) {
 		assert a != null;
 		actions.add(a);
 	}
-	
+
 	public List<String> getTokens() {
 		Control[] children = getChildren();
 		List<String> tokens = new ArrayList<>(children.length-1);
@@ -157,40 +193,40 @@ public class InsertWidget extends Composite implements TextWidget {
 		return tokens;
 	}
 
-	private void showMenu(Text label, Menu menu) {
-		int c = 0;
-		MenuItem item = null;
-		for (MenuItem menuItem : menu.getItems()) {
-			if (menuItem.isEnabled() && menuItem.getStyle() != SWT.SEPARATOR
-					&& menuItem.getAccelerator() != Constants.DEL_KEY
-					&& (menuItem.getData() instanceof SelectionListener
-							|| menuItem.getData() instanceof SequenceWidget.MenuCommand)) {
-				item = menuItem;
-				c++;
-			}
-		}
-		if (c == 1) {
-			((SelectionListener) item.getData()).widgetSelected(null);
-		} 
-		else {
-			menu.setLocation(label.toDisplay(0, 20));
-			menu.setVisible(true);
-		}
-	}
+	//	private void showMenu(Text label, Menu menu) {
+	//		int c = 0;
+	//		MenuItem item = null;
+	//		for (MenuItem menuItem : menu.getItems()) {
+	//			if (menuItem.isEnabled() && menuItem.getStyle() != SWT.SEPARATOR
+	//					&& menuItem.getAccelerator() != Constants.DEL_KEY
+	//					&& (menuItem.getData() instanceof SelectionListener
+	//							|| menuItem.getData() instanceof SequenceWidget.MenuCommand)) {
+	//				item = menuItem;
+	//				c++;
+	//			}
+	//		}
+	//		if (c == 1) {
+	//			((SelectionListener) item.getData()).widgetSelected(null);
+	//		} 
+	//		else {
+	//			menu.setLocation(label.toDisplay(0, 20));
+	//			menu.setVisible(true);
+	//		}
+	//	}
 
-	private void deleteAction(Menu menu) {
-		for (MenuItem menuItem : menu.getItems()) {
-			if (menuItem.isEnabled() && menuItem.getAccelerator() == Constants.DEL_KEY) {
-				((SelectionListener) menuItem.getData()).widgetSelected(null);
-				break;
-			}
-		}
-	}
+	//	private void deleteAction(Menu menu) {
+	//		for (MenuItem menuItem : menu.getItems()) {
+	//			if (menuItem.isEnabled() && menuItem.getAccelerator() == Constants.DEL_KEY) {
+	//				((SelectionListener) menuItem.getData()).widgetSelected(null);
+	//				break;
+	//			}
+	//		}
+	//	}
 
 
-	public boolean setFocus() {
-		return text.setFocus();
-	}
+	//	public boolean setFocus() {
+	//		return text.setFocus();
+	//	}
 
 	public void setMenu(Menu menu) {
 		text.setMenu(menu);
@@ -202,17 +238,19 @@ public class InsertWidget extends Composite implements TextWidget {
 		return menu;
 	}
 
+
+
 	@Override
 	public Text getWidget() {
 		return text;
 	}
 
-	public void addFocusListener(FocusListener listener) {
-		text.addFocusListener(listener);
-	}
+	//	public void addFocusListener(FocusListener listener) {
+	//		text.addFocusListener(listener);
+	//	}
 
-	public void addKeyListener(KeyAdapter listener) {
-		text.addKeyListener(listener);
-	}
-	
+	//	public void addKeyListener(KeyAdapter listener) {
+	//		text.addKeyListener(listener);
+	//	}
+
 }

@@ -2,6 +2,7 @@ package pt.iscte.paddle.javasde;
 import java.util.function.Function;
 
 import org.eclipse.swt.events.KeyListener;
+import org.eclipse.swt.widgets.Text;
 
 public class ExpressionWidget extends EditorWidget implements Expression {
 	Expression expression;
@@ -21,7 +22,7 @@ public class ExpressionWidget extends EditorWidget implements Expression {
 		this.expression = new SimpleExpressionWidget(this, expression, false);
 		this.expression.requestLayout();
 	}
-	
+
 	@Override
 	public void setData(Object data) {
 		expression.setData(data);
@@ -31,28 +32,15 @@ public class ExpressionWidget extends EditorWidget implements Expression {
 	public boolean setFocus() {
 		return expression.setFocus();
 	}
-	
-//	@Override
-//	public Text getWidget() {
-//		return ((TextWidget) expression).getWidget();
-//	}
+
 	
 	@Override
 	public void addKeyListener(KeyListener listener) {
 		expression.addKeyListener(listener);
 	}
-	
-//	@Override
-//	public void addFocusListener(FocusListener listener) {
-//		expression.addFocusListener(listener);
-//	}
 
-//	public String getText() {
-//		return ((TextWidget) expression).getText();
-//	}
-
-@Override
-public Expression copyTo(EditorWidget parent) {
-	return expression.copyTo(parent);
-}	
+	@Override
+	public Expression copyTo(EditorWidget parent) {
+		return expression.copyTo(parent);
+	}	
 }

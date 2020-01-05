@@ -10,23 +10,20 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.ITextSelection;
-import org.eclipse.jface.text.link.LinkedModeUI;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.texteditor.IDocumentProvider;
 import org.eclipse.ui.texteditor.ITextEditor;
 
-import pt.iscte.paddle.interpreter.IExecutionData;
 import pt.iscte.paddle.interpreter.IMachine;
 import pt.iscte.paddle.interpreter.IProgramState;
 import pt.iscte.paddle.javali.translator.ElementLocation;
 import pt.iscte.paddle.javali.translator.ISourceLocation;
-import pt.iscte.paddle.javali.translator.Model2Java;
 import pt.iscte.paddle.javali.translator.Translator;
+import pt.iscte.paddle.model.IModel2CodeTranslator;
 import pt.iscte.paddle.model.IModule;
 import pt.iscte.paddle.model.IProcedure;
 import pt.iscte.paddle.model.IProgramElement;
@@ -80,7 +77,7 @@ public class RunAction extends Action {
 		
 		Translator trans = new Translator(editorInput.getFile());
 		IModule program = trans.createProgram();
-		System.out.println(program.translate(new Model2Java()));
+		System.out.println(program.translate(new IModel2CodeTranslator.Java()));
 
 		try {
 			editorInput.getFile().deleteMarkers(IMarker.PROBLEM, true, IResource.DEPTH_INFINITE);    

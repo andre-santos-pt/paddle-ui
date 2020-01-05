@@ -1,7 +1,6 @@
 package pt.iscte.paddle.javasde;
 
-import org.eclipse.swt.events.FocusListener;
-import org.eclipse.swt.events.KeyListener;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 
@@ -9,17 +8,10 @@ public interface TextWidget {
 
 	Text getWidget();
 	
-//	default void addFocusListener(FocusListener listener) {
-//		getWidget().addFocusListener(listener);
-//	}
-//	
-//	default void addKeyListener(KeyListener listener) {
-//		getWidget().addKeyListener(listener);
-//	}
-
-//	default void setFocus() {
-//		getWidget().setFocus();
-//	}
+	
+	default Composite getParent() {
+		return getWidget().getParent();
+	}
 	
 	default String getText() {
 		return getWidget().getText();
@@ -31,6 +23,15 @@ public interface TextWidget {
 			c = c.getParent();
 		
 		return c;
+	}
+	
+	default SequenceContainer getSequenceContainer() {
+		Control c = getWidget().getParent();
+		while(!(c instanceof SequenceContainer)) {
+			c = c.getParent();
+		}
+		
+		return (SequenceContainer) c;
 	}
 	
 	default boolean isAtBeginning() {

@@ -19,6 +19,7 @@ import pt.iscte.paddle.javasde.Keyword;
 import pt.iscte.paddle.javasde.SequenceWidget;
 import pt.iscte.paddle.javasde.UiMode;
 import pt.iscte.paddle.model.IModule;
+import pt.iscte.paddle.model.IType;
 
 
 public class JavaSDEditor {
@@ -38,10 +39,10 @@ public class JavaSDEditor {
 		scroll.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
 		Composite area = new Composite(scroll, SWT.NONE);
+		area.setLayout(new FillLayout());
 
 //		GridLayout gridLayout = new GridLayout(1, false);
 //		area.setLayout(gridLayout);
-		area.setLayout(new FillLayout());
 //		scroll.setBackground(Display.getDefault().getSystemColor(SWT.COLOR_CYAN));
 
 		scroll.setContent(area);
@@ -56,22 +57,22 @@ public class JavaSDEditor {
 		});
 
 		UiMode mode = new UiMode();
-
+		IModule module = IModule.create();
+		module.setId("Name");
+		module.addProcedure("test", IType.VOID);
+		
 		SequenceWidget seq = new SequenceWidget(area, 0, token -> Keyword.isClassModifier(token));
 		seq.addAction(new InsertWidget.Action("class", 'c') {
 			public boolean isEnabled(char c, String text, int index, int caret, int selection, List<String> tokens) {
-				return c == SWT.SPACE && Keyword.CLASS.isEqual(text);
+				return seq.getChildren().length == 1 && c == SWT.SPACE && Keyword.CLASS.isEqual(text);
 			}
 			
 			public void run(char c, String text, int index, int caret, int selection, List<String> tokens) {
-				IModule module = IModule.create();
-				module.setId("Name");
 				ClassWidget w = seq.addWidget(p -> new ClassWidget(p, module, mode, Keyword.array(seq.getInsertTokens())));		
 				w.setFocus();
 			}
 		});
-		
-		
+		seq.addWidget(p -> new ClassWidget(p, module, mode));
 		shell.setSize(600, 800);
 		shell.open();
 

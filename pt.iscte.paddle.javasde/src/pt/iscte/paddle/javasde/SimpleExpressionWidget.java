@@ -8,10 +8,11 @@ import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.widgets.Canvas;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Text;
 
-public class SimpleExpressionWidget extends Canvas implements TextWidget, Expression {
+public class SimpleExpressionWidget extends Composite implements TextWidget, Expression {
 
 	private Text text;
 	private Class<?> literalType;
@@ -85,6 +86,8 @@ public class SimpleExpressionWidget extends Canvas implements TextWidget, Expres
 	private void addTransformationKeyListener(boolean assign) {
 		text.addKeyListener(new KeyAdapter() {
 			public void keyPressed(KeyEvent e) {
+				if(text.isDisposed())
+					return;
 				String match = null;
 				EditorWidget w = null;
 				if(!assign && text.getCaretPosition() == 0 && (match = match(e.character, Constants.UNARY_OPERATORS)) != null) {
@@ -120,8 +123,10 @@ public class SimpleExpressionWidget extends Canvas implements TextWidget, Expres
 				}
 				
 				if(w != null) {
+					System.out.println("DISP " + SimpleExpressionWidget.this);
 					dispose();
 					w.requestLayout();
+					e.doit = false;
 				}
 			}
 		});
@@ -171,14 +176,4 @@ public class SimpleExpressionWidget extends Canvas implements TextWidget, Expres
 	public void addKeyListener(KeyListener listener) {
 		text.addKeyListener(listener);
 	}
-	
-//	@Override
-//	public void dispose() {
-//		super.dispose();
-//	}
-	
-//	@Override
-//	public boolean setFocus() {
-//		return text.setFocus();
-//	}
 }

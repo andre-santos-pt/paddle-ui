@@ -42,6 +42,7 @@ abstract class BlockAction extends InsertWidget.Action {
 		all.add(returnStatement(block));
 		all.add(breakStatement(block));
 		all.add(continueStatement(block));
+		all.add(incrementStatement(block));
 		return all;
 	}
 
@@ -70,7 +71,7 @@ abstract class BlockAction extends InsertWidget.Action {
 	static BlockAction assignment(IBlock block) {
 		return new BlockAction("assignment", 'a', block) {
 			public boolean isEnabled(char c, String text, int index, int caret, int selection, List<String> tokens) {
-				return !Constants.isType(text) && !text.isEmpty() && atEnd(text, caret) && (c == '=' || c == '[');
+				return !Constants.isType(text) && !Keyword.is(text) && !text.isEmpty() && atEnd(text, caret) && (c == '=' || c == '[');
 			}
 			public void run(char c, String text, int index, int caret, int selection, List<String> tokens) {
 				IVariable var = block.getOwnerProcedure().getVariable(text);
@@ -165,9 +166,9 @@ abstract class BlockAction extends InsertWidget.Action {
 
 			public void run(char c, String text, int index, int caret, int selection, List<String> tokens) {
 				if(c == ';')
-					block.addReturn();
+					block.addReturnAt(index);
 				else
-					block.addReturn(null);
+					block.addReturnAt(null, index);
 			}
 		};
 	}
@@ -192,7 +193,22 @@ abstract class BlockAction extends InsertWidget.Action {
 			}
 
 			public void run(char c, String text, int index, int caret, int selection, List<String> tokens) {
-				block.addBreakAt(index);
+				block.addContinueAt(index);
+			}
+		};
+	}
+	
+	static BlockAction incrementStatement(IBlock block) {
+		return new BlockAction("incrementation", '+', block) {
+			public boolean isEnabled(char c, String text, int index, int caret, int selection, List<String> tokens) {
+				return !Keyword.is(text) && c == '+' && atEnd(text, caret);
+			}
+
+			public void run(char c, String text, int index, int caret, int selection, List<String> tokens) {
+				IVariable var = block.getOwnerProcedure().getVariable(text);
+				if(var == null)
+					var = new IVariable.UnboundVariable(text);
+				block.addIncrementAt(var, index);
 			}
 		};
 	}

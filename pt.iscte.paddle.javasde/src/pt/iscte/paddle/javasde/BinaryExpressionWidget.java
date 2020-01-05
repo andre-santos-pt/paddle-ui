@@ -98,12 +98,11 @@ public class BinaryExpressionWidget extends EditorWidget implements Expression {
 
 	void setLeft(String expression) {
 		left.set(expression);
+		left.setForeground(Constants.FONT_COLOR);
 	}
 
 	public void focusRight() {
-		left.setForeground(Constants.FONT_COLOR);
 		right.setFocus();
-		requestLayout();
 	}
 
 	@Override

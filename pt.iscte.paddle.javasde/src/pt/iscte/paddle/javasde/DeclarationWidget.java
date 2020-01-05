@@ -2,6 +2,7 @@ package pt.iscte.paddle.javasde;
 
 import org.eclipse.swt.widgets.Composite;
 
+import pt.iscte.paddle.javasde.Constants.DeleteListener;
 import pt.iscte.paddle.model.IArrayType;
 import pt.iscte.paddle.model.IType;
 
@@ -30,6 +31,12 @@ public class DeclarationWidget extends EditorWidget {
 		new FixedToken(this, "=");
 		this.expression = new ExpressionWidget(this, expression);
 		new FixedToken(this, ";");
+		
+		DeleteListener deleteListener = new Constants.DeleteListener(this);
+		this.type.addKeyListener(deleteListener);
+		Constants.addInsertLine(this.type);
+		this.id.addKeyListener(deleteListener);
+		this.expression.addKeyListener(deleteListener);
 	}
 	
 	@Override

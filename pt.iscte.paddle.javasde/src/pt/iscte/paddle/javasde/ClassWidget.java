@@ -17,7 +17,7 @@ import pt.iscte.paddle.model.IModule;
 import pt.iscte.paddle.model.IProcedure;
 import pt.iscte.paddle.model.IType;
 
-public class ClassWidget extends EditorWidget {
+public class ClassWidget extends EditorWidget implements SequenceContainer {
 
 	private IModule module;
 	private Id id;
@@ -42,23 +42,24 @@ public class ClassWidget extends EditorWidget {
 		}
 
 		int margin = UiMode.isStatic() ? 0 : Constants.TAB;
-		body = new SequenceWidget(this, margin, token -> Keyword.isMethodModifier(token) || Constants.isType(token));
-//		body.addChildCommand("constant", 'c', (i, p) -> module.addConstant(IType.INT, ILiteral.matchValue("1")));
-//		body.addChildCommand("procedure", 'p', (i, p) -> module.addProcedure(IType.VOID));
-
-//		body.acceptKeywords(Keyword.STATIC, Keyword.FINAL, Keyword.ABSTRACT, Keyword.PUBLIC, Keyword.PRIVATE, Keyword.PROTECTED);
+		body = new SequenceWidget(this, margin, token -> Keyword.isMethodModifier(token) || Constants.isType(token) || IType.VOID.getId().equals(token));
 		
+		body.setDeleteAction(index -> {
+			IProcedure p = module.getProcedures().get(index);
+			module.removeProcedure(p);
+		});
 		body.addAction(new InsertWidget.Action("method", 'm') {
 
 			public boolean isEnabled(char c, String text, int index, int caret, int selection, List<String> tokens) {
 				if(tokens.size() < 1)
 					return false;
 				String last = tokens.get(tokens.size()-1);
-				return c == '(' && tokens.size() > 0 && (Constants.isType(last) || IType.VOID.getId().equals(last));
+				return c == '(' && !Keyword.is(text) && text.length() > 0 && tokens.size() > 0 && (Constants.isType(last) || IType.VOID.getId().equals(last));
 			}
 			
 			public void run(char c, String text, int index, int caret, int selection, List<String> tokens) {
-				IType t = IType.match(tokens.get(tokens.size()-1));
+				String last = tokens.get(tokens.size()-1);
+				IType t = last.equals(IType.VOID.getId()) ? IType.VOID : IType.match(last);
 				IProcedure proc = module.addProcedure(text, t, tokens.toArray(new String[tokens.size()]));
 				proc.setId(text);
 			}
@@ -83,28 +84,30 @@ public class ClassWidget extends EditorWidget {
 			}
 		});
 		
-		module.getConstants().forEach(c -> body.addElement(new FieldWidget(body, c)));
-		module.getProcedures().forEach(p -> body.addElement(new MethodWidget(body, p)));
+		module.getConstants().forEach(c -> body.addElement(new FieldWidget(body, c), module.getConstants().size()-1));
+		module.getProcedures().forEach(p -> body.addElement(new MethodWidget(body, p), module.getProcedures().size()-1));
 
 		if (!UiMode.isStatic())
 			new FixedToken(this, "}");
 
 		module.addListener(new IModule.IListener() {
 			public void constantAdded(IConstant constant) {
-				body.addElement(new FieldWidget(body, constant));
+				int i = module.getConstants().indexOf(constant);
+				body.addElement(new FieldWidget(body, constant), i);
 			}
 
-			public void constantDeleted(IConstant constant) {
+			public void constantRemoved(IConstant constant) {
 				body.delete(e -> e instanceof FieldWidget && ((FieldWidget) e).constant == constant);
 			}
 
 			public void procedureAdded(IProcedure procedure) {
 				MethodWidget m = new MethodWidget(body, procedure);
-				body.addElement(m);
-				m.setFocus();
+				int i = module.getProcedures().indexOf(procedure);
+				body.addElement(m, module.getConstants().size() + i);
+				m.focusParameters();
 			}
 
-			public void procedureDeleted(IProcedure procedure) {
+			public void procedureRemoved(IProcedure procedure) {
 				body.delete(e -> e instanceof MethodWidget && ((MethodWidget) e).procedure == procedure);
 			}
 		});
@@ -116,12 +119,17 @@ public class ClassWidget extends EditorWidget {
 		return id.setFocus();
 	}
 	
+	public SequenceWidget getBody() {
+		return body;
+	}
+	
 	private void addUndoFilter() {
 		Display.getDefault().addFilter(SWT.KeyDown, new Listener() {
 			public void handleEvent(Event event) {
 				if ((event.stateMask & SWT.MODIFIER_MASK) == SWT.CTRL && event.keyCode == 'z') {
 					System.out.println("UNDO");
 					module.undo();
+					event.doit = false;
 				}
 			}
 		});

@@ -11,7 +11,7 @@ public interface Configuration {
 	}
 	
 	default int fontSize() {
-		return 20;
+		return 32;
 	}
 	
 	default Color fontColor() {

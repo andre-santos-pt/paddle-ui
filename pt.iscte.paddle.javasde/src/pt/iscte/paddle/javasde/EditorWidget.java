@@ -41,9 +41,9 @@ public class EditorWidget extends Composite {
 		menu.setLocation(control.toDisplay(0, 40));
 	}
 
-	void addTokenKeyHandler(KeyListener listener) {
-		
-	}
+//	void addTokenKeyHandler(KeyListener listener) {
+//		
+//	}
 	
 	void setSibling(Control sibling) {
 		sibling.addFocusListener(new FocusListener() {
@@ -77,20 +77,6 @@ public class EditorWidget extends Composite {
 	// to override
 	public void toCode(StringBuffer buffer) {
 		buffer.append("#" + this.getClass().getSimpleName() + "#");
-	}
-
-	public void accept(Visitor visitor) {
-		for (Control c : getChildren()) {
-//			if(c instanceof ConstantWidget)
-//				visitor.visit(((ConstantWidget) c));
-//			else if(c instanceof MethodWidget)
-//				visitor.visit(((MethodWidget) c));
-//			else if(c instanceof WhileWidget)
-//				visitor.visit(((WhileWidget) c));
-			
-			if(c instanceof EditorWidget)
-				((EditorWidget) c).accept(visitor);
-		}
 	}
 
 }
