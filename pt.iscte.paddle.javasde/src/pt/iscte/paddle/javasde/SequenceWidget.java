@@ -8,7 +8,6 @@ import static pt.iscte.paddle.javasde.Keyword.RETURN;
 import static pt.iscte.paddle.javasde.Keyword.WHILE;
 
 import java.util.List;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -27,7 +26,6 @@ import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 
 import pt.iscte.paddle.model.IArrayElementAssignment;
 import pt.iscte.paddle.model.IBlock;
@@ -45,14 +43,6 @@ import pt.iscte.paddle.model.IVariableAssignment;
 public class SequenceWidget extends Composite {
 
 	private final InsertWidget insertWidget;
-
-	//	private GridData data = new GridData(SWT.FILL, SWT.FILL, true, true);
-	//	private Menu menu;
-	//	private FocusListener updateMenuListener;
-
-	//	private MenuItem deleteItem;
-
-	//	private IBlock block;
 
 	private Consumer<Integer> deleteAction = index -> {};
 
@@ -162,7 +152,6 @@ public class SequenceWidget extends Composite {
 
 
 	void addBlockListener(IBlock block) {
-		//		this.block = block;
 		block.addListener(new IBlock.IListener() {
 			public void elementAdded(IProgramElement element, int index) {
 				if (element instanceof IVariable && element.not(Constants.FOR_FLAG)) {
@@ -359,9 +348,7 @@ public class SequenceWidget extends Composite {
 
 	void focusLast() {
 		Control[] children = getChildren();
-		int i = children.length == 1 ? 1 : 2;
 		children[children.length - 1].setFocus();
-
 	}
 
 
