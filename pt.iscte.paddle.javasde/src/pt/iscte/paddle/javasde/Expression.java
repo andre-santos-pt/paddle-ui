@@ -13,4 +13,11 @@ public interface Expression {
 
 	void addKeyListener(KeyListener listener);
 	
+	void toCode(StringBuffer buffer);
+
+	void substitute(Expression current, Expression newExpression);
+
+	default boolean isEmpty() {
+		return (this instanceof SimpleExpressionWidget) && ((SimpleExpressionWidget) this).text.getText().isBlank();
+	}
 }

@@ -6,15 +6,15 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 
-public class UnaryExpressionWidget extends EditorWidget {
+public class UnaryExpressionWidget extends EditorWidget implements Expression {
 	private Token op;
-	private ExpressionWidget expression;
+	private Expression expression;
 
-	public UnaryExpressionWidget(EditorWidget parent, String operator, String target) {
+	public UnaryExpressionWidget(EditorWidget parent, String operator, Expression expression) {
 		super(parent);
 		setLayout(Constants.ROW_LAYOUT_H_ZERO);
 		op = new Token(this, operator, Constants.UNARY_OPERATORS);
-		expression = new ExpressionWidget(this, target);
+		this.expression = expression.copyTo(this);
 
 		Menu menu = op.getMenu();
 		new MenuItem(menu, SWT.SEPARATOR);
@@ -29,8 +29,20 @@ public class UnaryExpressionWidget extends EditorWidget {
 
 	@Override
 	public void toCode(StringBuffer buffer) {
-		buffer.append(op + " ");
+		buffer.append(op);
 		expression.toCode(buffer);
+	}
+
+	@Override
+	public Expression copyTo(EditorWidget parent) {
+		return new UnaryExpressionWidget(parent, op.getText(), expression);
+	}
+	
+	@Override
+	public void substitute(Expression current, Expression newExpression) {
+		current.dispose();
+		this.expression = newExpression;
+		this.expression.requestLayout();
 	}
 
 }

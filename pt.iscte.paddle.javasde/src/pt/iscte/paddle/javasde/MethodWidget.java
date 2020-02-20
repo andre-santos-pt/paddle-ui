@@ -2,6 +2,7 @@ package pt.iscte.paddle.javasde;
 
 import static java.lang.System.lineSeparator;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.swt.SWT;
@@ -24,7 +25,8 @@ public class MethodWidget extends EditorWidget implements SequenceContainer {
 	private SequenceWidget body;
 	private ParamList params;
 	private EditorWidget header;
-
+	private List<Keyword> modifiers;
+	
 	MethodWidget(SequenceWidget parent, IProcedure procedure) {
 		super(parent);
 		this.procedure = procedure;
@@ -34,6 +36,7 @@ public class MethodWidget extends EditorWidget implements SequenceContainer {
 		header = new EditorWidget(this);
 		header.setLayout(Constants.ROW_LAYOUT_H);
 
+		modifiers = new ArrayList<>();
 		for (Keyword mod : Keyword.methodModifiers())
 			if(procedure.is(mod.toString()))
 				addModifier(mod);
@@ -71,6 +74,7 @@ public class MethodWidget extends EditorWidget implements SequenceContainer {
 	}
 
 	void addModifier(Keyword mod) {
+		modifiers.add(mod);
 		Token modifier = new Token(header, mod);
 		modifier.addKeyListener(new KeyAdapter() { 
 			public void keyPressed(KeyEvent e) {
@@ -78,6 +82,7 @@ public class MethodWidget extends EditorWidget implements SequenceContainer {
 					procedure.setProperty(mod.toString(), null);
 					modifier.dispose();
 					requestLayout();
+					modifiers.remove(mod);
 				}
 			}
 		});
@@ -99,8 +104,6 @@ public class MethodWidget extends EditorWidget implements SequenceContainer {
 			layout.verticalSpacing = 0;
 			layout.marginHeight = 0;
 			setLayout(layout);
-			
-//			setLayout(Constants.ROW_LAYOUT_H_ZERO);
 			createInsert();
 		}
 
@@ -123,6 +126,18 @@ public class MethodWidget extends EditorWidget implements SequenceContainer {
 			return insertWidget.setFocus();
 		}
 
+		public void toCode(StringBuffer buffer) {
+			boolean first = true;
+			for(Control c : getChildren())
+				if(c instanceof Param) {
+					if(first)
+						first = false;
+					else
+						buffer.append(", ");
+					((Param) c).toCode(buffer);
+				}
+		}
+		
 		private class Param extends EditorWidget {
 			private final Id type;
 			private final Id var;
@@ -165,6 +180,12 @@ public class MethodWidget extends EditorWidget implements SequenceContainer {
 				var.setFocus();
 			}
 
+			public void toCode(StringBuffer buffer) {
+				type.toCode(buffer);
+				buffer.append(' ');
+				var.toCode(buffer);
+			}
+			
 			@Override
 			public boolean setFocus() {
 				type.setFocus();
@@ -191,9 +212,12 @@ public class MethodWidget extends EditorWidget implements SequenceContainer {
 
 
 	public void toCode(StringBuffer buffer) {
-		buffer.append("\tpublic static ").append(retType).append(" ").append(id.toString())
-		.append("(...)") // TODO parameters to code
-		.append(" {").append(lineSeparator());
+		for(Keyword k : modifiers)
+			buffer.append(k.toString()).append(' ');
+		
+		buffer.append(retType).append(' ').append(id.toString()).append("(");
+		params.toCode(buffer);
+		buffer.append(") {").append(lineSeparator());
 		body.toCode(buffer, 2);
 		buffer.append("\t}").append(lineSeparator());
 

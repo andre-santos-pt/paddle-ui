@@ -2,21 +2,19 @@ package pt.iscte.paddle.javasde;
 
 import java.util.function.Function;
 
-import org.eclipse.swt.events.KeyAdapter;
-import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.KeyListener;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
-
 import pt.iscte.paddle.javasde.Constants.DeleteListener;
 
 public class AssignmentWidget extends EditorWidget {
 
 	private final ExpressionWidget id;
 	private final ExpressionWidget expression;
-
+	private boolean statement;
+	private boolean array;
+	
 	AssignmentWidget(SequenceWidget parent, String id, String expression, boolean statement, boolean array) {
 		super(parent);
+		this.statement = statement;
+		this.array = array;
 		setLayout(Constants.ROW_LAYOUT_H);
 		DeleteListener deleteListener = new Constants.DeleteListener(this);
 		Function<EditorWidget, Expression> f = 
@@ -29,7 +27,7 @@ public class AssignmentWidget extends EditorWidget {
 		this.expression = new ExpressionWidget(this, "expression");
 		this.expression.addKeyListener(deleteListener);
 		if(statement)
-			new FixedToken(this, ";");		
+			new FixedToken(this, ";");	
 	}
 	
 	public boolean setFocus() {
@@ -42,8 +40,10 @@ public class AssignmentWidget extends EditorWidget {
 	
 	@Override
 	public void toCode(StringBuffer buffer) {
-		buffer.append(id).append(" = ");
+		id.toCode(buffer);
+		buffer.append(" = ");
 		expression.toCode(buffer);
+		buffer.append(";");
 	}
 
 }

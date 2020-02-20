@@ -14,7 +14,7 @@ import org.eclipse.swt.widgets.Text;
 
 public class SimpleExpressionWidget extends Composite implements TextWidget, Expression {
 
-	private Text text;
+	final Text text;
 	private Class<?> literalType;
 	final boolean assign;
 	
@@ -89,43 +89,47 @@ public class SimpleExpressionWidget extends Composite implements TextWidget, Exp
 				if(text.isDisposed())
 					return;
 				String match = null;
-				EditorWidget w = null;
+				Expression w = null;
 				if(!assign && text.getCaretPosition() == 0 && (match = match(e.character, Constants.UNARY_OPERATORS)) != null) {
-					w = new UnaryExpressionWidget((EditorWidget) getParent(), match, text.getText());
+					w = new UnaryExpressionWidget((EditorWidget) getParent(), match, SimpleExpressionWidget.this);
 					w.setFocus();
 				}
 				else if(!assign && text.getCaretPosition() == text.getText().length() && (match = match(e.character, Constants.BINARY_OPERATORS)) != null) {
-					BinaryExpressionWidget b = new BinaryExpressionWidget((EditorWidget) getParent(), match);
-					b.setLeft(text.getText());
+					BinaryExpressionWidget b = new BinaryExpressionWidget((EditorWidget) getParent(), p -> new SimpleExpressionWidget(p, text.getText(), assign) , match);
 					b.focusRight();
 					w = b;
 				}
 				else if(!assign && e.character == SWT.SPACE && text.getText().equals("new")) {
-					ArrayAllocationExpression a = new ArrayAllocationExpression((EditorWidget) getParent());
+					ArrayAllocationExpression a = new ArrayAllocationExpression((EditorWidget) getParent(), p -> new SimpleExpressionWidget(p, "expression", false));
 					a.setFocus();
 					w = a;
 				}
-				else if(!assign && e.character == '(' && Id.isValid(text.getText())) {
+				else if(!assign && e.character == '(' && Id.isValid(text.getText()) && text.getCaretPosition() == text.getText().length() && text.getSelectionCount() == 0) {
 					CallWidget c = new CallWidget((EditorWidget) getParent(), text.getText(), false);
 					c.focusArgument();
 					w = c;
 				}
+				
+				
 				else if(e.character == '[') {
 					ArrayElementExpression a = new ArrayElementExpression((EditorWidget) getParent(), text.getText(), "expression");
 					a.addExpressionInserts();
 					a.focusExpression();
 					w = a;
 				}
-				else if(e.character == '.' && Id.isValid(text.getText())) {
-					FieldExpression f = new FieldExpression((EditorWidget) getParent(), text.getText());
-					f.focusExpression();
-					w = f;
+//				else if(e.character == '.' && Id.isValid(text.getText())) {
+//					FieldExpression f = new FieldExpression((EditorWidget) getParent(), text.getText());
+//					f.focusExpression();
+//					w = f;
+//				}
+				
+				
+				else if(e.character == SWT.CR) {
+					text.traverse(SWT.TRAVERSE_TAB_NEXT);
 				}
 				
 				if(w != null) {
-					System.out.println("DISP " + SimpleExpressionWidget.this);
-					dispose();
-					w.requestLayout();
+					((Expression) getParent()).substitute(SimpleExpressionWidget.this, w);
 					e.doit = false;
 				}
 			}
@@ -175,5 +179,16 @@ public class SimpleExpressionWidget extends Composite implements TextWidget, Exp
 	@Override
 	public void addKeyListener(KeyListener listener) {
 		text.addKeyListener(listener);
+	}
+	
+	@Override
+	public void toCode(StringBuffer buffer) {
+		buffer.append(text.getText().isBlank() ? Constants.EMPTY_EXPRESSION_SERIALIZE : text.getText());
+	}
+
+	@Override
+	public void substitute(Expression current, Expression newExpression) {
+		// TODO Auto-generated method stub
+		
 	}
 }

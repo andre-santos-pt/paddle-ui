@@ -9,6 +9,8 @@ public class ControlWidget extends EditorWidget implements SequenceContainer {
 	private ExpressionWidget expression;
 	private final SequenceWidget blockSeq;
 	private DeleteListener deleteListener;
+	private FixedToken openBracket;
+	private FixedToken closeBracket;
 
 	ControlWidget(SequenceWidget parent, Keyword keyword, String guard, IBlock block) {
 		super(parent);
@@ -31,12 +33,19 @@ public class ControlWidget extends EditorWidget implements SequenceContainer {
 			new FixedToken(header, ")");
 		}
 
-		new FixedToken(header, "{");
+		openBracket = new FixedToken(header, "{");
 		blockSeq = new SequenceWidget(this, Constants.TAB);
 		blockSeq.addActions(BlockAction.all(block));
 		blockSeq.addBlockListener(block);
 		blockSeq.setDeleteAction(index -> block.removeElement(index));
-		new FixedToken(this, "}");
+		closeBracket = new FixedToken(this, "}");
+//		blockSeq.addControlListener(new ControlAdapter() {
+//			public void controlResized(ControlEvent e) {
+//				int t = blockSeq.totalElements();
+//				openBracket.setVisible(t != 1);
+//				closeBracket.setVisible(t != 1);
+//			}
+//		});
 	}
 
 	void fillHeader(String expression, EditorWidget header) {
@@ -58,11 +67,17 @@ public class ControlWidget extends EditorWidget implements SequenceContainer {
 	}
 
 	@Override
-	public void toCode(StringBuffer buffer) {
-		buffer.append("while" + "(");
-		expression.toCode(buffer);
-		buffer.append(") {").append(System.lineSeparator());
-		blockSeq.toCode(buffer);
+	public void toCode(StringBuffer buffer, int level) {
+		appendTabs(buffer, level);
+		buffer.append(keyword.toString());
+		if(!keyword.isKeyword(Keyword.ELSE)) {
+			buffer.append("(");
+			expression.toCode(buffer);
+			buffer.append(")");
+		}
+		buffer.append(" {").append(System.lineSeparator());
+		blockSeq.toCode(buffer, level + 1);
+		appendTabs(buffer, level);
 		buffer.append("}").append(System.lineSeparator());
 	}
 
@@ -78,8 +93,5 @@ public class ControlWidget extends EditorWidget implements SequenceContainer {
 		return blockSeq;
 	}
 
-	@Override
-	public String toString() {
-		return this.keyword.getText() + "(...)";
-	}
+	
 }

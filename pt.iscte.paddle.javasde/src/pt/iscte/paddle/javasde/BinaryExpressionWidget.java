@@ -12,8 +12,8 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 
 public class BinaryExpressionWidget extends EditorWidget implements Expression {
-	private ExpressionWidget left;
-	private ExpressionWidget right;
+	private Expression left;
+	private Expression right;
 	private Token op;
 	private boolean brackets;
 	
@@ -65,40 +65,27 @@ public class BinaryExpressionWidget extends EditorWidget implements Expression {
 			}
 		});
 		
-		MenuItem simple = new MenuItem(menu, SWT.NONE);
-		simple.setText("delete");
-		simple.setAccelerator(Constants.DEL_KEY);
-		simple.addSelectionListener(new SelectionAdapter() {
-			public void widgetSelected(SelectionEvent e) {
-				deleteOperator();
-			}
-		});
-		
-		// problema com tabs
-//		op.addKeyListener(new KeyAdapter() {
+//		MenuItem simple = new MenuItem(menu, SWT.NONE);
+//		simple.setText("delete");
+//		simple.setAccelerator(Constants.DEL_KEY);
+//		simple.addSelectionListener(new SelectionAdapter() {
+//			public void widgetSelected(SelectionEvent e) {
+//				deleteOperator();
+//			}
+//		});
+//		
+//		this.right.addKeyListener(new KeyAdapter() {
 //			public void keyPressed(KeyEvent e) {
 //				if(e.keyCode == Constants.DEL_KEY)
 //					deleteOperator();
 //			}
 //		});
-		
-		this.right.addKeyListener(new KeyAdapter() {
-			public void keyPressed(KeyEvent e) {
-				if(e.keyCode == Constants.DEL_KEY)
-					deleteOperator();
-			}
-		});
 	}
 	
 	@Override
 	public boolean setFocus() {
 		left.setFocus();
 		return true;
-	}
-
-	void setLeft(String expression) {
-		left.set(expression);
-		left.setForeground(Constants.FONT_COLOR);
 	}
 
 	public void focusRight() {
@@ -114,20 +101,28 @@ public class BinaryExpressionWidget extends EditorWidget implements Expression {
 		if(brackets) buffer.append(")");
 	}
 
-	private void deleteOperator() {
-		ExpressionWidget parent = (ExpressionWidget) getParent();
-		if(left.expression instanceof SimpleExpressionWidget)
-			parent.expression = new SimpleExpressionWidget(parent, left.expression.toString(), false); // TODO propagate
-		else if(left.expression instanceof BinaryExpressionWidget)
-			parent.expression = new BinaryExpressionWidget(parent, ((BinaryExpressionWidget) left.expression).op.toString());
-		dispose();
-		parent.expression.requestLayout();
-		parent.expression.setFocus();
-	}
+//	private void deleteOperator() {
+//		ExpressionWidget parent = (ExpressionWidget) getParent();
+//		if(left.expression instanceof SimpleExpressionWidget)
+//			parent.expression = new SimpleExpressionWidget(parent, left.expression.toString(), false); // TODO propagate
+//		else if(left.expression instanceof BinaryExpressionWidget)
+//			parent.expression = new BinaryExpressionWidget(parent, ((BinaryExpressionWidget) left.expression).op.toString());
+//		dispose();
+//		parent.expression.requestLayout();
+//		parent.expression.setFocus();
+//	}
 
 	@Override
 	public Expression copyTo(EditorWidget parent) {
-		return new BinaryExpressionWidget(parent, p -> ((Expression) left.expression), op.getText());
+		return new BinaryExpressionWidget(parent, p -> left.copyTo(p), op.getText());
+	}
+
+	@Override
+	public void substitute(Expression current, Expression newExpression) {
+		if(left == current) {
+			left.dispose();
+			left = newExpression;
+		}
 	}
 
 

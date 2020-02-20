@@ -22,6 +22,12 @@ public class ExpressionWidget extends EditorWidget implements Expression {
 		this.expression = new SimpleExpressionWidget(this, expression, false);
 		this.expression.requestLayout();
 	}
+	
+	public void substitute(Expression current, Expression newExpression) {
+		current.dispose();
+		this.expression = newExpression;
+		this.expression.requestLayout();
+	}
 
 	@Override
 	public void setData(Object data) {
@@ -43,4 +49,13 @@ public class ExpressionWidget extends EditorWidget implements Expression {
 	public Expression copyTo(EditorWidget parent) {
 		return expression.copyTo(parent);
 	}	
+	
+	@Override
+	public void toCode(StringBuffer buffer) {
+		expression.toCode(buffer);
+	}
+
+	public boolean isEmpty() {
+		return expression.isEmpty();
+	}
 }

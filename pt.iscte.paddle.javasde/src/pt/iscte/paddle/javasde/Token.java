@@ -36,7 +36,8 @@ public class Token implements TextWidget {
 		text = new Text(parent, SWT.NONE);
 		text.setText(token);
 		text.setEditable(false);
-
+		text.setBackground(Constants.COLOR_BACKGROUND);
+		
 		if(Keyword.is(token)) {
 			text.setFont(Constants.FONT_KW);
 			text.setForeground(Constants.COLOR_KW);

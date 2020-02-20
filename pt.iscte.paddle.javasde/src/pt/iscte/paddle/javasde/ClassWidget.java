@@ -2,6 +2,7 @@ package pt.iscte.paddle.javasde;
 
 import static java.lang.System.lineSeparator;
 
+import java.io.PrintWriter;
 import java.util.List;
 
 import org.eclipse.swt.SWT;
@@ -22,28 +23,31 @@ public class ClassWidget extends EditorWidget implements SequenceContainer {
 	private IModule module;
 	private Id id;
 	private SequenceWidget body;
-
+	private Keyword[] modifiers;
+	
 	public ClassWidget(Composite parent, IModule module, UiMode mode, Keyword ... modifiers) {
 		super(parent);
 		this.module = module;
 		GridLayout layout = new GridLayout(1, true);
 		layout.verticalSpacing = 10;
 		setLayout(layout);
-		
+
 		if (!UiMode.isStatic()) {
 			EditorWidget header = new EditorWidget(this);
 			header.setLayout(Constants.ROW_LAYOUT_H);
 			for(Keyword mod : modifiers)
 				new Token(header, mod);
-				
+			this.modifiers = modifiers;
+			
 			new Token(header, Keyword.CLASS);
 			id = new Id(header, module.getId(), false);
+			id.setReadOnly();
 			new FixedToken(header, "{");
 		}
 
 		int margin = UiMode.isStatic() ? 0 : Constants.TAB;
 		body = new SequenceWidget(this, margin, token -> Keyword.isMethodModifier(token) || Constants.isType(token) || IType.VOID.getId().equals(token));
-		
+
 		body.setDeleteAction(index -> {
 			IProcedure p = module.getProcedures().get(index);
 			module.removeProcedure(p);
@@ -56,7 +60,7 @@ public class ClassWidget extends EditorWidget implements SequenceContainer {
 				String last = tokens.get(tokens.size()-1);
 				return c == '(' && !Keyword.is(text) && text.length() > 0 && tokens.size() > 0 && (Constants.isType(last) || IType.VOID.getId().equals(last));
 			}
-			
+
 			public void run(char c, String text, int index, int caret, int selection, List<String> tokens) {
 				String last = tokens.get(tokens.size()-1);
 				IType t = last.equals(IType.VOID.getId()) ? IType.VOID : IType.match(last);
@@ -64,7 +68,7 @@ public class ClassWidget extends EditorWidget implements SequenceContainer {
 				proc.setId(text);
 			}
 		});
-		
+
 		body.addAction(new InsertWidget.Action("field", 'f') {
 
 			public boolean isEnabled(char c, String text, int index, int caret, int selection, List<String> tokens) {
@@ -73,17 +77,16 @@ public class ClassWidget extends EditorWidget implements SequenceContainer {
 				String last = tokens.get(tokens.size()-1);
 				return (c == ';' || c == '=') && tokens.size() > 0 && Constants.isType(last);
 			}
-			
+
 			public void run(char c, String text, int index, int caret, int selection, List<String> tokens) {
 				IType t = IType.match(tokens.get(tokens.size()-1));
 				FieldWidget w = body.addWidget(p -> new FieldWidget(p, t, text, Keyword.array(tokens.subList(0, tokens.size()-1)), c == '='));
-					
+
 				if(c == '=')
 					w.focusExpression();
-//				IConstant constant = module.addConstant(text, t, ILiteral.matchValue("1"));
 			}
 		});
-		
+
 		module.getConstants().forEach(c -> body.addElement(new FieldWidget(body, c), module.getConstants().size()-1));
 		module.getProcedures().forEach(p -> body.addElement(new MethodWidget(body, p), module.getProcedures().size()-1));
 
@@ -116,13 +119,13 @@ public class ClassWidget extends EditorWidget implements SequenceContainer {
 	}
 
 	public boolean setFocus() {
-		return id.setFocus();
+		return body.setFocus();
 	}
-	
+
 	public SequenceWidget getBody() {
 		return body;
 	}
-	
+
 	private void addUndoFilter() {
 		Display.getDefault().addFilter(SWT.KeyDown, new Listener() {
 			public void handleEvent(Event event) {
@@ -136,10 +139,13 @@ public class ClassWidget extends EditorWidget implements SequenceContainer {
 	}
 
 	public void toCode(StringBuffer buffer) {
-		buffer.append("public class ").append(id.toString()).append(" {").append(lineSeparator());
-		for (Control c : getChildren())
-			if (c instanceof MethodWidget)
-				((MethodWidget) c).toCode(buffer);
+		for(Keyword k : modifiers)
+			buffer.append(k.toString()).append(' ');
+		
+		Keyword.CLASS.toCode(buffer);
+		buffer.append(' ').append(id.toString()).append(" {").append(lineSeparator());
+		
+		body.toCode(buffer, 1);
 
 		buffer.append("}").append(lineSeparator()).append(lineSeparator());
 	}

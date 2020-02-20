@@ -181,4 +181,10 @@ public enum Keyword implements CharSequence {
 			set[i] = Keyword.valueOf(insertTokens.get(i).toUpperCase());
 		return set;
 	}
+
+	public void toCode(StringBuffer buffer) {
+		buffer.append(name().toLowerCase());
+	}
+	
+	
 }

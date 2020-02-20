@@ -37,7 +37,8 @@ public interface Constants {
 	String FONT_FACE = "Monaco";
 	Color COLOR_KW = Display.getDefault().getSystemColor(SWT.COLOR_DARK_MAGENTA);
 	Color COLOR_PH = Display.getDefault().getSystemColor(SWT.COLOR_DARK_GRAY);
-	Color COLOR_ERROR = new Color(Display.getDefault(), 255, 200, 200);
+	//	Color COLOR_ERROR = new Color(Display.getDefault(), 255, 200, 200);
+	Color COLOR_ERROR = Display.getDefault().getSystemColor(SWT.COLOR_GRAY);
 	Color COLOR_BACKGROUND = Display.getDefault().getSystemColor(SWT.COLOR_WHITE);
 	Color COLOR_INSERT = new Color(Display.getDefault(), 245, 245, 245);
 	Color COLOR_HIGHLIGHT = new Color(Display.getDefault(), 0, 200, 200);
@@ -95,7 +96,7 @@ public interface Constants {
 	static boolean isLetter(char c) {
 		return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z';
 	}
-	
+
 	static boolean isNumber(char c) {
 		return c >= '0' && c <= '9';
 	}
@@ -126,23 +127,23 @@ public interface Constants {
 			HIDE_GRID.exclude = true;
 			SHOW_ROW.exclude = false;
 			HIDE_ROW.exclude = true;
-//			SHOW_ROW.width = SWT.DEFAULT;
-//			HIDE_ROW.width = 0;
+			//			SHOW_ROW.width = SWT.DEFAULT;
+			//			HIDE_ROW.width = 0;
 		}
 	}
-//	FocusListener ADD_HIDE = new FocusListener() {
-//		public void focusLost(FocusEvent e) {
-//			Control c = (Control) e.widget;
-//			c.setLayoutData(c.getParent().getLayout() instanceof GridLayout ? GridDatas.HIDE_GRID : GridDatas.HIDE_ROW);
-//			c.requestLayout();
-//		}
-//
-//		public void focusGained(FocusEvent e) {
-//			Control c = (Control) e.widget;
-//			c.setLayoutData(c.getParent().getLayout() instanceof GridLayout ? GridDatas.SHOW_GRID : GridDatas.SHOW_ROW);
-//			c.requestLayout();
-//		}
-//	};
+	//	FocusListener ADD_HIDE = new FocusListener() {
+	//		public void focusLost(FocusEvent e) {
+	//			Control c = (Control) e.widget;
+	//			c.setLayoutData(c.getParent().getLayout() instanceof GridLayout ? GridDatas.HIDE_GRID : GridDatas.HIDE_ROW);
+	//			c.requestLayout();
+	//		}
+	//
+	//		public void focusGained(FocusEvent e) {
+	//			Control c = (Control) e.widget;
+	//			c.setLayoutData(c.getParent().getLayout() instanceof GridLayout ? GridDatas.SHOW_GRID : GridDatas.SHOW_ROW);
+	//			c.requestLayout();
+	//		}
+	//	};
 
 	KeyListener LISTENER_ARROW_KEYS = new KeyAdapter() {
 		@Override
@@ -179,7 +180,7 @@ public interface Constants {
 		control.addKeyListener(LISTENER_ARROW_KEYS);
 		control.setData(widget);
 	}
-	
+
 	KeyListener INSERT_LINE = new KeyAdapter() {
 		@Override
 		public void keyPressed(KeyEvent e) {
@@ -192,7 +193,7 @@ public interface Constants {
 			}
 		}
 	};
-	
+
 	static void addInsertLine(TextWidget widget) {
 		widget.getWidget().addKeyListener(INSERT_LINE);
 		widget.getWidget().setData(widget);
@@ -208,20 +209,22 @@ public interface Constants {
 	static void addFocusSelectAll(Text e) {
 		e.addFocusListener(FOCUS_SELECTALL);
 	}
-	
+
 	FocusListener FOCUS_SELECTALL = new FocusAdapter() {
 		public void focusGained(FocusEvent e) {
 			((Text) e.widget).selectAll();
 		}
 	};
 
+	String EMPTY_EXPRESSION_SERIALIZE = "$EMPTY$";
+
 	class DeleteListener extends KeyAdapter { 
 		final EditorWidget target;
-		
+
 		DeleteListener(EditorWidget target) {
 			this.target = target;
 		}
-		
+
 		public void keyPressed(KeyEvent e) {
 			if(e.widget.isDisposed())
 				return;
@@ -229,7 +232,7 @@ public interface Constants {
 			if(e.keyCode == Constants.DEL_KEY && (!(w instanceof TextWidget) || ((TextWidget)w).isAtBeginning()) 
 					||
 					(e.stateMask & SWT.MODIFIER_MASK) == SWT.CTRL && e.keyCode == 'd'
-				) {
+					) {
 				SequenceWidget parent = (SequenceWidget) target.getParent();
 				int index = parent.findModelIndex(target);
 				parent.deleteAction(index);
@@ -260,4 +263,23 @@ public interface Constants {
 	static boolean isType(String text) {
 		return  IType.match(text) != null;
 	}
+
+	static boolean isNumber(String text) {
+		try {
+			Integer.parseInt(text);
+			return true;
+		}
+		catch(NumberFormatException e) {
+			try {
+			Double.parseDouble(text);
+			return true;
+			}
+			catch(NumberFormatException ex) {
+				return false;
+			}
+		}
+	}
+
+	
+
 }

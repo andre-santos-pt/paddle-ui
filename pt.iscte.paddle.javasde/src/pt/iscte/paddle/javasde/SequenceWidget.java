@@ -7,10 +7,12 @@ import static pt.iscte.paddle.javasde.Keyword.IF;
 import static pt.iscte.paddle.javasde.Keyword.RETURN;
 import static pt.iscte.paddle.javasde.Keyword.WHILE;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.DND;
@@ -23,9 +25,15 @@ import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
 
 import pt.iscte.paddle.model.IArrayElementAssignment;
 import pt.iscte.paddle.model.IBlock;
@@ -66,8 +74,46 @@ public class SequenceWidget extends Composite {
 				insertWidget.setFocus();
 			}
 		});
+		
+		Supplier<List<Action>> sup = () -> {
+			ArrayList<Action> list = new ArrayList<>();
+			list.add(new Action() {
+				public void run() {
+					System.out.println("!!");
+				}
+				public String getText() {
+					return "action";
+				}
+			});
+			return list;
+		};
+		Menu menu = new Menu(insertWidget);
+		menu.addListener(SWT.Show, new Listener() {
+			
+			@Override
+			public void handleEvent(Event event) {
+				for(MenuItem i : menu.getItems())
+					i.dispose();
+				for(Action a : sup.get()) {
+					MenuItem i = new MenuItem(menu, SWT.PUSH);
+					i.setText(a.getText());
+					i.addSelectionListener(new SelectionAdapter() {
+						public void widgetSelected(SelectionEvent e) {
+							a.run();
+						}
+					});
+				}
+					
+			}
+		});
+		insertWidget.setMenu(menu);
 	}
 
+	interface Action {
+		String getText();
+		void run();
+	}
+	
 	void setDeleteAction(Consumer<Integer> action) {
 		deleteAction = action;
 	}
@@ -118,7 +164,7 @@ public class SequenceWidget extends Composite {
 		return c instanceof ControlWidget && ((ControlWidget) c).is(Keyword.ELSE);
 	}
 
-	private int totalElements() {
+	int totalElements() {
 		Control[] children = getChildren();
 		int elsesAndInserts = 0;
 		for (Control c : children)
@@ -186,7 +232,6 @@ public class SequenceWidget extends Composite {
 					}
 				} 
 
-
 				else if (element instanceof IArrayElementAssignment) {
 					IArrayElementAssignment a = (IArrayElementAssignment) element;
 					String id = a.getTarget().getId();
@@ -195,7 +240,6 @@ public class SequenceWidget extends Composite {
 					AssignmentWidget assignmentWidget = new AssignmentWidget(SequenceWidget.this, idd, exp, true, true);
 					addElement(assignmentWidget, index);
 					assignmentWidget.setFocus();
-					//					focusNextStatement(); // TODO?
 				} 
 
 				else if (element instanceof ISelection) {
@@ -269,8 +313,6 @@ public class SequenceWidget extends Composite {
 				requestLayout();
 			}
 		});
-
-
 	}
 
 	void addElement(EditorWidget w, int modelIndex) {

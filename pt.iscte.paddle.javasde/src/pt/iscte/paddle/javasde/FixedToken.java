@@ -15,7 +15,8 @@ public class FixedToken {
 	public FixedToken(EditorWidget parent, String token) {
 		label = new Label(parent, SWT.NONE);
 		label.setText(token);
-
+		label.setBackground(Constants.COLOR_BACKGROUND);
+		
 		if(Keyword.is(token)) {
 			label.setFont(Constants.FONT_KW);
 			label.setForeground(Constants.COLOR_KW);

@@ -92,6 +92,10 @@ public class Id extends EditorWidget implements TextWidget {
 		Constants.addArrowKeys(text, this);
 	}
 
+	void setReadOnly() {
+		text.setEditable(false);
+	}
+	
 	@Override
 	public Text getWidget() {
 		return text;
@@ -218,6 +222,14 @@ public class Id extends EditorWidget implements TextWidget {
 	@Override
 	public String toString() {
 		return text.getText();
+	}
+	
+	@Override
+	public void toCode(StringBuffer buffer) {
+		if(text.getText().isBlank())
+			buffer.append(Constants.EMPTY_EXPRESSION_SERIALIZE);
+		else
+			buffer.append(text.getText());
 	}
 
 	public void set(String id) {

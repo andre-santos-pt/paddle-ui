@@ -37,12 +37,12 @@ abstract class BlockAction extends InsertWidget.Action {
 		all.add(ifStatement(block));
 		all.add(elseStatement(block));
 		all.add(whileLoop(block));
-		all.add(forLoop(block));
 		all.add(call(block));
 		all.add(returnStatement(block));
 		all.add(breakStatement(block));
 		all.add(continueStatement(block));
-		all.add(incrementStatement(block));
+//		all.add(forLoop(block));
+//		all.add(incrementStatement(block));
 		return all;
 	}
 

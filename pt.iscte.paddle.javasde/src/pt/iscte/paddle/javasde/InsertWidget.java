@@ -1,27 +1,25 @@
 package pt.iscte.paddle.javasde;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Predicate;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
-import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.events.VerifyListener;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.MenuItem;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.ToolTip;
 
 import pt.iscte.paddle.javasde.Constants.GridDatas;
 
@@ -33,6 +31,7 @@ public class InsertWidget extends Composite implements TextWidget {
 	private List<Action> actions;
 
 	private final Predicate<String> tokenAccept;
+	private ToolTip tip;
 
 	public InsertWidget(Composite parent, boolean permanent) {
 		this(parent, permanent, token -> false);
@@ -64,9 +63,11 @@ public class InsertWidget extends Composite implements TextWidget {
 			public void verifyText(VerifyEvent e) {
 				e.doit = 
 						edit || Constants.isLetter(e.character) ||
-						e.character == '.' || //e.character == '=' || 
+						//Constants.isNumber(e.character) ||
+						//e.character == '.' || //e.character == '=' || 
 						e.character == Constants.DEL_KEY || e.character == SWT.CR ||
-						e.character == '/' || (e.character == ' ' && text.getText().startsWith("//"));
+						e.character == '/' && (text.getText().isBlank() || text.getText().startsWith("/")) || 
+						((e.character == ' ' || Constants.isNumber(e.character))  && text.getText().startsWith("//"));
 			}
 		});
 		text.addModifyListener(Constants.MODIFY_PACK);
@@ -90,7 +91,7 @@ public class InsertWidget extends Composite implements TextWidget {
 					token.moveAbove(text);
 					requestLayout();
 					edit = true;
-					text.setText("");
+					text.setText(" ");
 					edit = false;
 					e.doit = false;
 					return;
@@ -106,6 +107,19 @@ public class InsertWidget extends Composite implements TextWidget {
 					e.doit = false;
 					return;
 				}
+				else if(e.keyCode == SWT.SPACE) {
+					Shell shell = new Shell(getDisplay());
+					tip = new ToolTip(shell, SWT.BALLOON);
+					tip.setMessage("Help?");
+					Point loc = text.toDisplay(text.getLocation());
+					tip.setLocation(loc);  
+					tip.setVisible(true);
+				} 
+				else {
+					if(tip != null)
+						tip.setVisible(false);
+				}
+				
 				// TODO FIX?
 				int index = getParent() instanceof SequenceWidget ? ((SequenceWidget) getParent()).findModelIndex(InsertWidget.this) : 0; 
 				List<String> tokens = getTokens();
@@ -136,6 +150,21 @@ public class InsertWidget extends Composite implements TextWidget {
 			}
 		});
 		Constants.addArrowKeys(text, TextWidget.create(text));
+
+		
+		
+//		text.addFocusListener(new FocusAdapter() {
+//			@Override
+//			public void focusGained(FocusEvent e) {
+//				Point loc = text.toDisplay(text.getLocation());
+//				tip.setLocation(loc);  
+//				tip.setVisible(true);
+//			}
+//			@Override
+//			public void focusLost(FocusEvent e) {
+//				tip.setVisible(false);
+//			}
+//		});
 		return text;
 	}
 
@@ -160,7 +189,7 @@ public class InsertWidget extends Composite implements TextWidget {
 			for(int i = 0; i < children.length-1; i++)
 				children[i].dispose();
 			edit = true;
-			text.setText("");
+			text.setText(" ");
 			edit = false;
 		}
 	}
@@ -244,13 +273,4 @@ public class InsertWidget extends Composite implements TextWidget {
 	public Text getWidget() {
 		return text;
 	}
-
-	//	public void addFocusListener(FocusListener listener) {
-	//		text.addFocusListener(listener);
-	//	}
-
-	//	public void addKeyListener(KeyAdapter listener) {
-	//		text.addKeyListener(listener);
-	//	}
-
 }
