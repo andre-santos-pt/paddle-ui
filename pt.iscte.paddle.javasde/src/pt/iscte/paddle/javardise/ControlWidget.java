@@ -2,6 +2,8 @@ package pt.iscte.paddle.javardise;
 
 import pt.iscte.paddle.javardise.Constants.DeleteListener;
 import pt.iscte.paddle.model.IBlock;
+import pt.iscte.paddle.model.IBlockElement;
+import pt.iscte.paddle.model.IExpression;
 
 public class ControlWidget extends EditorWidget implements SequenceContainer {
 
@@ -12,7 +14,7 @@ public class ControlWidget extends EditorWidget implements SequenceContainer {
 	private FixedToken openBracket;
 	private FixedToken closeBracket;
 
-	ControlWidget(SequenceWidget parent, Keyword keyword, String guard, IBlock block) {
+	ControlWidget(SequenceWidget parent, Keyword keyword, IExpression guard, IBlock block) {
 		super(parent);
 		setLayout(Constants.ROW_LAYOUT_V_ZERO);
 		EditorWidget header = new EditorWidget(this);
@@ -39,6 +41,11 @@ public class ControlWidget extends EditorWidget implements SequenceContainer {
 		blockSeq.addBlockListener(block);
 		blockSeq.setDeleteAction(index -> block.removeElement(index));
 		closeBracket = new FixedToken(this, "}");
+		
+		int i = 0;
+		for(IBlockElement e : block)
+			blockSeq.addModelElement(e, i++);
+		
 //		blockSeq.addControlListener(new ControlAdapter() {
 //			public void controlResized(ControlEvent e) {
 //				int t = blockSeq.totalElements();
@@ -48,8 +55,8 @@ public class ControlWidget extends EditorWidget implements SequenceContainer {
 //		});
 	}
 
-	void fillHeader(String expression, EditorWidget header) {
-		this.expression = new ExpressionWidget(header, expression == null ? "expression" : expression);
+	void fillHeader(IExpression expression, EditorWidget header) {
+		this.expression = new ExpressionWidget(header, Expression.match(expression));
 		this.expression.addKeyListener(deleteListener);
 	}
 

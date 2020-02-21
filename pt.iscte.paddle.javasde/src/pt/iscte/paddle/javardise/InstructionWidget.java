@@ -3,6 +3,7 @@ package pt.iscte.paddle.javardise;
 import org.eclipse.swt.widgets.Composite;
 
 import pt.iscte.paddle.javardise.Constants.DeleteListener;
+import pt.iscte.paddle.model.IExpression;
 
 public class InstructionWidget extends EditorWidget {
 	private final Keyword keyword;
@@ -13,7 +14,7 @@ public class InstructionWidget extends EditorWidget {
 		this(parent, keyword, null);
 	}
 
-	InstructionWidget(Composite parent, Keyword keyword, String expression) {
+	InstructionWidget(Composite parent, Keyword keyword, IExpression expression) {
 		super(parent);
 		this.keyword = keyword;
 		setLayout(Constants.ROW_LAYOUT_H);
@@ -23,7 +24,7 @@ public class InstructionWidget extends EditorWidget {
 		Constants.addInsertLine(this.keywordToken);
 
 		if(expression != null) {
-			expressionWidget = new ExpressionWidget(this, expression);
+			expressionWidget = new ExpressionWidget(this, Expression.match(expression));
 			expressionWidget.addKeyListener(deleteListener);
 		}
 		else
@@ -46,10 +47,6 @@ public class InstructionWidget extends EditorWidget {
 		return this.keywordToken.isKeyword(keyword);
 	}
 
-	@Override
-	public String toString() {
-		return this.keywordToken.getText() + ";";
-	}
 
 	@Override
 	public void toCode(StringBuffer buffer) {

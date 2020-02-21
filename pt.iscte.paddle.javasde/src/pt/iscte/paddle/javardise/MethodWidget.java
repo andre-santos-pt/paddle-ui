@@ -14,7 +14,10 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 
 import pt.iscte.paddle.javardise.Constants.DeleteListener;
+import pt.iscte.paddle.model.IArrayType;
+import pt.iscte.paddle.model.IBlockElement;
 import pt.iscte.paddle.model.IProcedure;
+import pt.iscte.paddle.model.IVariable;
 
 public class MethodWidget extends EditorWidget implements SequenceContainer {
 
@@ -40,7 +43,8 @@ public class MethodWidget extends EditorWidget implements SequenceContainer {
 			if(procedure.is(mod.toString()))
 				addModifier(mod);
 			
-
+		
+		
 		DeleteListener deleteListener = new Constants.DeleteListener(this);
 		retType = new Id(header, procedure.getReturnType().toString(), true, Constants.PRIMITIVE_TYPES_VOID_SUPPLIER);
 		retType.addKeyListener(deleteListener);
@@ -59,16 +63,34 @@ public class MethodWidget extends EditorWidget implements SequenceContainer {
 			name = "procedure";
 		id = new Id(header, name, false);
 		id.addKeyListener(deleteListener);
+		
 		new FixedToken(header, "(");
 		params = new ParamList(header);
 		new FixedToken(header, ")");
+		
+		for (IVariable p : procedure.getParameters()) {
+			System.out.println(p.getType().getId());
+			String type = p.getType().getId();
+			if(p.getType() instanceof IArrayType)
+				type = ((IArrayType) p.getType()).getComponentTypeAt(0).getId();
+			if(type == null)
+				type = "Unknown";
+			
+			String pname = p.getId();
+			if(pname == null)
+				pname = "ukn";
+			params.addParam(type, pname, p.getType() instanceof IArrayType, false, false);
+		}
 		new FixedToken(header, "{");
 		body = new SequenceWidget(this, Constants.TAB);
 		body.addBlockListener(procedure.getBody());
 		body.addActions(BlockAction.all(procedure.getBody()));
 		body.setDeleteAction(i -> procedure.getBody().removeElement(i));
 		new FixedToken(this, "}");
-		new Label(this, SWT.NONE); // line
+		
+		int i = 0;
+		for (IBlockElement e : procedure.getBody())
+			body.addModelElement(e, i++);
 	}
 
 	void addModifier(Keyword mod) {
@@ -113,7 +135,7 @@ public class MethodWidget extends EditorWidget implements SequenceContainer {
 				}
 
 				public void run(char c, String text, int index, int caret, int selection, List<String> tokens) {
-					addParam(insertWidget.text, text, c == '[', false, false);
+					addParam(text, "parameter", c == '[', false, false);
 				}
 			});
 			//			insertWidget.addFocusListener(Constants.FOCUS_SELECTALL);
@@ -141,7 +163,7 @@ public class MethodWidget extends EditorWidget implements SequenceContainer {
 			private final Id var;
 			private FixedToken comma;
 
-			public Param(String type, boolean array, boolean comma) {
+			public Param(String type, String name, boolean array, boolean comma) {
 				super(ParamList.this);
 				setLayout(Constants.ROW_LAYOUT_H_DOT);
 				if(comma)
@@ -150,11 +172,11 @@ public class MethodWidget extends EditorWidget implements SequenceContainer {
 				if(array)
 					this.type.addDimension();
 				this.type.setToolTip("Parameter type");
-				var = new Id(this, "parameter", false);
+				var = new Id(this, name, false);
 				var.addKeyListener(new KeyAdapter() {
 					public void keyPressed(KeyEvent e) {
 						if(e.character == ',')
-							addParam(Param.this, Keyword.INT.toString(), false, false, true);
+							addParam(Keyword.INT.toString(), "parameter", false, false, true);
 						else if(e.keyCode == Constants.DEL_KEY && var.isAtBeginning()) {
 							dispose();
 							Control[] children = ParamList.this.getChildren();
@@ -191,13 +213,13 @@ public class MethodWidget extends EditorWidget implements SequenceContainer {
 			}
 		}
 
-		private void addParam(Control control, String type, boolean array, boolean above, boolean focusType) {
+		private void addParam(String type, String name, boolean array, boolean above, boolean focusType) {
 			if(insertWidget != null) {
 				insertWidget.dispose();
 				insertWidget = null;
 			}
 			boolean comma = ParamList.this.getChildren().length != 0;
-			Param param = new Param(type, array, comma);
+			Param param = new Param(type, name, array, comma);
 			layout.numColumns = getChildren().length;
 			param.requestLayout();
 

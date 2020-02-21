@@ -8,7 +8,7 @@ public class ArrayAllocationExpression extends EditorWidget implements Expressio
 	private EditorWidget id;
 	private ExpressionWidget expressionWidget;
 
-	public ArrayAllocationExpression(EditorWidget parent, Function<EditorWidget, Expression> f) {
+	public ArrayAllocationExpression(EditorWidget parent, Expression.Creator f) {
 		super(parent);
 		new Token(this, Keyword.NEW);
 		id = new Id(this, "Type", true, Constants.PRIMITIVE_TYPES_SUPPLIER);

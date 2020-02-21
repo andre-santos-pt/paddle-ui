@@ -71,7 +71,7 @@ public class CallWidget extends EditorWidget implements Expression {
 					insert.traverse(SWT.TRAVERSE_TAB_NEXT);
 			}
 
-			private ExpressionWidget addArgument(Function<EditorWidget,Expression> f) {
+			private ExpressionWidget addArgument(Expression.Creator f) {
 				ExpressionWidget exp = new ExpressionWidget(args, f);
 				exp.requestLayout();
 				exp.setFocus();

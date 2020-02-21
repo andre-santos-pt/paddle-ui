@@ -1,6 +1,4 @@
 package pt.iscte.paddle.javardise;
-import java.util.function.Function;
-
 import org.eclipse.swt.events.KeyListener;
 
 import pt.iscte.paddle.model.IExpression;
@@ -12,10 +10,10 @@ public class ExpressionWidget extends EditorWidget implements Expression {
 		this(parent, w -> new SimpleExpressionWidget(w, literal));
 	}
 
-	public ExpressionWidget(EditorWidget parent, Function<EditorWidget, Expression> sup) {
+	public ExpressionWidget(EditorWidget parent, Expression.Creator f) {
 		super(parent);
 		setLayout(Constants.ROW_LAYOUT_H_ZERO);
-		expression = sup.apply(this);
+		expression = f.apply(this);
 	}
 
 	public void set(String expression) {

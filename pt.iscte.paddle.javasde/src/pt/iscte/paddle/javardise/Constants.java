@@ -218,6 +218,7 @@ public interface Constants {
 	};
 
 	String EMPTY_EXPRESSION_SERIALIZE = "$EMPTY$";
+	int METHOD_SPACING = 30;
 
 	class DeleteListener extends KeyAdapter { 
 		final EditorWidget target;

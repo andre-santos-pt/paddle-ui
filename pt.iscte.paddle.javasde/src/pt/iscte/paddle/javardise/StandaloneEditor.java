@@ -2,6 +2,7 @@ package pt.iscte.paddle.javardise;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.List;
@@ -15,6 +16,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -27,26 +29,53 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
 
-import pt.iscte.paddle.javardise.ClassWidget;
-import pt.iscte.paddle.javardise.ComplexId;
-import pt.iscte.paddle.javardise.Keyword;
-import pt.iscte.paddle.javardise.NewInsertWidget;
-import pt.iscte.paddle.javardise.SequenceWidget;
-import pt.iscte.paddle.javardise.UiMode;
 import pt.iscte.paddle.model.IModule;
 
 
 public class StandaloneEditor {
 	private File file;
+	private IModule module;
 	private ClassWidget classWidget;
+	private UiMode mode;
+	private Shell shell;
 
 	public StandaloneEditor(File file) {
+		if(file.exists() && (!file.isFile() || !file.getName().endsWith(".java"))) {
+			throw new RuntimeException("The provided argument is not a .java file");
+		}
+
+		String className = file.getName().substring(0, file.getName().indexOf('.'));
+		
+		if(file.exists()) {
+			// TODO load model
+			module = IModule.create();
+			module.setId(className);
+		}
+		else {
+			try {
+				if(!file.createNewFile())
+					throw new RuntimeException("Could not create file " + file.getAbsolutePath());
+			} catch (IOException e) {
+				throw new RuntimeException(e.getMessage());
+			}
+			
+			module = IModule.create();
+			module.setId(className);
+		}
+		mode = new UiMode();
 		this.file = file;
 	}
 
-	public void launch() {
-		Display display = new Display();
-		Shell shell = new Shell(display);
+	public StandaloneEditor(IModule module) {
+		if(module == null)
+			throw new IllegalArgumentException("null");
+		this.module = module;
+		this.file = new File(module.getId() + ".java");
+	}
+
+
+	public Shell launch(Display display) {
+		shell = new Shell(display);
 		RowLayout layout = new RowLayout(SWT.VERTICAL);
 		layout.wrap = false;
 		layout.marginLeft = 10;
@@ -67,22 +96,15 @@ public class StandaloneEditor {
 		scroll.setExpandVertical(true);
 		area.addPaintListener(new PaintListener() {
 			public void paintControl(PaintEvent e) {
-				scroll.setMinSize(area.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+				Point size = area.computeSize(SWT.DEFAULT, SWT.DEFAULT);
+				size.x += 100;
+				size.y += 100;
+				scroll.setMinSize(size);
 				scroll.requestLayout();
 			}
 		});		
 
-		String className = file.getName();
-		className = className.substring(0, className.indexOf('.'));
-
-		UiMode mode = new UiMode();
-		IModule module = IModule.create();
-		module.setId(className);
-//		IProcedure proc = module.addProcedure("test", IType.VOID);
-//		IVariable param = proc.addParameter(IType.INT);
-//		proc.getBody().addAssignment(param, IType.INT.literal(3)); // not working
-
-		SequenceWidget seq = new SequenceWidget(area, 0, token -> Keyword.isClassModifier(token));
+		SequenceWidget seq = new SequenceWidget(area, 0, Constants.METHOD_SPACING, token -> Keyword.isClassModifier(token));
 		seq.addAction(new NewInsertWidget.Action("class", 'c') {
 			public boolean isEnabled(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
 				return seq.getChildren().length == 1 && c == SWT.SPACE && id.isKeyword(Keyword.CLASS);
@@ -113,7 +135,8 @@ public class StandaloneEditor {
 		Display.getDefault().addFilter(SWT.KeyDown, new Listener() {
 			public void handleEvent(Event event) {
 				if ((event.stateMask & SWT.MODIFIER_MASK) == SWT.CTRL && event.keyCode == 's') {
-					serialize();
+					saveToFile();
+					compile();
 				}
 			}
 		});
@@ -122,93 +145,60 @@ public class StandaloneEditor {
 		seq.addWidget(p -> classWidget = new ClassWidget(p, module, mode));
 		shell.setSize(600, 800);
 		shell.open();
-
-		// Set up the event loop.
-		while (!shell.isDisposed()) {
-			if (!display.readAndDispatch()) {
-				// If no more entries in the event queue
-				display.sleep();
-			}
-		}
-		display.dispose();
+		return shell;
 	}
 
-	private void serialize() {
+	public void saveToFile() {
 		StringBuffer buffer = new StringBuffer();
 		classWidget.toCode(buffer, 0);
 		try {
 			PrintWriter w = new PrintWriter(file);
 			w.append(buffer);
 			w.close();
-			JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-			DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
-			 JavaStringObject stringObject = new JavaStringObject("Test", buffer);
-			JavaCompiler.CompilationTask task = compiler.getTask(null,
-					null, diagnostics, null, null, Arrays.asList(stringObject));
-			//				DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
-//			if(compiler.run(null, null, null, file.getPath()) == 0)
-//				System.out.println("compilation success");
-			if (!task.call()) {
-	            
-				diagnostics.getDiagnostics().forEach(d -> System.err.println(d));
-	            
-	        }
-			else
-				System.out.println("compilation success");
 		} 
 		catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
 	}
 
+	public boolean compile() {
+		StringBuffer buffer = new StringBuffer();
+		classWidget.toCode(buffer, 0);
+		JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+		DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
+		JavaStringObject stringObject = new JavaStringObject("Test", buffer);
+		JavaCompiler.CompilationTask task = compiler.getTask(null,
+				null, diagnostics, null, null, Arrays.asList(stringObject));
+		//				DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
+		//			if(compiler.run(null, null, null, file.getPath()) == 0)
+		//				System.out.println("compilation success");
+		if (!task.call()) {
+
+			diagnostics.getDiagnostics().forEach(d -> System.err.println(d));
+			
+			return false;
+		}
+		else
+			System.out.println("compilation success");
+			return true;
+	}
+	
+	
+
 	public static void main(String[] args) {
 		if(args.length == 0) {
 			System.err.println("Please provide a file as argument");
-			return;
 		}
-
-		File file = new File(args[0]);
-		if(!file.exists() || !file.isFile()) {
-			System.err.println("The provided argument is not a file");
-			return;
+		else {
+			StandaloneEditor editor = new StandaloneEditor(new File(args[0]));
+			Display display = new Display();
+			Shell shell = editor.launch(display);
+			while (!shell.isDisposed()) {
+				if (!display.readAndDispatch()) {
+					display.sleep();
+				}
+			}
+			display.dispose();
 		}
-
-		if(!(file.getName().endsWith(".java"))) {
-			System.err.println("The provided file must have extension .java");
-			return;
-		}
-
-		StandaloneEditor editor = new StandaloneEditor(file);
-		editor.launch();
 	}
-
-	//	private static ClassWidget instantiationExample(IModule module, Composite area, UiMode mode) {
-	//		IConstant pi = module.addConstant(DOUBLE, DOUBLE.literal(3.14));
-	//		pi.setId("PI");
-	//		
-	//		IProcedure max = module.addProcedure(INT);
-	//		IVariable array = max.addParameter(INT.array());
-	//		IBlock body = max.getBody();
-	//		IVariable m = body.addVariable(INT);
-	//		IVariableAssignment mAss = body.addAssignment(m, array.element(INT.literal(0)));
-	//		IVariable i = body.addVariable(INT);
-	//		IVariableAssignment iAss = body.addAssignment(i, INT.literal(1));
-	//		ILoop loop = body.addLoop(SMALLER.on(i, array.length()));
-	//		ISelection ifstat = loop.addSelection(GREATER.on(array.element(i), m));
-	//		IVariableAssignment mAss_ = ifstat.addAssignment(m, array.element(i));
-	//		IVariableAssignment iInc = loop.addIncrement(i);
-	//		IReturn ret = body.addReturn(m);
-	//		
-	//		max.setId("max");
-	//		array.setId("array");
-	//		m.setId("m");
-	//		i.setId("i");
-
-
-
-	//		l.createCall("proc");
-	//		WhileWidget l2 = l.createLoop("false");
-	//		ReturnWidget createReturn = l2.createReturn("true");
-	//		return c;
-	//	}
 }

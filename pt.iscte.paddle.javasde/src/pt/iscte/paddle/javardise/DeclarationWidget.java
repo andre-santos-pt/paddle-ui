@@ -24,6 +24,8 @@ public class DeclarationWidget extends EditorWidget {
 			typeId = ((IArrayType) type).getComponentType().getId();
 			dims = ((IArrayType) type).getDimensions();
 		}
+		if(typeId == null)
+			typeId = "Unknown";
 		this.type = new Id(this, typeId, true, Constants.PRIMITIVE_TYPES_SUPPLIER);
 		while(dims-- > 0)
 			this.type.addDimension();

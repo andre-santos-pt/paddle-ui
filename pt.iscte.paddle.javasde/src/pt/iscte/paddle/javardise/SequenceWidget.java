@@ -48,14 +48,14 @@ public class SequenceWidget extends Composite {
 	private Consumer<Integer> deleteAction = index -> {};
 
 	public SequenceWidget(Composite parent, int margin) {
-		this(parent, margin, token -> false);
+		this(parent, margin, 3, token -> false);
 	}
 
-	public SequenceWidget(Composite parent, int marginLeft, Predicate<String> tokenAccept) {
+	public SequenceWidget(Composite parent, int marginLeft, int verticalSpacing, Predicate<String> tokenAccept) {
 		super(parent, SWT.NONE);
 		GridLayout layout = new GridLayout(1, true);
 		layout.marginLeft = marginLeft;
-		layout.verticalSpacing = 3;
+		layout.verticalSpacing = verticalSpacing;
 		layout.horizontalSpacing = 2;
 		setBackground(Constants.COLOR_BACKGROUND);
 		setLayout(layout);
@@ -193,113 +193,14 @@ public class SequenceWidget extends Composite {
 	void addBlockListener(IBlock block) {
 		block.addListener(new IBlock.IListener() {
 			public void elementAdded(IProgramElement element, int index) {
-				if (element instanceof IVariable && element.not(Constants.FOR_FLAG)) {
-					IVariable v = (IVariable) element;
-					IType type = v.getType();
-					if(type == null)
-						type = IType.UNBOUND;
-
-					String id = v.getId() != null ? v.getId() : "variable";
-					String exp = "expression";
-					DeclarationWidget declarationWidget = new DeclarationWidget(SequenceWidget.this, type, id, exp);
-					addElement(declarationWidget, index);
-					if(v.getId() == null)
-						declarationWidget.focusId();
-					else 
-						declarationWidget.setFocus();
-				} 
-
-				else if (element instanceof IVariableAssignment && element.not(Constants.FOR_FLAG)) {
-					IVariableAssignment a = (IVariableAssignment) element;
-					String id = a.getTarget().getId();
-					String idd = id == null ? "variable" : id;
-					String exp = "expression";
-					if(a.is("INC") || a.is("DEC")) {
-						IncrementationWidget w = new IncrementationWidget(SequenceWidget.this, idd, a.is("INC"));
-						addElement(w, index);
-					}
-					else {
-						AssignmentWidget assignmentWidget = new AssignmentWidget(SequenceWidget.this, idd, exp, true, Collections.emptyList());
-						addElement(assignmentWidget, index);
-						assignmentWidget.focusExpression();
-					}
-				} 
-
-				else if (element instanceof IArrayElementAssignment) {
-					IArrayElementAssignment a = (IArrayElementAssignment) element;
-					String id = a.getTarget().getId();
-					String idd = id == null ? "variable" : id;
-					String exp = "expression";
-					AssignmentWidget assignmentWidget = new AssignmentWidget(SequenceWidget.this, idd, exp, true, a.getIndexes());
-					addElement(assignmentWidget, index);
-					assignmentWidget.focusExpression();
-				} 
-
-				else if (element instanceof ISelection) {
-					ISelection s = (ISelection) element;
-					ControlWidget w = new ControlWidget(SequenceWidget.this, IF, "expression", s.getBlock());
-					addElement(w, index);
-					w.focusIn();
-					if (s.hasAlternativeBlock())
-						addElement(new ControlWidget(SequenceWidget.this, ELSE, null, s.getAlternativeBlock()), index);
-					s.addPropertyListener((k,n,o) -> {
-						if(k.equals(Constants.ELSE_FLAG)) {
-							ControlWidget e = new ControlWidget(SequenceWidget.this, ELSE, null, s.getAlternativeBlock());
-							addElement(e, index);
-							e.focusIn();
-						}
-					});
-				} 
-
-				else if (element instanceof ILoop && element.not(Constants.FOR_FLAG)) {
-					ILoop l = (ILoop) element;
-					ControlWidget w = new ControlWidget(SequenceWidget.this, WHILE, "expression", l.getBlock());
-					addElement(w, index);
-					w.focusIn();
-				} 
-
-				else if (element instanceof IBlock && element.is(Constants.FOR_FLAG)) {
-					ForWidget w = new ForWidget(SequenceWidget.this, "expression", (IBlock) element);
-					addElement(w, index);
-					w.focusDeclaration();
-				} 
-
-				else if (element instanceof IBreak) {
-					InstructionWidget inst = new InstructionWidget(SequenceWidget.this, BREAK);
-					addElement(inst, index);
-
-				} 
-				else if (element instanceof IContinue) {
-					InstructionWidget inst = new InstructionWidget(SequenceWidget.this, CONTINUE);
-					addElement(inst, index);
-				} 
-
-				else if (element instanceof IProcedureCall) {
-					IProcedureCall call = (IProcedureCall) element;
-					CallWidget w = new CallWidget(SequenceWidget.this, call.getProcedure().getId(), true);
-					addElement(w, index);
-					w.focusArgument();
-				} 
-
-				else if (element instanceof IReturn) {
-					IReturn ret = (IReturn) element;
-					String exp = " ";
-					if(!ret.isVoid())
-						exp = ret.getExpression().toString();
-					InstructionWidget w = new InstructionWidget(SequenceWidget.this, RETURN, exp);
-					addElement(w, index);
-					w.focusExpression();
-				} else
-					System.err.println("unhandled: " + element);
+				addModelElement(element, index);
 			}
 
 			@Override
 			public void elementRemoved(IProgramElement element, int index) {
-				System.out.println("REM " + element);
 				int i = toViewIndex(index);
 				Control[] children = getChildren();
 				Control c = children[i];
-				//				focusNextStatement(c); // TODO focus next
 				c.dispose();
 				if(i+1 < children.length && children[i+1] instanceof ControlWidget && ((ControlWidget) children[i+1]).is(Keyword.ELSE))
 					children[i+1].dispose();
@@ -406,5 +307,98 @@ public class SequenceWidget extends Composite {
 		getChildren()[index].setFocus();
 	}
 
+	void addModelElement(IProgramElement element, int index) {
+		if (element instanceof IVariable && element.not(Constants.FOR_FLAG)) {
+			IVariable v = (IVariable) element;
+			IType type = v.getType();
+			if(type == null)
+				type = IType.UNBOUND;
+
+			String id = v.getId() != null ? v.getId() : "variable";
+			String exp = "expression";
+			DeclarationWidget declarationWidget = new DeclarationWidget(SequenceWidget.this, type, id, exp);
+			addElement(declarationWidget, index);
+			if(v.getId() == null)
+				declarationWidget.focusId();
+			else 
+				declarationWidget.setFocus();
+		} 
+
+		else if (element instanceof IVariableAssignment && element.not(Constants.FOR_FLAG)) {
+			IVariableAssignment a = (IVariableAssignment) element;
+			String id = a.getTarget().getId();
+			String idd = id == null ? "variable" : id;
+			if(a.is("INC") || a.is("DEC")) {
+				IncrementationWidget w = new IncrementationWidget(SequenceWidget.this, idd, a.is("INC"));
+				addElement(w, index);
+			}
+			else {
+				AssignmentWidget assignmentWidget = new AssignmentWidget(SequenceWidget.this, a);
+				addElement(assignmentWidget, index);
+				assignmentWidget.focusExpression();
+			}
+		} 
+
+		else if (element instanceof IArrayElementAssignment) {
+			IArrayElementAssignment a = (IArrayElementAssignment) element;
+			AssignmentWidget assignmentWidget = new AssignmentWidget(SequenceWidget.this, a);
+			addElement(assignmentWidget, index);
+			assignmentWidget.focusExpression();
+		} 
+
+		else if (element instanceof ISelection) {
+			ISelection s = (ISelection) element;
+			ControlWidget w = new ControlWidget(SequenceWidget.this, IF, s.getGuard(), s.getBlock());
+			addElement(w, index);
+			w.focusIn();
+			if (s.hasAlternativeBlock())
+				addElement(new ControlWidget(SequenceWidget.this, ELSE, null, s.getAlternativeBlock()), index);
+			s.addPropertyListener((k,n,o) -> {
+				if(k.equals(Constants.ELSE_FLAG)) {
+					ControlWidget e = new ControlWidget(SequenceWidget.this, ELSE, null, s.getAlternativeBlock());
+					addElement(e, index);
+					e.focusIn();
+				}
+			});
+		} 
+
+		else if (element instanceof ILoop && element.not(Constants.FOR_FLAG)) {
+			ILoop l = (ILoop) element;
+			ControlWidget w = new ControlWidget(SequenceWidget.this, WHILE, l.getGuard(), l.getBlock());
+			addElement(w, index);
+			w.focusIn();
+		} 
+
+		else if (element instanceof IBlock && element.is(Constants.FOR_FLAG)) { 
+			ForWidget w = new ForWidget(SequenceWidget.this, null, (IBlock) element);   // TODO guard
+			addElement(w, index);
+			w.focusDeclaration();
+		} 
+
+		else if (element instanceof IBreak) {
+			InstructionWidget inst = new InstructionWidget(SequenceWidget.this, BREAK);
+			addElement(inst, index);
+
+		} 
+		else if (element instanceof IContinue) {
+			InstructionWidget inst = new InstructionWidget(SequenceWidget.this, CONTINUE);
+			addElement(inst, index);
+		} 
+
+		else if (element instanceof IProcedureCall) {
+			IProcedureCall call = (IProcedureCall) element;
+			CallWidget w = new CallWidget(SequenceWidget.this, call.getProcedure().getId(), true);
+			addElement(w, index);
+			w.focusArgument();
+		} 
+
+		else if (element instanceof IReturn) {
+			IReturn ret = (IReturn) element;
+			InstructionWidget w = new InstructionWidget(SequenceWidget.this, RETURN, ret.isVoid() ? null : ret.getExpression());
+			addElement(w, index);
+			w.focusExpression();
+		} else
+			System.err.println("unhandled: " + element);
+	}
 
 }

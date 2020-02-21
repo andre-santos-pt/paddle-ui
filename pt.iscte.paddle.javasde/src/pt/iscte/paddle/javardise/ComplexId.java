@@ -140,7 +140,7 @@ public class ComplexId extends EditorWidget implements TextWidget {
 		addDimension(null);
 	}
 
-	public void addDimensionIndex(Function<EditorWidget, Expression> f) {
+	public void addDimensionIndex(Expression.Creator f) {
 		Dimension dimension = new Dimension(this, f);
 		dimension.setFocus();
 	}
@@ -170,7 +170,7 @@ public class ComplexId extends EditorWidget implements TextWidget {
 
 	private class Dimension extends EditorWidget {
 		private ExpressionWidget expression;
-		public Dimension(Composite parent, Function<EditorWidget, Expression> f) {
+		public Dimension(Composite parent, Expression.Creator f) {
 			super(parent);
 			if(f == null)
 				f = p -> new SimpleExpressionWidget(p, "expression");

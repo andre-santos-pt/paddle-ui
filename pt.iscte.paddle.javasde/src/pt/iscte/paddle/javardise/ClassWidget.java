@@ -44,12 +44,13 @@ public class ClassWidget extends EditorWidget implements SequenceContainer {
 		}
 
 		int margin = UiMode.isStatic() ? 0 : Constants.TAB;
-		body = new SequenceWidget(this, margin, token -> Keyword.isMethodModifier(token) || Constants.isType(token) || IType.VOID.getId().equals(token));
+		body = new SequenceWidget(this, margin, Constants.METHOD_SPACING, token -> Keyword.isMethodModifier(token) || Constants.isType(token) || IType.VOID.getId().equals(token));
 
 		body.setDeleteAction(index -> {
 			IProcedure p = module.getProcedures().get(index);
 			module.removeProcedure(p);
 		});
+		
 		body.addAction(new NewInsertWidget.Action("method", 'm') {
 
 			public boolean isEnabled(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
@@ -85,8 +86,10 @@ public class ClassWidget extends EditorWidget implements SequenceContainer {
 			}
 		});
 
-		module.getConstants().forEach(c -> body.addElement(new FieldWidget(body, c), module.getConstants().size()-1));
-		module.getProcedures().forEach(p -> body.addElement(new MethodWidget(body, p), module.getProcedures().size()-1));
+		module.getProcedures().forEach(p -> body.addWidget(c -> new MethodWidget(body, p)));
+		
+//		module.getConstants().forEach(c -> body.addElement(new FieldWidget(body, c), module.getConstants().size()-1));
+//		module.getProcedures().forEach(p -> body.addElement(new MethodWidget(body, p), module.getProcedures().size()-1));
 
 		if (!UiMode.isStatic())
 			new FixedToken(this, "}");
@@ -142,11 +145,8 @@ public class ClassWidget extends EditorWidget implements SequenceContainer {
 		
 		Keyword.CLASS.toCode(buffer);
 		buffer.append(' ').append(id.toString()).append(" {").append(lineSeparator());
-		
 		body.toCode(buffer, 1);
-
 		buffer.append("}").append(lineSeparator()).append(lineSeparator());
 	}
-
 
 }
