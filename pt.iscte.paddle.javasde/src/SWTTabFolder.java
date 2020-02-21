@@ -14,8 +14,8 @@ import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.swt.widgets.Text;
 
-import pt.iscte.paddle.javasde.ClassWidget;
-import pt.iscte.paddle.javasde.UiMode;
+import pt.iscte.paddle.javardise.ClassWidget;
+import pt.iscte.paddle.javardise.UiMode;
 import pt.iscte.paddle.model.IModule;
  
 public class SWTTabFolder
