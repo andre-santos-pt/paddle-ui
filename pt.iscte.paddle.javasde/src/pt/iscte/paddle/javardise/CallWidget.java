@@ -2,7 +2,6 @@ package pt.iscte.paddle.javardise;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyAdapter;
@@ -16,21 +15,26 @@ import pt.iscte.paddle.model.IProcedure;
 
 public class CallWidget extends EditorWidget implements Expression {
 	private ComplexId id;
-	private EditorWidget args;
+	private Composite args;
 	private boolean statement;
 	private InsertWidget insert;
 
-	public CallWidget(Composite parent, String id, boolean statement) {
+	public CallWidget(Composite parent, String id, boolean statement, Expression.Creator ... f) {
 		super(parent);
 		setLayout(Constants.ROW_LAYOUT_H_ZERO);
 
 		this.id = new ComplexId(this, id, false);
 		this.statement = statement;
 		new FixedToken(this, "(");
-		args = new EditorWidget(this);
+		args = new Composite(this, SWT.NONE);
+		args.setLayout(Constants.ROW_LAYOUT_H);
+		args.setBackground(Constants.COLOR_BACKGROUND);
 		insert = new InsertWidget(args, true, token -> Constants.isNumber(token));
-//		insert.setHideMode();
-		
+		//		insert.setHideMode();
+
+		for(Expression.Creator c : f)
+			addArgument(c);
+
 		new FixedToken(this, ")");
 		if(statement) {
 			new FixedToken(this, ";");
@@ -49,7 +53,6 @@ public class CallWidget extends EditorWidget implements Expression {
 				if(c == ',') {
 					if(args.getChildren().length == 1)
 						addArgument(p -> new SimpleExpressionWidget(p, text));
-					new FixedToken(args, ", ");
 					arg = addArgument(p -> new SimpleExpressionWidget(p, "argument"));
 					arg.setFocus();
 				}
@@ -70,24 +73,28 @@ public class CallWidget extends EditorWidget implements Expression {
 				else
 					insert.traverse(SWT.TRAVERSE_TAB_NEXT);
 			}
-
-			private ExpressionWidget addArgument(Expression.Creator f) {
-				ExpressionWidget exp = new ExpressionWidget(args, f);
-				exp.requestLayout();
-				exp.setFocus();
-				exp.addKeyListener(new KeyAdapter() {
-					public void keyPressed(KeyEvent e) {
-						if(e.character == ',') {
-							new FixedToken(args, ", ");
-							addArgument(p -> new SimpleExpressionWidget(p, "argument"));
-						}
-					}
-				});
-				return exp;
-			}
 		});
 	}
 
+	private ExpressionWidget addArgument(Expression.Creator f) {
+		if(args.getChildren().length > 1)
+			new FixedToken(args, ",");
+		
+		ExpressionWidget exp = new ExpressionWidget(args, f);
+		exp.requestLayout();
+		exp.setFocus();
+		exp.addKeyListener(new KeyAdapter() {
+			public void keyPressed(KeyEvent e) {
+				if(e.character == ',') {
+					addArgument(p -> new SimpleExpressionWidget(p, "argument"));
+				}
+			}
+		});
+		return exp;
+	}
+	
+	
+	
 	@Override
 	public void toCode(StringBuffer buffer) {
 		id.toCode(buffer);
@@ -125,7 +132,7 @@ public class CallWidget extends EditorWidget implements Expression {
 		for(Control c : args.getChildren())
 			if(c instanceof ExpressionWidget)
 				list.add(((ExpressionWidget) c).toModel());
-		
+
 		return new IProcedure.UnboundProcedure(id.getId()).call(list);
 	}
 }

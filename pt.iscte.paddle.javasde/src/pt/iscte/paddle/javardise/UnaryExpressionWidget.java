@@ -14,11 +14,11 @@ public class UnaryExpressionWidget extends EditorWidget implements Expression {
 	private Token op;
 	private Expression expression;
 
-	public UnaryExpressionWidget(EditorWidget parent, String operator, Expression expression) {
+	public UnaryExpressionWidget(EditorWidget parent, String operator, Expression.Creator f) {
 		super(parent);
 		setLayout(Constants.ROW_LAYOUT_H_ZERO);
 		op = new Token(this, operator, Constants.UNARY_OPERATORS);
-		this.expression = expression.copyTo(this);
+		this.expression = f.apply(this);
 
 		Menu menu = op.getMenu();
 		new MenuItem(menu, SWT.SEPARATOR);
@@ -39,7 +39,7 @@ public class UnaryExpressionWidget extends EditorWidget implements Expression {
 
 	@Override
 	public Expression copyTo(EditorWidget parent) {
-		return new UnaryExpressionWidget(parent, op.getText(), expression);
+		return new UnaryExpressionWidget(parent, op.getText(), p -> expression.copyTo(p));
 	}
 	
 	@Override

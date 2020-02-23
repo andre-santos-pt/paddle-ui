@@ -2,17 +2,18 @@ package pt.iscte.paddle.javardise;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.layout.RowData;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 
 public class FixedToken {
 	private final Label label;
 	
-	public FixedToken(EditorWidget parent, Keyword keyword) {
+	public FixedToken(Composite parent, Keyword keyword) {
 		this(parent, keyword.toString());
 	}
 	
-	public FixedToken(EditorWidget parent, String token) {
+	public FixedToken(Composite parent, String token) {
 		label = new Label(parent, SWT.NONE);
 		label.setText(token);
 		label.setBackground(Constants.COLOR_BACKGROUND);
@@ -53,4 +54,6 @@ public class FixedToken {
 	public void setFocus() {
 		label.setFocus();
 	}
+	
+	
 }

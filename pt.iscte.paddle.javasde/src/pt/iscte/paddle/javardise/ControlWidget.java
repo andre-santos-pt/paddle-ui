@@ -1,5 +1,8 @@
 package pt.iscte.paddle.javardise;
 
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Composite;
+
 import pt.iscte.paddle.javardise.Constants.DeleteListener;
 import pt.iscte.paddle.model.IBlock;
 import pt.iscte.paddle.model.IBlockElement;
@@ -17,7 +20,7 @@ public class ControlWidget extends EditorWidget implements SequenceContainer {
 	ControlWidget(SequenceWidget parent, Keyword keyword, IExpression guard, IBlock block) {
 		super(parent);
 		setLayout(Constants.ROW_LAYOUT_V_ZERO);
-		EditorWidget header = new EditorWidget(this);
+		Composite header = new Composite(this, SWT.NONE);
 		header.setLayout(Constants.ROW_LAYOUT_H_ZERO);
 
 		deleteListener = new Constants.DeleteListener(this);
@@ -46,6 +49,18 @@ public class ControlWidget extends EditorWidget implements SequenceContainer {
 		for(IBlockElement e : block)
 			blockSeq.addModelElement(e, i++);
 		
+//		addPaintListener(new PaintListener() {
+//		public void paintControl(PaintEvent e) {
+//			GC gc=e.gc;
+//			Color red=new Color(null,255,0,0);
+//			gc.setForeground(red);
+//			Rectangle rect = getBounds();
+//			Rectangle rect1 = new Rectangle(rect.x-2, rect.y+2, rect.width+4, rect.height-4);
+//			gc.drawRectangle(rect);
+//			//				gc.drawLine(0, 0, 100, 100);
+//		}
+//	});
+		
 //		blockSeq.addControlListener(new ControlAdapter() {
 //			public void controlResized(ControlEvent e) {
 //				int t = blockSeq.totalElements();
@@ -55,7 +70,7 @@ public class ControlWidget extends EditorWidget implements SequenceContainer {
 //		});
 	}
 
-	void fillHeader(IExpression expression, EditorWidget header) {
+	void fillHeader(IExpression expression, Composite header) {
 		this.expression = new ExpressionWidget(header, Expression.match(expression));
 		this.expression.addKeyListener(deleteListener);
 	}

@@ -40,14 +40,14 @@ public class BinaryExpressionWidget extends EditorWidget implements Expression {
 		data.exclude = !brackets;
 		
 		FixedToken lBracket = new FixedToken(this, "(");
-		lBracket.setLayoutData(data);
+//		lBracket.setLayoutData(data);
 	
 		this.left = new ExpressionWidget(this, left);
 		this.op = new Token(this, operator, Constants.ARITHMETIC_OPERATORS, Constants.RELATIONAL_OPERATORS, Constants.LOGICAL_OPERATORS);
 		this.right = new ExpressionWidget(this, right);
 		
-		FixedToken rBracket = new FixedToken(this, ")");
-		rBracket.setLayoutData(data);
+		Token rBracket = new Token(this, ")");
+//		rBracket.setLayoutData(data);
 		
 		Menu menu = op.getMenu();
 		new MenuItem(menu, SWT.SEPARATOR);
@@ -79,11 +79,13 @@ public class BinaryExpressionWidget extends EditorWidget implements Expression {
 
 	@Override
 	public void toCode(StringBuffer buffer) {
-		if(brackets) buffer.append("(");
+		if(brackets) buffer.append('(');
 		left.toCode(buffer);
-		buffer.append(" " + op + " ");
+		buffer.append(' ');
+		op.toCode(buffer);
+		buffer.append(' ');
 		right.toCode(buffer);
-		if(brackets) buffer.append(")");
+		if(brackets) buffer.append(')');
 	}
 
 	@Override

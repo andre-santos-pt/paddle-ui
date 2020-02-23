@@ -5,8 +5,10 @@ import static java.lang.System.lineSeparator;
 import java.util.List;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
@@ -14,6 +16,7 @@ import org.eclipse.swt.widgets.Listener;
 import pt.iscte.paddle.model.IConstant;
 import pt.iscte.paddle.model.IModule;
 import pt.iscte.paddle.model.IProcedure;
+import pt.iscte.paddle.model.IProgramElement;
 import pt.iscte.paddle.model.IType;
 
 public class ClassWidget extends EditorWidget implements SequenceContainer {
@@ -29,16 +32,14 @@ public class ClassWidget extends EditorWidget implements SequenceContainer {
 		GridLayout layout = new GridLayout(1, true);
 		layout.verticalSpacing = 10;
 		setLayout(layout);
-
 		if (!UiMode.isStatic()) {
-			EditorWidget header = new EditorWidget(this);
-			header.setLayout(Constants.ROW_LAYOUT_H);
+			Composite header = Constants.createHeader(this);
 			for(Keyword mod : modifiers)
 				new Token(header, mod);
 			this.modifiers = modifiers;
 			
 			new Token(header, Keyword.CLASS);
-			id = new Id(header, module.getId(), false);
+			id = new Id(header, module.getId());
 			id.setReadOnly();
 			new FixedToken(header, "{");
 		}
@@ -88,9 +89,6 @@ public class ClassWidget extends EditorWidget implements SequenceContainer {
 
 		module.getProcedures().forEach(p -> body.addWidget(c -> new MethodWidget(body, p)));
 		
-//		module.getConstants().forEach(c -> body.addElement(new FieldWidget(body, c), module.getConstants().size()-1));
-//		module.getProcedures().forEach(p -> body.addElement(new MethodWidget(body, p), module.getProcedures().size()-1));
-
 		if (!UiMode.isStatic())
 			new FixedToken(this, "}");
 
@@ -117,6 +115,21 @@ public class ClassWidget extends EditorWidget implements SequenceContainer {
 		});
 
 		addUndoFilter();
+//		Display.getDefault().addFilter(SWT.FocusIn, new Listener() {
+//			
+//			@Override
+//			public void handleEvent(Event event) {
+//				System.out.println(getOwner((Control) event.widget));
+//			}
+//			
+//			private EditorWidget getOwner(Control c) {
+//				Composite p = c.getParent();
+//				while(!(p instanceof EditorWidget))
+//					p = p.getParent();
+//				
+//				return (EditorWidget) p;
+//			}
+//		});
 	}
 
 	public boolean setFocus() {
@@ -149,4 +162,13 @@ public class ClassWidget extends EditorWidget implements SequenceContainer {
 		buffer.append("}").append(lineSeparator()).append(lineSeparator());
 	}
 
+	public void mark(IProgramElement s, Color color) {
+		Selectable<?> selectable = Selectable.map.get(s);
+		if(selectable != null)
+			selectable.mark(color);
+	}
+	
+	public void removeAllMarks() {
+		Selectable.removeAllMarks();
+	}
 }

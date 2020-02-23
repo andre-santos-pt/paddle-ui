@@ -16,6 +16,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
@@ -30,10 +31,10 @@ import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
 
 import pt.iscte.paddle.model.IModule;
+import pt.iscte.paddle.model.IProgramElement;
 
 
 public class StandaloneEditor {
-	private File file;
 	private IModule module;
 	private ClassWidget classWidget;
 	private UiMode mode;
@@ -63,14 +64,12 @@ public class StandaloneEditor {
 			module.setId(className);
 		}
 		mode = new UiMode();
-		this.file = file;
 	}
 
 	public StandaloneEditor(IModule module) {
 		if(module == null)
 			throw new IllegalArgumentException("null");
 		this.module = module;
-		this.file = new File(module.getId() + ".java");
 	}
 
 
@@ -140,8 +139,8 @@ public class StandaloneEditor {
 				}
 			}
 		});
-
-		shell.setText(file.getName());
+		
+		shell.setText(module.getId() + ".java");
 		seq.addWidget(p -> classWidget = new ClassWidget(p, module, mode));
 		shell.setSize(600, 800);
 		shell.open();
@@ -149,9 +148,14 @@ public class StandaloneEditor {
 	}
 
 	public void saveToFile() {
+		saveToFile(new File(module.getId() + ".java"));
+	}
+	
+	public void saveToFile(File file) {
 		StringBuffer buffer = new StringBuffer();
 		classWidget.toCode(buffer, 0);
 		try {
+		
 			PrintWriter w = new PrintWriter(file);
 			w.append(buffer);
 			w.close();
@@ -184,7 +188,14 @@ public class StandaloneEditor {
 	}
 	
 	
-
+	public void mark(IProgramElement s, Color color) {
+		classWidget.mark(s, color);
+	}
+	
+	public void removeAllMarks() {
+		classWidget.removeAllMarks();
+	}
+	
 	public static void main(String[] args) {
 		if(args.length == 0) {
 			System.err.println("Please provide a file as argument");
@@ -201,4 +212,6 @@ public class StandaloneEditor {
 			display.dispose();
 		}
 	}
+
+	
 }

@@ -21,7 +21,7 @@ public class FieldWidget extends EditorWidget {
 		for(Keyword mod : modifiers)
 			new Token(this, mod);
 		this.type = new Id(this, type.getId(), true, Constants.PRIMITIVE_TYPES_SUPPLIER);
-		this.id = new Id(this, id, false);
+		this.id = new Id(this, id);
 		if(assign) {
 			new FixedToken(this, "=");
 			this.expression = new SimpleExpressionWidget(this, "expression");			
@@ -43,7 +43,7 @@ public class FieldWidget extends EditorWidget {
 		if(id == null)
 			id = "CONSTANT";
 		
-		this.id = new Id(this, id, false);
+		this.id = new Id(this, id);
 		this.id.setEditAction(() -> constant.setId(this.id.getText()));
 		
 		new FixedToken(this, "=");

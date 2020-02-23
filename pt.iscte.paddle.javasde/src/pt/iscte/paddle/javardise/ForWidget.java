@@ -1,9 +1,12 @@
 package pt.iscte.paddle.javardise;
 
+import org.eclipse.swt.widgets.Composite;
+
 import pt.iscte.paddle.model.IBlock;
 import pt.iscte.paddle.model.IExpression;
 import pt.iscte.paddle.model.IType;
 
+// TODO for
 public class ForWidget extends ControlWidget implements SequenceContainer {
 
 	private ExpressionWidget guard;
@@ -15,8 +18,8 @@ public class ForWidget extends ControlWidget implements SequenceContainer {
 	}
 
 	@Override
-	void fillHeader(IExpression guard, EditorWidget header) {
-		dec = new DeclarationWidget(header, IType.INT, "i", "0");
+	void fillHeader(IExpression guard, Composite header) {
+//		dec = new DeclarationWidget(header, IType.INT, "i", "0");
 		this.guard = new ExpressionWidget(header, Expression.match(guard));
 		new FixedToken(header, ";");
 		statement = new ExpressionWidget(header, "statement"); // TODO to statement

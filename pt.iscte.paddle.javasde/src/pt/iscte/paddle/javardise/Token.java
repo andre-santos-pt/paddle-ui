@@ -16,7 +16,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Text;
 
-public class Token implements TextWidget {
+public class Token implements TextWidget, CodeElement {
 	private final Text text;
 	private Map<Character, String> map;
 	
@@ -135,6 +135,11 @@ public class Token implements TextWidget {
 
 	public void moveAbove(Control c) {
 		text.moveAbove(c);
+	}
+	
+	@Override
+	public void toCode(StringBuffer buffer) {
+		buffer.append(text.getText());
 	}
 
 }

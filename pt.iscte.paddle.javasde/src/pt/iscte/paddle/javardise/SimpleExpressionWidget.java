@@ -22,6 +22,7 @@ public class SimpleExpressionWidget extends Composite implements TextWidget, Exp
 	
 	public SimpleExpressionWidget(EditorWidget parent, String literal) {
 		super(parent, SWT.NONE);
+		assert literal != null;
 		setLayout(Constants.ROW_LAYOUT_H_ZERO);
 		
 		text = new Text(this, SWT.NONE);
@@ -59,7 +60,7 @@ public class SimpleExpressionWidget extends Composite implements TextWidget, Exp
 				String match = null;
 				Expression w = null;
 				if(text.getCaretPosition() == 0 && (match = match(e.character, Constants.UNARY_OPERATORS)) != null) {
-					w = new UnaryExpressionWidget((EditorWidget) getParent(), match, SimpleExpressionWidget.this);
+					w = new UnaryExpressionWidget((EditorWidget) getParent(), match, p -> new SimpleExpressionWidget(p, text.getText()));
 					w.setFocus();
 				}
 				else if(text.getCaretPosition() == text.getText().length() && (match = match(e.character, Constants.BINARY_OPERATORS)) != null) {
@@ -68,7 +69,7 @@ public class SimpleExpressionWidget extends Composite implements TextWidget, Exp
 					w = b;
 				}
 				else if(e.character == SWT.SPACE && Keyword.NEW.isEqual(text)) {
-					ArrayAllocationExpression a = new ArrayAllocationExpression((EditorWidget) getParent(), p -> new SimpleExpressionWidget(p, "expression"));
+					ArrayAllocationExpression a = new ArrayAllocationExpression((EditorWidget) getParent(), IType.INT.array(), p -> new SimpleExpressionWidget(p, "expression"));
 					a.setFocus();
 					w = a;
 				}

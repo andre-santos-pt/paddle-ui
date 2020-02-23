@@ -1,22 +1,29 @@
 package pt.iscte.paddle.javardise;
 
-import java.util.function.Function;
+import java.util.ArrayList;
+import java.util.List;
 
+import pt.iscte.paddle.model.IArrayType;
 import pt.iscte.paddle.model.IExpression;
 
-public class ArrayAllocationExpression extends EditorWidget implements Expression {
-	private EditorWidget id;
-	private ExpressionWidget expressionWidget;
 
-	public ArrayAllocationExpression(EditorWidget parent, Expression.Creator f) {
+// TODO add dim
+public class ArrayAllocationExpression extends EditorWidget implements Expression {
+	private Id id;
+	private List<ExpressionWidget> expressions;
+
+	public ArrayAllocationExpression(EditorWidget parent, IArrayType type, Expression.Creator ... f) {
 		super(parent);
 		new Token(this, Keyword.NEW);
-		id = new Id(this, "Type", true, Constants.PRIMITIVE_TYPES_SUPPLIER);
-		new FixedToken(this, "[");
-		expressionWidget = new ExpressionWidget(this, f);
-		new FixedToken(this, "]");
+		id = new Id(this, type.getRootComponentType());
+		expressions = new ArrayList<>(type.getDimensions()+1);
+		for(int n = 0; n < type.getDimensions(); n++) {
+			new FixedToken(this, "[");
+			expressions.add(new ExpressionWidget(this, f[n]));
+			new FixedToken(this, "]");
+		}
 	}
-	
+
 	@Override
 	public boolean setFocus() {
 		id.setFocus();
@@ -25,7 +32,13 @@ public class ArrayAllocationExpression extends EditorWidget implements Expressio
 
 	@Override
 	public Expression copyTo(EditorWidget parent) {
-		return new ArrayAllocationExpression(parent, p -> expressionWidget.expression.copyTo(p));
+		IArrayType type = (IArrayType) id.inferType();
+		Expression.Creator[] f = new Expression.Creator[type.getDimensions()];
+		for(int i = 0; i < f.length; i++) {
+			int j = i;
+			f[i] = p -> expressions.get(j).copyTo(p);
+		}
+		return new ArrayAllocationExpression(parent, type, f);
 	}
 
 	@Override
@@ -33,17 +46,19 @@ public class ArrayAllocationExpression extends EditorWidget implements Expressio
 		Keyword.NEW.toCode(buffer);
 		buffer.append(' ');
 		id.toCode(buffer);
-		buffer.append('[');
-		expressionWidget.toCode(buffer);
-		buffer.append(']');
+		for(Expression e : expressions) {
+			buffer.append('[');
+			e.toCode(buffer);
+			buffer.append(']');
+		}
 	}
-	
+
 	@Override
 	public void substitute(Expression current, Expression newExpression) {
 		// TODO Auto-generated method stub
-		
+
 	}
-	
+
 	@Override
 	public IExpression toModel() {
 		// TODO Auto-generated method stub

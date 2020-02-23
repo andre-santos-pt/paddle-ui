@@ -3,42 +3,36 @@ package pt.iscte.paddle.javardise;
 import org.eclipse.swt.widgets.Composite;
 
 import pt.iscte.paddle.javardise.Constants.DeleteListener;
-import pt.iscte.paddle.model.IArrayType;
-import pt.iscte.paddle.model.IType;
+import pt.iscte.paddle.model.IExpression;
+import pt.iscte.paddle.model.IVariable;
 
 public class DeclarationWidget extends EditorWidget {
 	private final Id type;
 	private final Id id;
 	private final ExpressionWidget expression;
-
-	DeclarationWidget(Composite parent) {
-		this(parent, IType.UNBOUND, "variable", "expression");
-	}
 	
-	DeclarationWidget(Composite parent, IType type, String id, String expression) {
+	DeclarationWidget(Composite parent, IVariable var, IExpression exp) {
 		super(parent);
 		setLayout(Constants.ROW_LAYOUT_H);
-		String typeId = type.getId();
-		int dims = 0;
-		if(type instanceof IArrayType) {
-			typeId = ((IArrayType) type).getComponentType().getId();
-			dims = ((IArrayType) type).getDimensions();
+		DeleteListener deleteListener = new Constants.DeleteListener(this);
+
+		this.type = new Id(this, var.getType());
+		
+		String id =  var.getId() == null ? "var$" + var.procedureIndex() :  var.getId();
+		
+		this.id = new Id(this, id);
+		if(exp != null) {
+			new FixedToken(this, "=");
+			this.expression = new ExpressionWidget(this, Expression.match(exp));
+			this.expression.addKeyListener(deleteListener);
 		}
-		if(typeId == null)
-			typeId = "Unknown";
-		this.type = new Id(this, typeId, true, Constants.PRIMITIVE_TYPES_SUPPLIER);
-		while(dims-- > 0)
-			this.type.addDimension();
-		this.id = new Id(this, id, false);
-		new FixedToken(this, "=");
-		this.expression = new ExpressionWidget(this, expression);
+		else
+			this.expression = null;
 		new FixedToken(this, ";");
 		
-		DeleteListener deleteListener = new Constants.DeleteListener(this);
 		this.type.addKeyListener(deleteListener);
 		Constants.addInsertLine(this.type);
 		this.id.addKeyListener(deleteListener);
-		this.expression.addKeyListener(deleteListener);
 	}
 	
 	@Override
@@ -52,8 +46,13 @@ public class DeclarationWidget extends EditorWidget {
 	
 	@Override
 	public void toCode(StringBuffer buffer) {
-		buffer.append(type).append(" ").append(id).append(" = ");
-		expression.toCode(buffer);
+		type.toCode(buffer);
+		buffer.append(" ");
+		id.toCode(buffer);
+		if(expression != null) {
+			buffer.append(" = ");
+			expression.toCode(buffer);
+		}
 		buffer.append(";");
 	}
 }

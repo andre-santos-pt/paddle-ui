@@ -72,7 +72,6 @@ public class NewInsertWidget extends Composite implements TextWidget {
 			}
 			
 		});
-		complexId.highlight(); // ??
 		
 //		complexId.addFocusListener(new FocusAdapter() {
 //			public void focusLost(FocusEvent e) {

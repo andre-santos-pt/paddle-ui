@@ -1,6 +1,10 @@
 package pt.iscte.paddle.javardise;
 
+import org.eclipse.jface.fieldassist.ControlDecoration;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 
 import pt.iscte.paddle.javardise.Constants.DeleteListener;
 import pt.iscte.paddle.model.IExpression;
@@ -16,12 +20,13 @@ public class InstructionWidget extends EditorWidget {
 
 	InstructionWidget(Composite parent, Keyword keyword, IExpression expression) {
 		super(parent);
+		
 		this.keyword = keyword;
 		setLayout(Constants.ROW_LAYOUT_H);
 		DeleteListener deleteListener = new Constants.DeleteListener(this);
 		this.keywordToken = new Token(this, keyword);
 		this.keywordToken.addKeyListener(deleteListener);
-		Constants.addInsertLine(this.keywordToken);
+//		Constants.addInsertLine(this.keywordToken);
 
 		if(expression != null) {
 			expressionWidget = new ExpressionWidget(this, Expression.match(expression));
@@ -31,6 +36,11 @@ public class InstructionWidget extends EditorWidget {
 			expressionWidget = null;
 		new FixedToken(this, ";");
 
+//		final ControlDecoration dec = new ControlDecoration(this, SWT.LEFT | SWT.CENTER);
+//		dec.setMarginWidth(10);
+//		dec.setDescriptionText("blabla");
+//		dec.setImage(new Image(Display.getDefault(), "/Users/andresantos/git/paddle-ui/pt.iscte.paddle.javasde/arrow.png")); 
+		
 	}
 
 	@Override

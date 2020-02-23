@@ -9,23 +9,12 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Menu;
 
-public class EditorWidget extends Composite {
+public class EditorWidget extends Composite implements CodeElement {
 
 	public EditorWidget(Composite parent) {
 		super(parent, SWT.NONE);
 		setLayout(Constants.ROW_LAYOUT_H_ZERO);
 		setBackground(Constants.COLOR_BACKGROUND);
-		//		addPaintListener(new PaintListener() {
-		//			public void paintControl(PaintEvent e) {
-		//				GC gc=e.gc;
-		//				Color red=new Color(null,255,0,0);
-		//				gc.setForeground(red);
-		//			    Rectangle rect = getBounds();
-		////				Rectangle rect1 = new Rectangle(rect.x+2, rect.y+2, rect.width-2, rect.height-2);
-		//				gc.drawRectangle(rect);
-		////				gc.drawLine(0, 0, 100, 100);
-		//			}
-		//		});
 	}
 
 	private void colorSubComposites(Composite co, Color color) {
@@ -35,6 +24,10 @@ public class EditorWidget extends Composite {
 			if(control instanceof Composite)
 				colorSubComposites((Composite) control, color);
 		}
+	}
+	
+	void setReadOnly(boolean readonly) {
+		setEnabled(!readonly);
 	}
 
 	// TODO to think
@@ -97,10 +90,10 @@ public class EditorWidget extends Composite {
 	}
 
 	// to override
-	public void toCode(StringBuffer buffer) {
-		buffer.append("#TODO" + this.getClass().getSimpleName() + "#");
-		System.err.println("missing toCode " + this.getClass());
-	}
+//	public void toCode(StringBuffer buffer) {
+//		buffer.append("#TODO" + this.getClass().getSimpleName() + "#");
+//		System.err.println("missing toCode " + this.getClass());
+//	}
 
 	@Override
 	public String toString() {

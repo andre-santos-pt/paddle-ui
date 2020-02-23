@@ -1,10 +1,11 @@
 package pt.iscte.paddle.javardise;
 
-import java.util.List;
+import org.eclipse.swt.widgets.Composite;
 
 import pt.iscte.paddle.javardise.Constants.DeleteListener;
 import pt.iscte.paddle.model.IArrayElementAssignment;
 import pt.iscte.paddle.model.IExpression;
+import pt.iscte.paddle.model.IVariable;
 import pt.iscte.paddle.model.IVariableAssignment;
 
 public class AssignmentWidget extends EditorWidget {
@@ -17,15 +18,15 @@ public class AssignmentWidget extends EditorWidget {
 //		setLayout(Constants.ROW_LAYOUT_H);
 //	}
 	
-	AssignmentWidget(SequenceWidget parent, IVariableAssignment a) {
+	AssignmentWidget(Composite parent, IVariableAssignment a) {
 		super(parent);
 		setLayout(Constants.ROW_LAYOUT_H);
 		
-		String id = a.getTarget().getId();
-		String idd = id == null ? "variable" : id;
+		IVariable var = a.getTarget();
+		String id =  var.getId() == null ? "var$" + var.procedureIndex() :  var.getId();
 		
 		DeleteListener deleteListener = new Constants.DeleteListener(this);
-		this.id = new ComplexId(this, idd, false);
+		this.id = new ComplexId(this, id, false);
 		this.id.addKeyListener(deleteListener);
 		
 		new FixedToken(this, "=");
@@ -39,11 +40,11 @@ public class AssignmentWidget extends EditorWidget {
 		super(parent);
 		setLayout(Constants.ROW_LAYOUT_H);
 		
-		String id = a.getTarget().getId();
-		String idd = id == null ? "variable" : id;
+		IVariable var = (IVariable) a.getTarget(); // TODO check other types
+		String id =  var.getId() == null ? "var$" + var.procedureIndex() :  var.getId();
 		
 		DeleteListener deleteListener = new Constants.DeleteListener(this);
-		this.id = new ComplexId(this, idd, false);
+		this.id = new ComplexId(this, id, false);
 		this.id.addKeyListener(deleteListener);
 		
 		for(IExpression i : a.getIndexes())

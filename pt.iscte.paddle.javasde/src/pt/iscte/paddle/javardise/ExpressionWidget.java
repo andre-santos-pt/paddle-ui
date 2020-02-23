@@ -1,16 +1,17 @@
 package pt.iscte.paddle.javardise;
 import org.eclipse.swt.events.KeyListener;
+import org.eclipse.swt.widgets.Composite;
 
 import pt.iscte.paddle.model.IExpression;
 
 public class ExpressionWidget extends EditorWidget implements Expression {
 	Expression expression;
 
-	public ExpressionWidget(EditorWidget parent, String literal) {
+	public ExpressionWidget(Composite parent, String literal) {
 		this(parent, w -> new SimpleExpressionWidget(w, literal));
 	}
 
-	public ExpressionWidget(EditorWidget parent, Expression.Creator f) {
+	public ExpressionWidget(Composite parent, Expression.Creator f) {
 		super(parent);
 		setLayout(Constants.ROW_LAYOUT_H_ZERO);
 		expression = f.apply(this);

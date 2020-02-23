@@ -11,12 +11,12 @@ import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Label;
 
 import pt.iscte.paddle.javardise.Constants.DeleteListener;
 import pt.iscte.paddle.model.IArrayType;
 import pt.iscte.paddle.model.IBlockElement;
 import pt.iscte.paddle.model.IProcedure;
+import pt.iscte.paddle.model.IType;
 import pt.iscte.paddle.model.IVariable;
 
 public class MethodWidget extends EditorWidget implements SequenceContainer {
@@ -26,27 +26,21 @@ public class MethodWidget extends EditorWidget implements SequenceContainer {
 	private Id id;
 	private SequenceWidget body;
 	private ParamList params;
-	private EditorWidget header;
+	private Composite header;
 	private List<Keyword> modifiers;
 	
 	MethodWidget(SequenceWidget parent, IProcedure procedure) {
 		super(parent);
 		this.procedure = procedure;
-
 		setLayout(Constants.ROW_LAYOUT_V_ZERO);
-
-		header = new EditorWidget(this);
-		header.setLayout(Constants.ROW_LAYOUT_H);
-
+		header = Constants.createHeader(this);
 		modifiers = new ArrayList<>();
 		for (Keyword mod : Keyword.methodModifiers())
 			if(procedure.is(mod.toString()))
 				addModifier(mod);
 			
-		
-		
 		DeleteListener deleteListener = new Constants.DeleteListener(this);
-		retType = new Id(header, procedure.getReturnType().toString(), true, Constants.PRIMITIVE_TYPES_VOID_SUPPLIER);
+		retType = new Id(header, procedure.getReturnType());
 		retType.addKeyListener(deleteListener);
 		retType.addKeyListener(new KeyAdapter() {
 			public void keyPressed(KeyEvent e) {
@@ -61,7 +55,7 @@ public class MethodWidget extends EditorWidget implements SequenceContainer {
 		String name = procedure.getId();
 		if(name == null)
 			name = "procedure";
-		id = new Id(header, name, false);
+		id = new Id(header, name);
 		id.addKeyListener(deleteListener);
 		
 		new FixedToken(header, "(");
@@ -69,17 +63,16 @@ public class MethodWidget extends EditorWidget implements SequenceContainer {
 		new FixedToken(header, ")");
 		
 		for (IVariable p : procedure.getParameters()) {
-			System.out.println(p.getType().getId());
-			String type = p.getType().getId();
-			if(p.getType() instanceof IArrayType)
-				type = ((IArrayType) p.getType()).getComponentTypeAt(0).getId();
-			if(type == null)
-				type = "Unknown";
-			
-			String pname = p.getId();
-			if(pname == null)
-				pname = "ukn";
-			params.addParam(type, pname, p.getType() instanceof IArrayType, false, false);
+//			String type = p.getType().getId();
+//			if(p.getType() instanceof IArrayType)
+//				type = ((IArrayType) p.getType()).getComponentTypeAt(0).getId();
+//			if(type == null)
+//				type = "Unknown";
+//			
+//			String pname = p.getId();
+//			if(pname == null)
+//				pname = "ukn";
+			params.addParam(p, false, false);
 		}
 		new FixedToken(header, "{");
 		body = new SequenceWidget(this, Constants.TAB);
@@ -113,17 +106,18 @@ public class MethodWidget extends EditorWidget implements SequenceContainer {
 
 
 
-	private class ParamList extends EditorWidget {
+	private class ParamList extends Composite {
 		private InsertWidget insertWidget;
 		private GridLayout layout;
 
 		public ParamList(Composite parent) {
-			super(parent);
+			super(parent, SWT.NONE);
 			layout = new GridLayout(1, false);
 			layout.marginTop = 0;
 			layout.verticalSpacing = 0;
 			layout.marginHeight = 0;
 			setLayout(layout);
+			setBackground(Constants.COLOR_BACKGROUND);
 			createInsert();
 		}
 
@@ -135,7 +129,10 @@ public class MethodWidget extends EditorWidget implements SequenceContainer {
 				}
 
 				public void run(char c, String text, int index, int caret, int selection, List<String> tokens) {
-					addParam(text, "parameter", c == '[', false, false);
+					IType t = IType.INT;
+					if(c == '[')
+						t = t.array();
+					addParam(new IVariable.UnboundVariable(t, "parameter"), false, false);
 				}
 			});
 			//			insertWidget.addFocusListener(Constants.FOCUS_SELECTALL);
@@ -163,20 +160,25 @@ public class MethodWidget extends EditorWidget implements SequenceContainer {
 			private final Id var;
 			private FixedToken comma;
 
-			public Param(String type, String name, boolean array, boolean comma) {
+			public Param(IVariable v, boolean comma) {
 				super(ParamList.this);
 				setLayout(Constants.ROW_LAYOUT_H_DOT);
 				if(comma)
 					this.comma = new FixedToken(this, ",");
-				this.type = new Id(this, type, true, Constants.PRIMITIVE_TYPES_SUPPLIER);
-				if(array)
-					this.type.addDimension();
+				
+				this.type = new Id(this, v.getType());
+//				this.type = new Id(this, type, true, Constants.PRIMITIVE_TYPES_SUPPLIER);
+//				if(array)
+//					this.type.addDimension();
+				
+				
 				this.type.setToolTip("Parameter type");
-				var = new Id(this, name, false);
+				
+				var = new Id(this, Constants.variableId(v));
 				var.addKeyListener(new KeyAdapter() {
 					public void keyPressed(KeyEvent e) {
 						if(e.character == ',')
-							addParam(Keyword.INT.toString(), "parameter", false, false, true);
+							addParam(new IVariable.UnboundVariable(IType.INT, "parameter"), false, true);
 						else if(e.keyCode == Constants.DEL_KEY && var.isAtBeginning()) {
 							dispose();
 							Control[] children = ParamList.this.getChildren();
@@ -213,13 +215,13 @@ public class MethodWidget extends EditorWidget implements SequenceContainer {
 			}
 		}
 
-		private void addParam(String type, String name, boolean array, boolean above, boolean focusType) {
+		private void addParam(IVariable var, boolean above, boolean focusType) {
 			if(insertWidget != null) {
 				insertWidget.dispose();
 				insertWidget = null;
 			}
 			boolean comma = ParamList.this.getChildren().length != 0;
-			Param param = new Param(type, name, array, comma);
+			Param param = new Param(var, comma);
 			layout.numColumns = getChildren().length;
 			param.requestLayout();
 

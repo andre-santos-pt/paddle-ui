@@ -5,13 +5,13 @@ import org.eclipse.swt.widgets.Composite;
 import pt.iscte.paddle.javardise.Constants.DeleteListener;
 
 public class IncrementationWidget extends EditorWidget {
-	private final Id id;
+	private final Id id; // TODO to complex
 	
 	IncrementationWidget(Composite parent, String id, boolean increment) {
 		super(parent);
 		setLayout(Constants.ROW_LAYOUT_H_SHRINK);
 		DeleteListener deleteListener = new Constants.DeleteListener(this);
-		this.id = new Id(this, id, false);
+		this.id = new Id(this, id);
 		this.id.addKeyListener(deleteListener);
 		Constants.addInsertLine(this.id);
 		
@@ -26,8 +26,8 @@ public class IncrementationWidget extends EditorWidget {
 	
 	
 	@Override
-	public String toString() {
-		return this.id.getText() + "++;";
+	public void toCode(StringBuffer buffer) {
+		id.toCode(buffer);
+		buffer.append("++;");
 	}
-	
 }

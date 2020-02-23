@@ -19,11 +19,13 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.RowData;
 import org.eclipse.swt.layout.RowLayout;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Text;
 
 import pt.iscte.paddle.model.IType;
+import pt.iscte.paddle.model.IVariable;
 
 public interface Constants {
 	//	class Operator {
@@ -46,8 +48,8 @@ public interface Constants {
 
 
 	int ARRAY_DIMS = 3;
-	List<String> BINARY_OPERATORS = Arrays.asList("+", "-", "*", "/ ", "%", "==", "!=", "<", "<=", ">", ">=", "&&", "||", "^");
-	List<String> ARITHMETIC_OPERATORS = Arrays. asList("+", "-", "*", "/ ", "%");
+	List<String> BINARY_OPERATORS = Arrays.asList("+", "-", "*", "/", "%", "==", "!=", "<", "<=", ">", ">=", "&&", "||", "^");
+	List<String> ARITHMETIC_OPERATORS = Arrays. asList("+", "-", "*", "/", "%");
 	List<String> RELATIONAL_OPERATORS = Arrays. asList( "==", "!=", "<", "<=", ">", ">=");
 	List<String> LOGICAL_OPERATORS = Arrays. asList("&&", "||", "^");
 	//	Supplier<List<String>> BINARY_OPERATORS_SUPPLIER = () -> BINARY_OPERATORS;
@@ -254,6 +256,18 @@ public interface Constants {
 		seq.focusNextStatement(widget);
 	}
 
+	
+	static Composite createHeader(Composite parent) {
+		Composite c = new Composite(parent, SWT.NONE);
+		c.setLayout(ROW_LAYOUT_H);
+		c.setBackground(COLOR_BACKGROUND);
+		return c;
+	}
+	
+	static String variableId(IVariable var) {
+		return var.getId() == null ? "var$" + var.procedureIndex() :  var.getId();
+	}
+	
 	static String matchBinaryOperator(char character) {
 		for(String o : BINARY_OPERATORS)
 			if(o.charAt(0) == character)

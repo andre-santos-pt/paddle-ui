@@ -12,10 +12,15 @@ import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Text;
+
+import pt.iscte.paddle.model.IArrayType;
+import pt.iscte.paddle.model.IReferenceType;
+import pt.iscte.paddle.model.IType;
 
 public class Id extends EditorWidget implements TextWidget {
 
@@ -31,11 +36,36 @@ public class Id extends EditorWidget implements TextWidget {
 
 	private Runnable editAction = () -> {};
 
-	Id(EditorWidget parent, String id, boolean type) {
-		this(parent, id, type, () -> Collections.emptyList());
+	Id(Composite parent, IType type) {
+		this(parent, rootType(type), true, () -> Collections.emptyList());
+				
+		if(type instanceof IReferenceType)
+			type = ((IReferenceType) type).resolveTarget();
+		
+		if(type instanceof IArrayType) {
+			int n = ((IArrayType) type).getDimensions();
+			while(n-- > 0)
+				addDimension();
+		}
+	}
+	
+	private static String rootType(IType type) {
+		IType t = type;
+		if(t instanceof IReferenceType)
+			t = ((IReferenceType) t).resolveTarget();
+		
+		if(t instanceof IArrayType) 
+			return ((IArrayType) t).getRootComponentType().getId();
+		else
+			return t.getId();
+	}
+	
+	// identifier
+	Id(Composite parent, String id) {
+		this(parent, id, false, () -> Collections.emptyList());
 	}
 
-	Id(EditorWidget parent, String id, boolean type, Supplier<List<String>> idProvider) {
+	Id(Composite parent, String id, boolean type, Supplier<List<String>> idProvider) {
 		super(parent);
 		this.idProvider = idProvider;
 		this.type = type;
@@ -94,6 +124,13 @@ public class Id extends EditorWidget implements TextWidget {
 		text.setEditable(false);
 	}
 	
+	IType inferType() {
+		IType t = IType.match(text.getText()); // TODO other types
+		int n = numberOfDimensions();
+		while(n-- > 0)
+			t = t.array();
+		return t;
+	}
 	@Override
 	public Text getWidget() {
 		return text;
@@ -113,7 +150,6 @@ public class Id extends EditorWidget implements TextWidget {
 	public void addDimension() {
 		Token t = new Token(this, "[]");
 		t.addKeyListener(new KeyAdapter() {
-			@Override
 			public void keyPressed(KeyEvent e) {
 				if(e.keyCode == Constants.DEL_KEY)
 					removeDimension((Control) e.widget);
@@ -144,6 +180,10 @@ public class Id extends EditorWidget implements TextWidget {
 		requestLayout();
 	}
 
+	public int numberOfDimensions() {
+		return getChildren().length-1;
+	}
+	
 	public void focusLastDimension() {
 		Control[] children = getChildren();
 		children[children.length-1].setFocus();
@@ -217,17 +257,13 @@ public class Id extends EditorWidget implements TextWidget {
 		text.setMenu(menu);
 	}
 
-	@Override
-	public String toString() {
-		return text.getText();
-	}
 	
 	@Override
 	public void toCode(StringBuffer buffer) {
-		if(text.getText().isBlank())
-			buffer.append(Constants.EMPTY_EXPRESSION_SERIALIZE);
-		else
-			buffer.append(text.getText());
+		CodeElement.toCode(text, buffer);
+		int n = numberOfDimensions();
+		while(n-- > 0)
+			buffer.append("[]");
 	}
 
 	public void set(String id) {

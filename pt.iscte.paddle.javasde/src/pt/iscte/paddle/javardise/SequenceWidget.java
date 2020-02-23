@@ -8,7 +8,6 @@ import static pt.iscte.paddle.javardise.Keyword.RETURN;
 import static pt.iscte.paddle.javardise.Keyword.WHILE;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -209,7 +208,7 @@ public class SequenceWidget extends Composite {
 		});
 	}
 
-	void addElement(EditorWidget w, int modelIndex) {
+	void addElement(Composite w, int modelIndex) {
 		int viewIndex = toViewIndex(modelIndex);
 		if(isElse(w))
 			viewIndex++;
@@ -310,13 +309,7 @@ public class SequenceWidget extends Composite {
 	void addModelElement(IProgramElement element, int index) {
 		if (element instanceof IVariable && element.not(Constants.FOR_FLAG)) {
 			IVariable v = (IVariable) element;
-			IType type = v.getType();
-			if(type == null)
-				type = IType.UNBOUND;
-
-			String id = v.getId() != null ? v.getId() : "variable";
-			String exp = "expression";
-			DeclarationWidget declarationWidget = new DeclarationWidget(SequenceWidget.this, type, id, exp);
+			DeclarationWidget declarationWidget = new DeclarationWidget(SequenceWidget.this, v, null);
 			addElement(declarationWidget, index);
 			if(v.getId() == null)
 				declarationWidget.focusId();
@@ -333,6 +326,9 @@ public class SequenceWidget extends Composite {
 				addElement(w, index);
 			}
 			else {
+//				Selectable<AssignmentWidget> w = new Selectable<>(SequenceWidget.this, p -> new AssignmentWidget(p, a), a);
+//				addElement(w, index);
+//				w.target.focusExpression();
 				AssignmentWidget assignmentWidget = new AssignmentWidget(SequenceWidget.this, a);
 				addElement(assignmentWidget, index);
 				assignmentWidget.focusExpression();
@@ -387,7 +383,7 @@ public class SequenceWidget extends Composite {
 
 		else if (element instanceof IProcedureCall) {
 			IProcedureCall call = (IProcedureCall) element;
-			CallWidget w = new CallWidget(SequenceWidget.this, call.getProcedure().getId(), true);
+			CallWidget w = new CallWidget(SequenceWidget.this, call.getProcedure().getId(), true, Expression.creators(call.getArguments()));
 			addElement(w, index);
 			w.focusArgument();
 		} 
@@ -397,8 +393,14 @@ public class SequenceWidget extends Composite {
 			InstructionWidget w = new InstructionWidget(SequenceWidget.this, RETURN, ret.isVoid() ? null : ret.getExpression());
 			addElement(w, index);
 			w.focusExpression();
-		} else
+			
+//			Selectable<InstructionWidget> w = new Selectable<>(SequenceWidget.this, p -> new InstructionWidget(p, RETURN, ret.isVoid() ? null : ret.getExpression()), ret);
+//			w.target.focusExpression();
+//			addElement(w, index);
+		} else {
 			System.err.println("unhandled: " + element);
+			assert false;
+		}
 	}
-
+	
 }

@@ -2,7 +2,6 @@ package pt.iscte.paddle.javardise;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.eclipse.swt.SWT;
@@ -16,15 +15,17 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Text;
 
+import pt.iscte.paddle.model.IArrayElement;
+import pt.iscte.paddle.model.IArrayLength;
 import pt.iscte.paddle.model.IExpression;
+import pt.iscte.paddle.model.IVariable;
 
-public class ComplexId extends EditorWidget implements TextWidget {
+public class ComplexId extends EditorWidget implements TextWidget, Expression {
 
 	final Text text;
 	private Menu popupMenu;
@@ -37,6 +38,19 @@ public class ComplexId extends EditorWidget implements TextWidget {
 
 	private Runnable editAction = () -> {};
 
+	private List<CodeElement> elements = new ArrayList<>();
+
+	ComplexId(Composite parent, IArrayElement e) {
+		this(parent, Constants.variableId((IVariable) e.getTarget()), false);
+		for(IExpression exp : e.getIndexes())
+			new Dimension(this, Expression.match(exp));
+	}
+
+	ComplexId(EditorWidget p, IArrayLength e) {
+		this(p, e.getVariable().getId(), false);
+		addField("length");
+	}
+	
 	ComplexId(Composite parent, String id, boolean type) {
 		this(parent, id, type, () -> Collections.emptyList());
 	}
@@ -92,12 +106,18 @@ public class ComplexId extends EditorWidget implements TextWidget {
 		Constants.addArrowKeys(text, this);
 	}
 
+	
+	
+
+	
+	
+
 	void setReadOnly() {
 		text.setEditable(false);
 	}
 
 	public boolean isSingleId() {
-		return getChildren().length == 1;
+		return elements.isEmpty();
 	}
 
 	public boolean isKeyword() {
@@ -162,25 +182,25 @@ public class ComplexId extends EditorWidget implements TextWidget {
 		else {
 			Dimension dimension = new Dimension(this, null);
 			if(left != null)
-				dimension.moveBelow(left);
+				dimension.expression.moveBelow(left);
 			dimension.setFocus();
 		}
 		requestLayout();
 	}
 
-	private class Dimension extends EditorWidget {
+	private class Dimension implements CodeElement {
 		private ExpressionWidget expression;
 		public Dimension(Composite parent, Expression.Creator f) {
-			super(parent);
+			elements.add(this);
 			if(f == null)
 				f = p -> new SimpleExpressionWidget(p, "expression");
-			new FixedToken(this, "[");
-			expression = new ExpressionWidget(this, f);
-			Token rightBracket = new Token(this, "]");
+			new FixedToken(parent, "[");
+			expression = new ExpressionWidget(parent, f);
+			Token rightBracket = new Token(parent, "]");
 			rightBracket.addKeyListener(new KeyAdapter() {
 				public void keyPressed(KeyEvent e) {
 					if(e.character == '[') {
-						addDimension(Dimension.this);
+						addDimension(Dimension.this.expression);
 					}
 					else if(e.character == Constants.DEL_KEY) {
 						dispose();
@@ -199,7 +219,6 @@ public class ComplexId extends EditorWidget implements TextWidget {
 
 		}
 
-		@Override
 		public boolean setFocus() {
 			return expression.setFocus();
 		}
@@ -211,12 +230,12 @@ public class ComplexId extends EditorWidget implements TextWidget {
 		}
 	}
 
-	private class Field extends EditorWidget {
+	private class Field implements CodeElement {
 		Text field;
 		public Field(Composite parent, String id) {
-			super(parent);
-			new FixedToken(this, ".");
-			field = new Text(this, SWT.NONE);
+			elements.add(this);
+			new FixedToken(parent, ".");
+			field = new Text(parent, SWT.NONE);
 			field.setText(id);
 			field.addVerifyListener(e -> e.doit = menuMode || Constants.isLetter(e.character) || e.character == SWT.BS);
 			field.addModifyListener(Constants.MODIFY_PACK);
@@ -227,12 +246,10 @@ public class ComplexId extends EditorWidget implements TextWidget {
 			field.addKeyListener(addListener);
 		}
 
-		@Override
 		public boolean setFocus() {
 			return field.setFocus();
 		}
 
-		@Override
 		public void toCode(StringBuffer buffer) {
 			buffer.append('.');
 			if(field.getText().isBlank())
@@ -341,14 +358,9 @@ public class ComplexId extends EditorWidget implements TextWidget {
 
 	@Override
 	public void toCode(StringBuffer buffer) {
-		if(text.getText().isBlank())
-			buffer.append(Constants.EMPTY_EXPRESSION_SERIALIZE);
-		else
-			buffer.append(text.getText());
-
-		Control[] children = getChildren();
-		for(int i = 1; i < children.length; i++)
-			((EditorWidget) children[i]).toCode(buffer);
+		CodeElement.toCode(text, buffer);
+		for(CodeElement e : elements)
+			e.toCode(buffer);
 	}
 
 	public void set(String id) {
@@ -365,7 +377,7 @@ public class ComplexId extends EditorWidget implements TextWidget {
 	public void addFocusListener(FocusListener listener) {
 		text.addFocusListener(listener);
 	}
-
+	
 	public void clean() {
 		menuMode = true;
 		text.setText("");
@@ -380,39 +392,54 @@ public class ComplexId extends EditorWidget implements TextWidget {
 	}
 
 	public boolean isArrayAccess() {
-		Control[] children = getChildren();
-		return children[children.length-1] instanceof Dimension;
+		return elements.get(elements.size()-1) instanceof Dimension;
 	}
+	
 	
 	public List<IExpression> getArrayModelExpressions() {
 		assert isArrayAccess();
-		Control[] children = getChildren();
 		List<IExpression> list = new ArrayList<>();
-		for(int i = children.length-1; children[i] instanceof Dimension; i--)
-			list.add(0, ((Dimension) children[i]).expression.toModel());
+		for(int i = elements.size()-1; elements.get(i) instanceof Dimension; i--)
+			list.add(0, ((Dimension) elements.get(i)).expression.toModel());
 		return list;
 	}
 	
 
 	public boolean isFieldAccess() {
-		Control[] children = getChildren();
-		return children[children.length-1] instanceof Field;
+		return elements.get(elements.size()-1) instanceof Field;
 	}
 
 	public List<String> getFields() {
-		Control[] children = getChildren();
 		List<String> fields = new ArrayList<>();
-		for(int i = 1; i < children.length; i++)
-			if(children[i] instanceof Field)
-				fields.add(((Field) children[i]).field.getText());
+		for(int i = 0; i < elements.size(); i++)
+			if(elements.get(i) instanceof Field)
+				fields.add(((Field)elements.get(i)).field.getText());
 		return fields;
 	}
 
-	public boolean isChild(Control control) {
-		for(Control c : getChildren())
-			if(c == control)
-				return true;
-		return false;
+	@Override
+	public Expression copyTo(EditorWidget parent) {
+		// TODO Auto-generated method stub
+		return null;
 	}
+
+	@Override
+	public void substitute(Expression current, Expression newExpression) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public IExpression toModel() {
+		// TODO resolve hole expression
+		return null;
+	}
+
+//	public boolean isChild(Control control) {
+//		for(Control c : getChildren())
+//			if(c == control)
+//				return true;
+//		return false;
+//	}
 
 }
