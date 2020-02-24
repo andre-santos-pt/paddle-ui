@@ -16,7 +16,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
@@ -31,7 +30,6 @@ import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
 
 import pt.iscte.paddle.model.IModule;
-import pt.iscte.paddle.model.IProgramElement;
 
 
 public class StandaloneEditor {
@@ -187,14 +185,6 @@ public class StandaloneEditor {
 			return true;
 	}
 	
-	
-	public void mark(IProgramElement s, Color color) {
-		Selectable.mark(s, color);
-	}
-	
-	public void removeAllMarks() {
-		Selectable.removeAllMarks();
-	}
 	
 	public static void main(String[] args) {
 		if(args.length == 0) {

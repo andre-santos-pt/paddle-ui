@@ -54,7 +54,7 @@ public interface Constants {
 	List<String> LOGICAL_OPERATORS = Arrays. asList("&&", "||", "^");
 	//	Supplier<List<String>> BINARY_OPERATORS_SUPPLIER = () -> BINARY_OPERATORS;
 	Supplier<List<String>> EMPTY_TOKEN_SUPPLIER = () -> Collections.emptyList();
-	int FONT_SIZE = 32;
+	int FONT_SIZE = 16;
 	int MENU_KEY = SWT.SPACE;
 	int DEL_KEY = SWT.BS;
 	Font FONT_TINY = new Font(null, FONT_FACE, 10, SWT.NONE);
@@ -221,6 +221,7 @@ public interface Constants {
 
 	String EMPTY_EXPRESSION_SERIALIZE = "$EMPTY$";
 	int METHOD_SPACING = 30;
+	int MARK_MARGIN = 2;
 
 	class DeleteListener extends KeyAdapter { 
 		final EditorWidget target;

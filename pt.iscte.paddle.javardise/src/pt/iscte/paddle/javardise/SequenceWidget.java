@@ -208,7 +208,7 @@ public class SequenceWidget extends Composite {
 	}
 
 	<T extends EditorWidget> T addElement(Function<Composite, T> f, IProgramElement e, int modelIndex) {
-		Selectable<T> sel = new Selectable<>(this, f, e);
+		Markable<T> sel = new Markable<>(this, f, e);
 		T w = sel.target;
 //		T w = f.apply(this);
 		int viewIndex = toViewIndex(modelIndex);
@@ -259,8 +259,8 @@ public class SequenceWidget extends Composite {
 	void focusNextStatement(TextWidget widget) {
 		Control c = widget.getStatement();
 		
-		if(c instanceof Selectable && ((Selectable<?>) c).target instanceof SequenceContainer) {
-			((SequenceContainer) ((Selectable<?>) c).target).getBody().focusFirst();
+		if(c instanceof Markable && ((Markable<?>) c).target instanceof SequenceContainer) {
+			((SequenceContainer) ((Markable<?>) c).target).getBody().focusFirst();
 		}
 		else {
 			Control[] children = getChildren();
