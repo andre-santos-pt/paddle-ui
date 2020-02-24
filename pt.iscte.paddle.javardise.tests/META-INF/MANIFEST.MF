@@ -1,0 +1,11 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Javardise Tests
+Bundle-SymbolicName: pt.iscte.paddle.javardise.tests
+Bundle-Version: 0.1
+Automatic-Module-Name: pt.iscte.paddle.javardise.tests
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Require-Bundle: pt.iscte.paddle.javardise;bundle-version="0.4.0",
+ pt.iscte.paddle.model;bundle-version="0.4.0",
+ org.eclipse.swt;bundle-version="3.111.0",
+ pt.iscte.paddle.model.tests
