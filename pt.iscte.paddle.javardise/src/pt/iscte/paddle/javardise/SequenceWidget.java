@@ -207,6 +207,10 @@ public class SequenceWidget extends Composite {
 		});
 	}
 
+	<T extends EditorWidget> T addElement(Function<Composite, T> f, IProgramElement e) {
+		return addElement(f, e, totalElements());
+	}
+	
 	<T extends EditorWidget> T addElement(Function<Composite, T> f, IProgramElement e, int modelIndex) {
 		Markable<T> sel = new Markable<>(this, f, e);
 		T w = sel.target;

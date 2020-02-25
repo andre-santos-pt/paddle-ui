@@ -19,8 +19,8 @@ public class Decoration {
 	private Shell s;
 
 	Decoration(EditorWidget target, Function<Composite, Control> f, BiFunction<Point, Point, Point> loc) {
-		Shell parent = Display.getDefault().getActiveShell();
-		s = new Shell(parent, SWT.NO_TRIM | SWT.BORDER);
+		Shell parent = target.getShell();
+		s = new Shell(parent, SWT.NO_TRIM | SWT.ON_TOP);
 		s.setLayout(new FillLayout());
 		Control c = f.apply(s);
 		s.pack();
@@ -32,6 +32,7 @@ public class Decoration {
 					setLocation(target, loc, c);
 			}
 		});
+	
 	}
 
 	private void setLocation(EditorWidget target, BiFunction<Point, Point, Point> loc, Control c) {
@@ -39,13 +40,13 @@ public class Decoration {
 		targetSize.x += 5;
 		targetSize.y += 5;
 		Point decoratorSize = c.computeSize(SWT.DEFAULT, SWT.DEFAULT);
-		s.setLocation(target.toDisplay(loc.apply(targetSize, decoratorSize)));
+		s.setLocation(target.getParent().toDisplay(loc.apply(targetSize, decoratorSize)));
 	}
 
 	public void show() {
-		s.open();
+		s.setVisible(true);
 	}
-
+	
 	public void hide() {
 		s.setVisible(false);
 	}
@@ -58,7 +59,7 @@ public class Decoration {
 	
 	public enum Location implements BiFunction<Point, Point, Point> {
 		LEFT((t,d) -> new Point(-d.x, t.y/2 - d.y/2)),
-		RIGHT((t,d) -> new Point(d.x, t.y/2 - d.y/2)),
+		RIGHT((t,d) -> new Point(t.x, t.y/2 - d.y/2)),
 		TOP((t,d) -> new Point(t.x/2 - d.x/2, -d.y)),
 		BOTTOM((t,d) -> new Point(t.x/2 - d.x/2, d.y));
 

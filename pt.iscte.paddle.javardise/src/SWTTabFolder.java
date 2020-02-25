@@ -59,7 +59,7 @@ public class SWTTabFolder
 		IModule module = IModule.create();
 		module.setId("TestClass");
 
-		ClassWidget c = new ClassWidget(area, module, mode);
+		ClassWidget c = new ClassWidget(area, module);
 		
 	    
 	    tab1.setControl(scroll);	    

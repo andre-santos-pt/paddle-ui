@@ -26,7 +26,7 @@ public class ClassWidget extends EditorWidget implements SequenceContainer {
 	private SequenceWidget body;
 	private Keyword[] modifiers;
 	
-	public ClassWidget(Composite parent, IModule module, UiMode mode, Keyword ... modifiers) {
+	public ClassWidget(Composite parent, IModule module, Keyword ... modifiers) {
 		super(parent);
 		this.module = module;
 		GridLayout layout = new GridLayout(1, true);
@@ -80,15 +80,16 @@ public class ClassWidget extends EditorWidget implements SequenceContainer {
 
 			public void run(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
 				IType t = IType.match(tokens.get(tokens.size()-1));
+				
 				FieldWidget w = body.addWidget(p -> new FieldWidget(p, t, id.getId(), Keyword.array(tokens.subList(0, tokens.size()-1)), c == '='));
-
 				if(c == '=')
 					w.focusExpression();
 			}
 		});
 
-		module.getProcedures().forEach(p -> body.addWidget(c -> new MethodWidget(body, p)));
 		
+		module.getProcedures().forEach(p -> body.addElement(comp -> new MethodWidget(comp, p), p));
+				
 		if (!UiMode.isStatic())
 			new FixedToken(this, "}");
 

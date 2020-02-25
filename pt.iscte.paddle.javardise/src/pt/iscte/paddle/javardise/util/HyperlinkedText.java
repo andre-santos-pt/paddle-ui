@@ -3,6 +3,7 @@ package pt.iscte.paddle.javardise.util;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -28,9 +29,9 @@ public class HyperlinkedText {
 	private Map<Integer, Runnable> actionMap;
 	private Multimap<Integer, IProgramElement> elementMap;
 	private int linkCount;
-	private Consumer<IProgramElement> consumer;
+	private Consumer<Iterable<IProgramElement>> consumer;
 
-	public HyperlinkedText(Consumer<IProgramElement> consumer) {
+	public HyperlinkedText(Consumer<Iterable<IProgramElement>> consumer) {
 		buffer = new StringBuffer();
 		actionMap = new HashMap<>();
 		elementMap = ArrayListMultimap.create();
@@ -81,7 +82,7 @@ public class HyperlinkedText {
 				int id = Integer.parseInt(e.text);
 				if(elementMap.containsKey(id)) {
 					Collection<IProgramElement> collection = elementMap.get(Integer.parseInt(e.text));
-					collection.forEach(el -> consumer.accept(el));
+					consumer.accept(collection);
 				}
 				else if(actionMap.containsKey(id)) {
 					actionMap.get(id).run();
