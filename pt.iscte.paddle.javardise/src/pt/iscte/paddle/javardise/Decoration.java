@@ -20,7 +20,7 @@ public class Decoration {
 
 	Decoration(EditorWidget target, Function<Composite, Control> f, BiFunction<Point, Point, Point> loc) {
 		Shell parent = target.getShell();
-		s = new Shell(parent, SWT.NO_TRIM | SWT.ON_TOP);
+		s = new Shell(parent, SWT.NO_TRIM);
 		s.setLayout(new FillLayout());
 		Control c = f.apply(s);
 		s.pack();
