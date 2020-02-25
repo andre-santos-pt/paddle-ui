@@ -53,7 +53,8 @@ public class Test {
 				StandaloneEditor e = new StandaloneEditor(t.getModule());
 				Shell s = e.launch(display);
 				shells.add(s);
-				if(e.compile()) {
+				File dest = new File("src-gen");
+				if(e.compile(dest)) {
 //					s.close();
 				}
 				else  {

@@ -245,7 +245,7 @@ public interface Constants {
 		}	
 	};
 
-	private static void moveCursorUp(TextWidget widget) {
+	static void moveCursorUp(TextWidget widget) {
 		Control statement = widget.getStatement();
 		if(statement != null) {
 			SequenceWidget seq = (SequenceWidget) statement.getParent();
@@ -253,7 +253,7 @@ public interface Constants {
 		}
 	}
 
-	private static void moveCursorDown(TextWidget widget) {
+	static void moveCursorDown(TextWidget widget) {
 		Control statement = widget.getStatement();
 		if(statement != null) {
 			SequenceWidget seq = (SequenceWidget) statement.getParent();

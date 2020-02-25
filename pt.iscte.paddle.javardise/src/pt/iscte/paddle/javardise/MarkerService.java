@@ -81,7 +81,8 @@ public interface MarkerService {
 		return addDecoration(e, p -> createToolip(p, text), loc);
 	}
 
-	private static Text createToolip(Composite parent, String text) {
+	
+	static Text createToolip(Composite parent, String text) {
 		Text t = new Text(parent, SWT.BORDER);
 		t.setText(text);
 		t.setEnabled(false);

@@ -10,6 +10,8 @@ import java.util.List;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
+import javax.tools.StandardJavaFileManager;
+import javax.tools.StandardLocation;
 import javax.tools.ToolProvider;
 
 import org.eclipse.swt.SWT;
@@ -132,8 +134,8 @@ public class StandaloneEditor {
 		Display.getDefault().addFilter(SWT.KeyDown, new Listener() {
 			public void handleEvent(Event event) {
 				if ((event.stateMask & SWT.MODIFIER_MASK) == SWT.CTRL && event.keyCode == 's') {
-					saveToFile();
-					compile();
+					File f = saveToFile();
+					compile(f.getParentFile());
 				}
 			}
 		});
@@ -145,8 +147,10 @@ public class StandaloneEditor {
 		return shell;
 	}
 
-	public void saveToFile() {
-		saveToFile(new File(module.getId() + ".java"));
+	public File saveToFile() {
+		File file = new File(module.getId() + ".java");
+		saveToFile(file);
+		return file;
 	}
 	
 	public void saveToFile(File file) {
@@ -163,14 +167,22 @@ public class StandaloneEditor {
 		}
 	}
 
-	public boolean compile() {
+	public boolean compile(File destinationDir) {
 		StringBuffer buffer = new StringBuffer();
 		classWidget.toCode(buffer, 0);
+		
 		JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+	
 		DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
 		JavaStringObject stringObject = new JavaStringObject("Test", buffer);
+		StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
+		try {
+			fileManager.setLocation(StandardLocation.CLASS_OUTPUT, Arrays.asList(destinationDir));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		JavaCompiler.CompilationTask task = compiler.getTask(null,
-				null, diagnostics, null, null, Arrays.asList(stringObject));
+				fileManager, diagnostics, null, null, Arrays.asList(stringObject));
 		//				DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
 		//			if(compiler.run(null, null, null, file.getPath()) == 0)
 		//				System.out.println("compilation success");
