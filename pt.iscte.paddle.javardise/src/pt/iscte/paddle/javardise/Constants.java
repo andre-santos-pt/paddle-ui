@@ -22,6 +22,7 @@ import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
 import pt.iscte.paddle.model.IType;
@@ -113,8 +114,10 @@ public interface Constants {
 		return t;
 	}
 	
-	static void setFont(Text control, boolean init) {
-		if (Keyword.is(control.getText())) {
+	static void setFont(Control control, boolean init) {
+		assert control instanceof Text || control instanceof Label;
+		String text = control instanceof Text ? ((Text) control).getText() : ((Label) control).getText();
+ 		if (Keyword.is(text)) {
 			control.setFont(FONT_KW);
 			control.setForeground(COLOR_KW);
 		} else {

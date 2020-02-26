@@ -16,14 +16,9 @@ public class FixedToken {
 	public FixedToken(Composite parent, String token) {
 		label = new Label(parent, SWT.NONE);
 		label.setText(token);
-		label.setBackground(Constants.COLOR_BACKGROUND);
-		
-		if(Keyword.is(token)) {
-			label.setFont(Constants.FONT_KW);
-			label.setForeground(Constants.COLOR_KW);
-		}
-		else
-			label.setFont(token.equals(".") ? Constants.FONT_DOT : Constants.FONT);
+		Constants.setFont(label, true);
+		if(token.equals("."))
+			label.setFont(Constants.FONT_DOT);
 	}
 
 	public void moveBelow(Control control) {
@@ -54,6 +49,4 @@ public class FixedToken {
 	public void setFocus() {
 		label.setFocus();
 	}
-	
-	
 }
