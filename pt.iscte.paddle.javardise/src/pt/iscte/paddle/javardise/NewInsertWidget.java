@@ -141,8 +141,8 @@ public class NewInsertWidget extends Composite implements TextWidget {
 	public List<String> getTokens() {
 		Control[] children = getChildren();
 		List<String> tokens = new ArrayList<>(children.length-1);
-		for(int i = 0; i < children.length-1; i++)
-			tokens.add(((Text) children[i]).getText());
+//		for(int i = 0; i < children.length-1; i++)
+//			tokens.add(((Text) children[i]).getText()); // TODO Bug
 		return tokens;
 	}
 

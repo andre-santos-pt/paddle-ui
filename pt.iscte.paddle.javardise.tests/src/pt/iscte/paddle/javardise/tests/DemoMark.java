@@ -54,7 +54,6 @@ public class DemoMark {
 		layout.verticalSpacing = 20;
 		shell.setLayout(layout);
 
-
 		ClassWidget widget = new ClassWidget(shell, module);
 		widget.setEnabled(false);
 

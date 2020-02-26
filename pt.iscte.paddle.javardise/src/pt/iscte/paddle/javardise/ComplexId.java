@@ -1,23 +1,20 @@
 package pt.iscte.paddle.javardise;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.function.Supplier;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Text;
 
 import pt.iscte.paddle.model.IArrayElement;
@@ -28,17 +25,9 @@ import pt.iscte.paddle.model.IVariable;
 public class ComplexId extends EditorWidget implements TextWidget, Expression {
 
 	final Text text;
-	private Menu popupMenu;
 	private final boolean type;
 	private boolean menuMode;
-
-	private Supplier<List<String>> idProvider;
-
-	private SelectionListener[] typeListeners;
-
-	private Runnable editAction = () -> {};
-
-	private List<CodeElement> elements = new ArrayList<>();
+	private List<CodeElementControl> elements;
 
 	ComplexId(Composite parent, IArrayElement e) {
 		this(parent, Constants.variableId((IVariable) e.getTarget()), false);
@@ -52,54 +41,23 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 	}
 	
 	ComplexId(Composite parent, String id, boolean type) {
-		this(parent, id, type, () -> Collections.emptyList());
-	}
-
-	ComplexId(Composite parent, String id, boolean type, Supplier<List<String>> idProvider) {
 		super(parent);
-		this.idProvider = idProvider;
 		this.type = type;
 		this.menuMode = false;
+		this.elements = new ArrayList<>();
 		setLayout(Constants.ROW_LAYOUT_H_SHRINK);
-		text = Constants.createText(parent, id);
-		List<String> provider = idProvider.get();
-
+		text = Constants.createText(this, id);
 		text.addVerifyListener(e -> e.doit = menuMode ||
 				isValidCharacter(e.character) || e.character == Constants.DEL_KEY || e.character == SWT.CR || e.character == '/');
-
-		text.addFocusListener(new FocusListener() {
+		text.addFocusListener(new  FocusAdapter() {
 			public void focusGained(FocusEvent e) {
-				//				text.setBackground(Constants.COLOR_BACKGROUND);
 				text.selectAll();
 			}
-
-			public void focusLost(FocusEvent e) {
-				//				if(text.getText().isBlank() || !type && Keyword.is(text.getText())) {
-				//					text.setBackground(Constants.COLOR_ERROR);
-				//				}
-				//				else
-				//					text.setBackground(Constants.COLOR_BACKGROUND);
-
-				//				if(Keyword.VOID.isEqual(text))
-				//					removeAllDimensions();
-
-				//				Constants.setFont(text, false); 
-				//				editAction.run();
-			}			
 		});
 
 		text.addModifyListener(Constants.MODIFY_PACK);
-
 		text.addKeyListener(addListener);
-
-
-		if(!provider.isEmpty()) {
-			addMenu(provider);
-			//			addKeyListeners();
-		}
-		else
-			text.setMenu(new Menu(text)); // prevent system menu
-
+		text.setMenu(new Menu(text)); // prevent system menu
 		Constants.addArrowKeys(text, this);
 	}
 
@@ -144,10 +102,6 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 		requestLayout();
 	}
 
-	public void setEditAction(Runnable editAction) {
-		this.editAction = editAction == null ? () -> {} : editAction;
-	}
-
 	public void addDimension() {
 		addDimension(null);
 	}
@@ -173,23 +127,30 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 		}
 		else {
 			Dimension dimension = new Dimension(this, null);
-			if(left != null)
-				dimension.expression.moveBelow(left);
+//			if(left != null)
+//				dimension.expression.moveBelow(left);
 			dimension.setFocus();
 		}
 		requestLayout();
 	}
 
-	private class Dimension implements CodeElement {
+	private interface CodeElementControl extends CodeElement {
+		void dispose();
+	}
+	
+	private class Dimension implements CodeElementControl {
+		private FixedToken left;
 		private ExpressionWidget expression;
+		private Token right;
+		
 		public Dimension(Composite parent, Expression.Creator f) {
 			elements.add(this);
 			if(f == null)
 				f = p -> new SimpleExpressionWidget(p, "expression");
-			new FixedToken(parent, "[");
+			left = new FixedToken(parent, "[");
 			expression = new ExpressionWidget(parent, f);
-			Token rightBracket = new Token(parent, "]");
-			rightBracket.addKeyListener(new KeyAdapter() {
+			right = new Token(parent, "]");
+			right.addKeyListener(new KeyAdapter() {
 				public void keyPressed(KeyEvent e) {
 					if(e.character == '[') {
 						addDimension(Dimension.this.expression);
@@ -220,13 +181,21 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 			expression.toCode(buffer);
 			buffer.append(']');
 		}
+
+		@Override
+		public void dispose() {
+			left.dispose();
+			expression.dispose();
+			right.dispose();
+		}
 	}
 
-	private class Field implements CodeElement {
+	private class Field implements CodeElementControl {
+		FixedToken dot;
 		Text field;
 		public Field(Composite parent, String id) {
 			elements.add(this);
-			new FixedToken(parent, ".");
+			dot = new FixedToken(parent, ".");
 			field = Constants.createText(parent, id);
 			field.addVerifyListener(e -> e.doit = menuMode || Constants.isLetter(e.character) || e.character == SWT.BS);
 			field.addModifyListener(Constants.MODIFY_PACK);
@@ -246,6 +215,12 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 				buffer.append(Constants.EMPTY_EXPRESSION_SERIALIZE);
 			else
 				buffer.append(field.getText());
+		}
+
+		@Override
+		public void dispose() {
+			dot.dispose();
+			field.dispose();
 		}
 	}
 
@@ -273,51 +248,9 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 		children[children.length-1].setFocus();
 	}
 
-	private void addMenu(List<String> provider) {
-		popupMenu = new Menu(text);
-		MenuItem[] items = new MenuItem[provider.size()];
-		typeListeners = new SelectionListener[provider.size()];
-		for(int i = 0; i < provider.size(); i++) {
-			MenuItem it = new MenuItem(popupMenu, SWT.CHECK);
-			items[i] = it;
-			items[i].setText(provider.get(i));
-			//			items[i].setSelection(provider.get(i).equals(initialId));
-			typeListeners[i] = new SelectionAdapter() {
-				public void widgetSelected(SelectionEvent e) {
-					for(MenuItem m : items)
-						m.setSelection(m == it);
-					menuMode = true;
-					text.setText(it.getText());
-					menuMode = false;
-					Constants.setFont(text, false);
-					text.requestLayout();
-				}
-			};
-			items[i].addSelectionListener(typeListeners[i]);
-		}
-		setMenu(popupMenu);
-	}
+	
 
-	private void addKeyListeners() {
-		text.addKeyListener(KeyListener.keyPressedAdapter(e -> {
-			List<String> list = idProvider.get();
-			if(e.keyCode == Constants.MENU_KEY && popupMenu != null) {
-				popup(popupMenu, text);
-			}
-			else {
-				for(String i : list) {
-					if(i.charAt(0) == e.character && !text.getText().equals(i)) {
-						menuMode = true;
-						text.setText(i); 
-						menuMode = false;
-						e.doit = false;
-						break;
-					}
-				}
-			}
-			setAtRight();
-		}));
-	}
+	
 
 	public void setToolTip(String text) {
 		this.text.setToolTipText(text);
@@ -371,10 +304,11 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 	public void clean() {
 		menuMode = true;
 		text.setText("");
-		Control[] children = getChildren();
-		for(int i = 1; i < children.length; i++)
-			children[i].dispose();
 		menuMode = false;
+		for(CodeElementControl e : elements)
+			e.dispose();
+		elements.clear();
+		requestLayout();
 	}
 
 	public boolean isEmpty() {
@@ -389,7 +323,7 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 	public List<IExpression> getArrayModelExpressions() {
 		assert isArrayAccess();
 		List<IExpression> list = new ArrayList<>();
-		for(int i = elements.size()-1; elements.get(i) instanceof Dimension; i--)
+		for(int i = elements.size()-1; i >= 0 && elements.get(i) instanceof Dimension; i--)
 			list.add(0, ((Dimension) elements.get(i)).expression.toModel());
 		return list;
 	}
@@ -425,11 +359,58 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 		return null;
 	}
 
-//	public boolean isChild(Control control) {
-//		for(Control c : getChildren())
-//			if(c == control)
-//				return true;
-//		return false;
+	
+	
+	
+	
+	
+//	private SelectionListener[] typeListeners;
+	
+	
+//	private void addKeyListeners() {
+//		text.addKeyListener(KeyListener.keyPressedAdapter(e -> {
+//			List<String> list = idProvider.get();
+//			if(e.keyCode == Constants.MENU_KEY && popupMenu != null) {
+//				popup(popupMenu, text);
+//			}
+//			else {
+//				for(String i : list) {
+//					if(i.charAt(0) == e.character && !text.getText().equals(i)) {
+//						menuMode = true;
+//						text.setText(i); 
+//						menuMode = false;
+//						e.doit = false;
+//						break;
+//					}
+//				}
+//			}
+//			setAtRight();
+//		}));
+//	}
+	
+//	private void addMenu(List<String> provider) {
+//		popupMenu = new Menu(text);
+//		MenuItem[] items = new MenuItem[provider.size()];
+//		typeListeners = new SelectionListener[provider.size()];
+//		for(int i = 0; i < provider.size(); i++) {
+//			MenuItem it = new MenuItem(popupMenu, SWT.CHECK);
+//			items[i] = it;
+//			items[i].setText(provider.get(i));
+//			//			items[i].setSelection(provider.get(i).equals(initialId));
+//			typeListeners[i] = new SelectionAdapter() {
+//				public void widgetSelected(SelectionEvent e) {
+//					for(MenuItem m : items)
+//						m.setSelection(m == it);
+//					menuMode = true;
+//					text.setText(it.getText());
+//					menuMode = false;
+//					Constants.setFont(text, false);
+//					text.requestLayout();
+//				}
+//			};
+//			items[i].addSelectionListener(typeListeners[i]);
+//		}
+//		setMenu(popupMenu);
 //	}
 
 }

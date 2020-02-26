@@ -1,4 +1,4 @@
-package pt.iscte.paddle.javardise;
+package pt.iscte.paddle.javardise.editor;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -31,6 +31,14 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
 
+import pt.iscte.paddle.javardise.ClassWidget;
+import pt.iscte.paddle.javardise.ComplexId;
+import pt.iscte.paddle.javardise.Constants;
+import pt.iscte.paddle.javardise.Keyword;
+import pt.iscte.paddle.javardise.NewInsertWidget;
+import pt.iscte.paddle.javardise.SequenceWidget;
+import pt.iscte.paddle.javardise.UiMode;
+import pt.iscte.paddle.javardise.NewInsertWidget.Action;
 import pt.iscte.paddle.model.IModule;
 
 
@@ -167,10 +175,10 @@ public class StandaloneEditor {
 		}
 	}
 
+	
 	public boolean compile(File destinationDir) {
 		StringBuffer buffer = new StringBuffer();
 		classWidget.toCode(buffer, 0);
-		
 		JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 	
 		DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
@@ -183,17 +191,11 @@ public class StandaloneEditor {
 		}
 		JavaCompiler.CompilationTask task = compiler.getTask(null,
 				fileManager, diagnostics, null, null, Arrays.asList(stringObject));
-		//				DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
-		//			if(compiler.run(null, null, null, file.getPath()) == 0)
-		//				System.out.println("compilation success");
 		if (!task.call()) {
-
 			diagnostics.getDiagnostics().forEach(d -> System.err.println(d));
-			
 			return false;
 		}
 		else
-			System.out.println("compilation success");
 			return true;
 	}
 	

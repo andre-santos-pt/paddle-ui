@@ -15,4 +15,10 @@ public interface CodeElement {
 		else
 			buffer.append(text.getText());
 	}
+	
+	default String getCode() {
+		StringBuffer b = new StringBuffer();
+		toCode(b);
+		return b.toString();
+	}
 }
