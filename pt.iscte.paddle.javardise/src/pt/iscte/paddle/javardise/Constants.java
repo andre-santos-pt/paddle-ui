@@ -106,6 +106,13 @@ public interface Constants {
 	//		return token.matches("class|static|final|return|new|void|if|else|while|for|break|continue|byte|short|int|long|float|double|boolean|char|true|false|null");
 	//	}
 
+	static Text createText(Composite parent, String text) {
+		Text t = new Text(parent, SWT.NONE);
+		t.setText(text);
+		setFont(t, true);
+		return t;
+	}
+	
 	static void setFont(Text control, boolean init) {
 		if (Keyword.is(control.getText())) {
 			control.setFont(FONT_KW);
@@ -116,6 +123,7 @@ public interface Constants {
 			control.setFont(FONT);
 			control.setForeground(FONT_COLOR);
 		}
+		control.setBackground(COLOR_BACKGROUND);
 	}
 
 	GridData data = new GridData(SWT.LEFT, SWT.TOP, false, false);

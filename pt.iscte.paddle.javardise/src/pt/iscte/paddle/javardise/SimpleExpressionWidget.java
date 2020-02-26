@@ -25,10 +25,7 @@ public class SimpleExpressionWidget extends Composite implements TextWidget, Exp
 		assert literal != null;
 		setLayout(Constants.ROW_LAYOUT_H_ZERO);
 		
-		text = new Text(this, SWT.NONE);
-		text.setText(literal);
-		text.setBackground(Constants.COLOR_BACKGROUND);
-		Constants.setFont(text, true);
+		text = Constants.createText(parent, literal);
 		text.addVerifyListener(e -> e.doit = 
 				validCharacter(e.character) || 
 				e.character == '.' && text.getText().indexOf('.') == -1 || 
@@ -174,8 +171,6 @@ public class SimpleExpressionWidget extends Composite implements TextWidget, Exp
 
 	private void updateContent() {
 		Constants.setFont(text, false);
-		text.setBackground(Constants.COLOR_BACKGROUND);
-		text.setForeground(Constants.FONT_COLOR);
 		text.setToolTipText("");
 		literalType = null;
 		try {

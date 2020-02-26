@@ -54,6 +54,7 @@ public class Test {
 				Shell s = e.launch(display);
 				shells.add(s);
 				File dest = new File("src-gen");
+				
 				if(e.compile(dest)) {
 //					s.close();
 				}

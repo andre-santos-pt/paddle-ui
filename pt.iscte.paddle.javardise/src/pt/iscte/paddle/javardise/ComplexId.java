@@ -61,11 +61,8 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 		this.type = type;
 		this.menuMode = false;
 		setLayout(Constants.ROW_LAYOUT_H_SHRINK);
-		text = new Text(this, SWT.NONE);
-		text.setText(id);
-//		text.setBackground(Constants.COLOR_HIGHLIGHT);
+		text = Constants.createText(parent, id);
 		List<String> provider = idProvider.get();
-		Constants.setFont(text, true);
 
 		text.addVerifyListener(e -> e.doit = menuMode ||
 				isValidCharacter(e.character) || e.character == Constants.DEL_KEY || e.character == SWT.CR || e.character == '/');
@@ -107,11 +104,6 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 	}
 
 	
-	
-
-	
-	
-
 	void setReadOnly() {
 		text.setEditable(false);
 	}
@@ -235,12 +227,10 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 		public Field(Composite parent, String id) {
 			elements.add(this);
 			new FixedToken(parent, ".");
-			field = new Text(parent, SWT.NONE);
-			field.setText(id);
+			field = Constants.createText(parent, id);
 			field.addVerifyListener(e -> e.doit = menuMode || Constants.isLetter(e.character) || e.character == SWT.BS);
 			field.addModifyListener(Constants.MODIFY_PACK);
 			// TODO empty modify
-			Constants.setFont(field, true);
 			Constants.addArrowKeys(field, TextWidget.create(field));
 			Constants.addFocusSelectAll(field);
 			field.addKeyListener(addListener);

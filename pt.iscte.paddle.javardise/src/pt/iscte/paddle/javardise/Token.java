@@ -40,9 +40,10 @@ public class Token implements TextWidget, CodeElement {
 			text.setFont(Constants.FONT_KW);
 			text.setForeground(Constants.COLOR_KW);
 		}
-		else
+		else {
 			text.setFont(token.equals(".") ? Constants.FONT_DOT : Constants.FONT);
-
+			text.setForeground(Constants.FONT_COLOR);
+		}
 		map = new HashMap<>();
 		
 		Menu menu = new Menu(text);

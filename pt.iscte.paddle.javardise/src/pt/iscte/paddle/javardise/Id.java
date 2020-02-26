@@ -70,6 +70,7 @@ public class Id extends EditorWidget implements TextWidget {
 		this.idProvider = idProvider;
 		this.type = type;
 		setLayout(Constants.ROW_LAYOUT_H_SHRINK);
+		setBackground(Constants.COLOR_BACKGROUND);
 		initialId = id;
 		text = new Text(this, SWT.NONE);
 		text.setText(id);
