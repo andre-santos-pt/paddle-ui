@@ -20,9 +20,9 @@ public class ForWidget extends ControlWidget implements SequenceContainer {
 	@Override
 	void fillHeader(IExpression guard, Composite header) {
 //		dec = new DeclarationWidget(header, IType.INT, "i", "0");
-		this.guard = new ExpressionWidget(header, Expression.match(guard));
+//		this.guard = new ExpressionWidget(header, Expression.match(guard));
 		new FixedToken(header, ";");
-		statement = new ExpressionWidget(header, "statement"); // TODO to statement
+		//statement = new ExpressionWidget(header, "statement"); // TODO to statement
 	}
 	
 

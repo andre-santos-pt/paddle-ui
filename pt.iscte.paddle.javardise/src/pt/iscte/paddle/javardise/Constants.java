@@ -26,7 +26,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
 import pt.iscte.paddle.model.IType;
-import pt.iscte.paddle.model.IVariable;
+import pt.iscte.paddle.model.IVariableDeclaration;
 
 public interface Constants {
 	//	class Operator {
@@ -245,18 +245,18 @@ public interface Constants {
 			if(e.widget.isDisposed())
 				return;
 			Control w = ((Control) e.widget).getParent();
-			if(e.keyCode == Constants.DEL_KEY && (!(w instanceof TextWidget) || ((TextWidget)w).isAtBeginning()) 
-					||
-					(e.stateMask & SWT.MODIFIER_MASK) == SWT.CTRL && e.keyCode == 'd'
-					) {
-				SequenceWidget parent = (SequenceWidget) target.getParent();
+			assert w instanceof TextWidget;
+			if(e.keyCode == Constants.DEL_KEY && 
+					(w instanceof TextWidget && ((TextWidget)w).isAtBeginning())) {
+				SequenceWidget parent = target.getOwnerSequence();
+				parent = target.getOwnerSequence();
 				int index = parent.findModelIndex(target);
 				parent.deleteAction(index);
 			}
 		}	
 	};
 
-	static void moveCursorUp(TextWidget widget) {
+	private static void moveCursorUp(TextWidget widget) {
 		Control statement = widget.getStatement();
 		if(statement != null) {
 			SequenceWidget seq = (SequenceWidget) statement.getParent();
@@ -264,7 +264,7 @@ public interface Constants {
 		}
 	}
 
-	static void moveCursorDown(TextWidget widget) {
+	private static void moveCursorDown(TextWidget widget) {
 		Control statement = widget.getStatement();
 		if(statement != null) {
 			SequenceWidget seq = (SequenceWidget) statement.getParent();
@@ -280,7 +280,7 @@ public interface Constants {
 		return c;
 	}
 
-	static String variableId(IVariable var) {
+	static String variableId(IVariableDeclaration var) {
 		return var.getId() == null ? "var$" + var.procedureIndex() :  var.getId();
 	}
 

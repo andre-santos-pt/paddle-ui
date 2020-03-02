@@ -22,16 +22,17 @@ public class ControlWidget extends EditorWidget implements SequenceContainer {
 		setLayout(Constants.ROW_LAYOUT_V_ZERO);
 		Composite header = new Composite(this, SWT.NONE);
 		header.setLayout(Constants.ROW_LAYOUT_H_ZERO);
-
+		header.setBackground(Constants.COLOR_BACKGROUND);
 		deleteListener = new Constants.DeleteListener(this);
 		this.keyword = new Token(header, keyword);
-		Constants.addInsertLine(this.keyword);
 
 		if(keyword == Keyword.ELSE)
 			; // TODO special case delete ELSE
-		else
+		else {
+			Constants.addInsertLine(this.keyword);
 			this.keyword.addKeyListener(deleteListener);
-
+		}
+		
 		if(keyword != Keyword.ELSE) {
 			new FixedToken(header, "(");
 			fillHeader(guard, header);
@@ -59,7 +60,10 @@ public class ControlWidget extends EditorWidget implements SequenceContainer {
 	}
 
 	void fillHeader(IExpression expression, Composite header) {
-		this.expression = new ExpressionWidget(header, Expression.match(expression));
+		Markable<CodeElement> markable = new Markable<CodeElement>(header, p -> new ExpressionWidget(p, Expression.match(expression), expression), expression);
+		
+//		this.expression = new ExpressionWidget(header, Expression.match(expression), expression);
+		this.expression = (ExpressionWidget) markable.target;
 		this.expression.addKeyListener(deleteListener);
 	}
 

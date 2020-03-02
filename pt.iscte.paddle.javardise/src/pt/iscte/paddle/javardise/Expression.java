@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.function.Function;
 
 import org.eclipse.swt.events.KeyListener;
+import org.eclipse.swt.widgets.Composite;
 
 import pt.iscte.paddle.model.IArrayAllocation;
 import pt.iscte.paddle.model.IArrayElement;
@@ -16,14 +17,15 @@ import pt.iscte.paddle.model.IProcedureCall;
 import pt.iscte.paddle.model.IReferenceType;
 import pt.iscte.paddle.model.IType;
 import pt.iscte.paddle.model.IUnaryExpression;
-import pt.iscte.paddle.model.IVariable;
 import pt.iscte.paddle.model.IVariableAddress;
+import pt.iscte.paddle.model.IVariableDeclaration;
+import pt.iscte.paddle.model.IVariableExpression;
 
 public interface Expression extends CodeElement {
 
-	interface Creator extends Function<EditorWidget, Expression> {  }
+	interface Creator extends Function<Composite, Expression> {  }
 
-	Expression copyTo(EditorWidget parent);
+	Expression copyTo(Composite parent);
 
 	void dispose();
 	boolean setFocus();
@@ -45,12 +47,12 @@ public interface Expression extends CodeElement {
 		if(e instanceof ILiteral) {
 			return p -> new SimpleExpressionWidget(p, ((ILiteral) e).getStringValue());
 		}
-		else if(e instanceof IVariable) {
-			IVariable var = (IVariable) e;
-			return p -> new SimpleExpressionWidget(p, Constants.variableId(var));
+		else if(e instanceof IVariableExpression) {
+			IVariableExpression var = (IVariableExpression) e;
+			return p -> new SimpleExpressionWidget(p, Constants.variableId(var.getVariable()));
 		}
 		else if(e instanceof IVariableAddress) {
-			IVariable var = ((IVariableAddress) e).getVariable();
+			IVariableDeclaration var = ((IVariableAddress) e).getTarget().getVariable();
 			return p -> new SimpleExpressionWidget(p, Constants.variableId(var));
 		}
 		else if(e instanceof IUnaryExpression) {

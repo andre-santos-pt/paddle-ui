@@ -4,6 +4,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.RowData;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 
@@ -19,21 +20,21 @@ public class BinaryExpressionWidget extends EditorWidget implements Expression {
 	
 	private RowData data = new RowData();
 	
-	public BinaryExpressionWidget(EditorWidget parent, String operator) {
+	public BinaryExpressionWidget(Composite parent, String operator) {
 		this(parent, 
 				e -> new SimpleExpressionWidget(e, "left"),
 				e -> new SimpleExpressionWidget(e, "right"),
 				operator);
 	}
 	
-	public BinaryExpressionWidget(EditorWidget parent, Expression.Creator left, String operator) {
+	public BinaryExpressionWidget(Composite parent, Expression.Creator left, String operator) {
 		this(parent, 
 				left,
 				e -> new SimpleExpressionWidget(e, ""),
 				operator);
 	}
 	
-	public BinaryExpressionWidget(EditorWidget parent, Expression.Creator left, Expression.Creator right, String operator) {
+	public BinaryExpressionWidget(Composite parent, Expression.Creator left, Expression.Creator right, String operator) {
 		super(parent);
 		brackets = false;
 		setLayout(Constants.ROW_LAYOUT_H_ZERO);
@@ -42,9 +43,9 @@ public class BinaryExpressionWidget extends EditorWidget implements Expression {
 		FixedToken lBracket = new FixedToken(this, "(");
 		lBracket.setLayoutData(data);
 	
-		this.left = new ExpressionWidget(this, left);
+		this.left = new ExpressionWidget(this, left, null);
 		this.op = new Token(this, operator, Constants.ARITHMETIC_OPERATORS, Constants.RELATIONAL_OPERATORS, Constants.LOGICAL_OPERATORS);
-		this.right = new ExpressionWidget(this, right);
+		this.right = new ExpressionWidget(this, right, null);
 		
 		Token rBracket = new Token(this, ")");
 		rBracket.setLayoutData(data);
@@ -106,7 +107,7 @@ public class BinaryExpressionWidget extends EditorWidget implements Expression {
 //	}
 
 	@Override
-	public Expression copyTo(EditorWidget parent) {
+	public Expression copyTo(Composite parent) {
 		return new BinaryExpressionWidget(parent, p -> left.copyTo(p), op.getText());
 	}
 

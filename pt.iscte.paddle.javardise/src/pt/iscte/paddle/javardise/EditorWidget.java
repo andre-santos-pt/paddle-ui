@@ -13,7 +13,7 @@ import pt.iscte.paddle.model.IProgramElement;
 
 public class EditorWidget extends Composite implements CodeElement {
 
-	
+
 	public EditorWidget(Composite parent) {
 		super(parent, SWT.NONE);
 		setLayout(Constants.ROW_LAYOUT_H_ZERO);
@@ -28,7 +28,7 @@ public class EditorWidget extends Composite implements CodeElement {
 				colorSubComposites((Composite) control, color);
 		}
 	}
-	
+
 	void setReadOnly(boolean readonly) {
 		setEnabled(!readonly);
 	}
@@ -42,6 +42,11 @@ public class EditorWidget extends Composite implements CodeElement {
 		setBackground(Constants.COLOR_BACKGROUND);
 	}
 
+	@Override
+	public Control getControl() {
+		return this;
+	}
+
 	// fragile
 	MethodWidget getParentMethod() {
 		EditorWidget e = this;
@@ -50,6 +55,8 @@ public class EditorWidget extends Composite implements CodeElement {
 
 		return (MethodWidget) e;
 	}
+
+	
 
 
 	void popup(Menu menu, Control control) {
@@ -93,10 +100,10 @@ public class EditorWidget extends Composite implements CodeElement {
 	}
 
 	// to override
-//	public void toCode(StringBuffer buffer) {
-//		buffer.append("#TODO" + this.getClass().getSimpleName() + "#");
-//		System.err.println("missing toCode " + this.getClass());
-//	}
+	//	public void toCode(StringBuffer buffer) {
+	//		buffer.append("#TODO" + this.getClass().getSimpleName() + "#");
+	//		System.err.println("missing toCode " + this.getClass());
+	//	}
 
 	@Override
 	public String toString() {
@@ -104,4 +111,14 @@ public class EditorWidget extends Composite implements CodeElement {
 		toCode(b);
 		return b.toString();
 	}
+
+	public SequenceWidget getOwnerSequence() {
+		Composite parent = getParent();
+		while(!(parent instanceof SequenceWidget))
+			parent = parent.getParent();
+		
+		assert parent != null : "not applicable";
+		return (SequenceWidget) parent;
+	}
+	
 }

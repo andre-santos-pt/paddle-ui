@@ -18,7 +18,7 @@ import pt.iscte.paddle.model.IProcedure;
 import pt.iscte.paddle.model.IRecordFieldExpression;
 import pt.iscte.paddle.model.ISelection;
 import pt.iscte.paddle.model.IType;
-import pt.iscte.paddle.model.IVariable;
+import pt.iscte.paddle.model.IVariableDeclaration;
 
 abstract class BlockAction extends NewInsertWidget.Action {
 
@@ -76,21 +76,21 @@ abstract class BlockAction extends NewInsertWidget.Action {
 				return c == '=' && !Constants.isType(id.getText()) && !id.isKeyword() && !id.isEmpty();
 			}
 			public void run(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
-				IVariable var = block.getOwnerProcedure().getVariable(id.getId());
+				IVariableDeclaration var = block.getOwnerProcedure().getVariable(id.getId());
 				if(var == null)
-					var = new IVariable.UnboundVariable(id.getId());
+					var = new IVariableDeclaration.UnboundVariable(id.getId());
 				
 				if(id.isSingleId())
 					block.addAssignmentAt(var, null, index);
 				else if(id.isArrayAccess()) {
 					List<IExpression> indexes = id.getArrayModelExpressions();
-					block.addArrayElementAssignmentAt(var, null, index, indexes);
+					block.addArrayElementAssignmentAt(var.expression(), null, index, indexes);
 				}
 				else if(id.isFieldAccess()) {
 					Iterator<String> fields = id.getFields().iterator();
-					IRecordFieldExpression exp = var.field(new IVariable.UnboundVariable(fields.next()));
+					IRecordFieldExpression exp = var.field(new IVariableDeclaration.UnboundVariable(fields.next()));
 					while(fields.hasNext())
-						exp = exp.field(new IVariable.UnboundVariable(fields.next()));
+						exp = exp.field(new IVariableDeclaration.UnboundVariable(fields.next()));
 					block.addRecordFieldAssignmentAt(exp, null, index);
 					// TODO mix resolve
 				}
@@ -148,7 +148,7 @@ abstract class BlockAction extends NewInsertWidget.Action {
 
 			public void run(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
 				IBlock forBlock = block.addBlockAt(index, Constants.FOR_FLAG);
-				IVariable progVar = forBlock.addVariable(INT, Constants.FOR_FLAG);
+				IVariableDeclaration progVar = forBlock.addVariable(INT, Constants.FOR_FLAG);
 				ILoop loop = forBlock.addLoop(BOOLEAN.literal(true), Constants.FOR_FLAG);
 				loop.addAssignment(progVar, IOperator.ADD.on(progVar, INT.literal(1)), Constants.FOR_FLAG);
 			}
@@ -217,9 +217,9 @@ abstract class BlockAction extends NewInsertWidget.Action {
 			}
 
 			public void run(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
-				IVariable var = block.getOwnerProcedure().getVariable(id.getId());
+				IVariableDeclaration var = block.getOwnerProcedure().getVariable(id.getId());
 				if(var == null)
-					var = new IVariable.UnboundVariable(id.getId());
+					var = new IVariableDeclaration.UnboundVariable(id.getId());
 				block.addIncrementAt(var, index);
 			}
 		};

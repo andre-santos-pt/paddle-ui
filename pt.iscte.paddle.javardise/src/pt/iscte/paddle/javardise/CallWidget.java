@@ -80,7 +80,7 @@ public class CallWidget extends EditorWidget implements Expression {
 		if(args.getChildren().length > 1)
 			new FixedToken(args, ",");
 		
-		ExpressionWidget exp = new ExpressionWidget(args, f);
+		ExpressionWidget exp = new ExpressionWidget(args, f, null);
 		exp.requestLayout();
 		exp.setFocus();
 		exp.addKeyListener(new KeyAdapter() {
@@ -115,7 +115,7 @@ public class CallWidget extends EditorWidget implements Expression {
 	}
 
 	@Override
-	public Expression copyTo(EditorWidget parent) {
+	public Expression copyTo(Composite parent) {
 		// TODO Auto-generated method stub
 		return null;
 	}

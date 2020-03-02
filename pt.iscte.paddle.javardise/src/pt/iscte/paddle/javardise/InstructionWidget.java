@@ -20,22 +20,19 @@ public class InstructionWidget extends EditorWidget {
 		this.keyword = keyword;
 		setLayout(Constants.ROW_LAYOUT_H);
 		DeleteListener deleteListener = new Constants.DeleteListener(this);
-		this.keywordToken = new Token(this, keyword);
-		this.keywordToken.addKeyListener(deleteListener);
+		keywordToken = new Token(this, keyword);
+		keywordToken.addKeyListener(deleteListener);
+		Constants.addInsertLine(keywordToken);
 
 		if(expression != null) {
-			expressionWidget = new ExpressionWidget(this, Expression.match(expression));
+			Markable<CodeElement> markable = new Markable<CodeElement>(this, p -> new ExpressionWidget(p, Expression.match(expression), expression), expression);
+			expressionWidget = (ExpressionWidget) markable.target;
+//			expressionWidget = new ExpressionWidget(this, Expression.match(expression), expression);
 			expressionWidget.addKeyListener(deleteListener);
 		}
 		else
 			expressionWidget = null;
 		new FixedToken(this, ";");
-
-//		final ControlDecoration dec = new ControlDecoration(this, SWT.LEFT | SWT.CENTER);
-//		dec.setMarginWidth(10);
-//		dec.setDescriptionText("blabla");
-//		dec.setImage(new Image(Display.getDefault(), "/Users/andresantos/git/paddle-ui/pt.iscte.paddle.javasde/arrow.png")); 
-		
 	}
 
 	@Override

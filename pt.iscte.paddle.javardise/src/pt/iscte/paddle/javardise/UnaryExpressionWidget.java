@@ -3,6 +3,7 @@ package pt.iscte.paddle.javardise;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 
@@ -14,7 +15,7 @@ public class UnaryExpressionWidget extends EditorWidget implements Expression {
 	private Token op;
 	private Expression expression;
 
-	public UnaryExpressionWidget(EditorWidget parent, String operator, Expression.Creator f) {
+	public UnaryExpressionWidget(Composite parent, String operator, Expression.Creator f) {
 		super(parent);
 		setLayout(Constants.ROW_LAYOUT_H_ZERO);
 		op = new Token(this, operator, Constants.UNARY_OPERATORS);
@@ -38,7 +39,7 @@ public class UnaryExpressionWidget extends EditorWidget implements Expression {
 	}
 
 	@Override
-	public Expression copyTo(EditorWidget parent) {
+	public Expression copyTo(Composite parent) {
 		return new UnaryExpressionWidget(parent, op.getText(), p -> expression.copyTo(p));
 	}
 	

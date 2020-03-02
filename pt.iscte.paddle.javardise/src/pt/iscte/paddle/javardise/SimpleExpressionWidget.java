@@ -8,24 +8,25 @@ import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Text;
 
 import pt.iscte.paddle.model.IExpression;
 import pt.iscte.paddle.model.IType;
-import pt.iscte.paddle.model.IVariable;
+import pt.iscte.paddle.model.IVariableDeclaration;
 
 public class SimpleExpressionWidget extends Composite implements TextWidget, Expression {
 
 	final Text text;
 	private Class<?> literalType;
 	
-	public SimpleExpressionWidget(EditorWidget parent, String literal) {
+	public SimpleExpressionWidget(Composite parent, String literal) {
 		super(parent, SWT.NONE);
 		assert literal != null;
 		setLayout(Constants.ROW_LAYOUT_H_ZERO);
 		
-		text = Constants.createText(parent, literal);
+		text = Constants.createText(this, literal);
 		text.addVerifyListener(e -> e.doit = 
 				validCharacter(e.character) || 
 				e.character == '.' && text.getText().indexOf('.') == -1 || 
@@ -49,6 +50,11 @@ public class SimpleExpressionWidget extends Composite implements TextWidget, Exp
 		text.setMenu(new Menu(text));
 	}
 
+	@Override
+	public Control getControl() {
+		return text;
+	}
+	
 	private void addTransformationKeyListener() {
 		text.addKeyListener(new KeyAdapter() {
 			public void keyPressed(KeyEvent e) {
@@ -75,13 +81,19 @@ public class SimpleExpressionWidget extends Composite implements TextWidget, Exp
 					c.focusArgument();
 					w = c;
 				}
-				
+				else if(e.character == '(' && (text.getText().isBlank() || text.getSelectionCount() == text.getText().length())) {
+					BracketsWidget b = new BracketsWidget((EditorWidget) getParent(), p -> new SimpleExpressionWidget(p, "expression"));
+					b.setFocus();
+					w = b;
+				}
 				else if(e.character == '[' && Id.isValid(text.getText()) && text.getCaretPosition() == text.getText().length() && text.getSelectionCount() == 0) {
-//					ComplexId id = new ComplexId((EditorWidget) getParent(), text.getText(), false);
+					ComplexId id = new ComplexId((EditorWidget) getParent(), text.getText(), false);
+					id.addDimension();
+					id.focusLastDimension();
 //					ArrayElementExpression a = new ArrayElementExpression((EditorWidget) getParent(), text.getText(), "expression");
 //					a.addExpressionInserts();
 //					a.focusExpression();
-//					w = a;
+					w = id;
 				}
 				
 //				else if(e.character == '.' && Id.isValid(text.getText())) {
@@ -90,13 +102,12 @@ public class SimpleExpressionWidget extends Composite implements TextWidget, Exp
 //					w = f;
 //				}
 				
-				
 				else if(e.character == SWT.CR) {
 					text.traverse(SWT.TRAVERSE_TAB_NEXT);
 				}
 				
 				if(w != null) {
-					((Expression) getParent()).substitute(SimpleExpressionWidget.this, w);
+					((Expression) getParent()).substitute(SimpleExpressionWidget.this, w); // TODO bug cast
 					e.doit = false;
 				}
 			}
@@ -129,6 +140,11 @@ public class SimpleExpressionWidget extends Composite implements TextWidget, Exp
 	}
 
 	@Override
+	public boolean setFocus() {
+		return text.setFocus();
+	}
+	
+	@Override
 	public String toString() {
 		return text.getText();
 	}
@@ -139,7 +155,7 @@ public class SimpleExpressionWidget extends Composite implements TextWidget, Exp
 	}
 	
 	@Override
-	public Expression copyTo(EditorWidget parent) {
+	public Expression copyTo(Composite parent) {
 		return new SimpleExpressionWidget(parent, text.getText());
 	}
 	
@@ -164,7 +180,7 @@ public class SimpleExpressionWidget extends Composite implements TextWidget, Exp
 		if(literalType == Integer.class)
 			return IType.INT.literal(Integer.parseInt(text.getText()));
 		else if(Id.isValid(text.getText()))
-			return new IVariable.UnboundVariable(text.getText());
+			return new IVariableDeclaration.UnboundVariable(text.getText()).expression(); // TODO Unbound Variable to Expression
 		else
 			return null;
 	}

@@ -36,8 +36,8 @@ import pt.iscte.paddle.model.IProcedureCall;
 import pt.iscte.paddle.model.IProgramElement;
 import pt.iscte.paddle.model.IReturn;
 import pt.iscte.paddle.model.ISelection;
-import pt.iscte.paddle.model.IVariable;
 import pt.iscte.paddle.model.IVariableAssignment;
+import pt.iscte.paddle.model.IVariableDeclaration;
 
 public class SequenceWidget extends Composite {
 
@@ -65,7 +65,7 @@ public class SequenceWidget extends Composite {
 				insertWidget.setFocus();
 			}
 		});
-		
+
 		Supplier<List<Action>> sup = () -> {
 			ArrayList<Action> list = new ArrayList<>();
 			list.add(new Action() {
@@ -80,7 +80,7 @@ public class SequenceWidget extends Composite {
 		};
 		Menu menu = new Menu(insertWidget);
 		menu.addListener(SWT.Show, new Listener() {
-			
+
 			@Override
 			public void handleEvent(Event event) {
 				for(MenuItem i : menu.getItems())
@@ -94,7 +94,7 @@ public class SequenceWidget extends Composite {
 						}
 					});
 				}
-					
+
 			}
 		});
 		insertWidget.setMenu(menu);
@@ -104,7 +104,7 @@ public class SequenceWidget extends Composite {
 		String getText();
 		void run();
 	}
-	
+
 	void setDeleteAction(Consumer<Integer> action) {
 		deleteAction = action;
 	}
@@ -119,10 +119,13 @@ public class SequenceWidget extends Composite {
 	int findModelIndex(Control location) {
 		int i = 0;
 		for (Control c : getChildren()) {
+			if(c instanceof Markable)
+				c = ((Markable)c).target.getControl();
+
 			if (c == location)
 				return i;
 
-			if(!isElse(c) && !(c instanceof InsertWidget))
+			if(!isElse(c) && !(c instanceof NewInsertWidget))
 				i++;
 		}
 		assert false;
@@ -131,27 +134,19 @@ public class SequenceWidget extends Composite {
 
 	private int toViewIndex(int modelIndex) {
 		assert modelIndex < getChildren().length : modelIndex;
-		//		assert modelIndex < totalElements() : modelIndex;
-
 		int elsesAndInserts = 0;
-		int i = 0;
-		for (Control c : getChildren()) {
-			if(i == modelIndex) {
-				return i + elsesAndInserts;
-			}
-
-			if(isElse(c) || c instanceof InsertWidget)
+		Control[] children = getChildren();
+		for(int i = 0; i <= modelIndex; i++)
+			if(isElse(children[i]) || children[i] instanceof NewInsertWidget)
 				elsesAndInserts++;
-			else
-				i++;
-		}
-
-		assert false;
-		return -1;
+		
+		return modelIndex + elsesAndInserts;
 	}
 
-
 	private static boolean isElse(Control c) {
+		if(c instanceof Markable)
+			c = ((Markable) c).target.getControl();
+		
 		return c instanceof ControlWidget && ((ControlWidget) c).is(Keyword.ELSE);
 	}
 
@@ -159,24 +154,12 @@ public class SequenceWidget extends Composite {
 		Control[] children = getChildren();
 		int elsesAndInserts = 0;
 		for (Control c : children)
-			if(isElse(c) || c instanceof InsertWidget)
+			if(isElse(c) || c instanceof NewInsertWidget)
 				elsesAndInserts++;
 
 		return children.length - elsesAndInserts;
 	}
 
-	public <T extends Control> T addWidget(Function<Composite, T> f) {
-		return addWidget(f, totalElements());
-	}
-
-	public <T extends Control> T addWidget(Function<Composite, T> f, int modelIndex) {
-		T w = f.apply(this);
-		int i = toViewIndex(modelIndex);
-		Control location = getChildren()[i];
-		w.moveAbove(location);
-		w.requestLayout();
-		return w;
-	}
 
 	public void addAction(NewInsertWidget.Action a) {
 		insertWidget.addAction(a);
@@ -207,22 +190,45 @@ public class SequenceWidget extends Composite {
 		});
 	}
 
-	<T extends EditorWidget> T addElement(Function<Composite, T> f, IProgramElement e) {
+	public <T extends EditorWidget> T addElement(Function<Composite, T> f, IProgramElement e) {
 		return addElement(f, e, totalElements());
 	}
-	
-	<T extends EditorWidget> T addElement(Function<Composite, T> f, IProgramElement e, int modelIndex) {
+
+	public <T extends EditorWidget> T addElement(Function<Composite, T> f, IProgramElement e, int modelIndex) {
+//		int viewIndex = toViewIndex(modelIndex);
+		
+		Control el = viewElement(modelIndex);
+
 		Markable<T> sel = new Markable<>(this, f, e);
 		T w = sel.target;
-//		T w = f.apply(this);
-		int viewIndex = toViewIndex(modelIndex);
+		
 		if(isElse(w))
-			viewIndex++;
-		Control location = getChildren()[viewIndex];
-		sel.moveAbove(location);
-		sel.requestLayout();
-		sel.setFocus();
+			sel.moveBelow(el);
+		else
+			sel.moveAbove(el);
+		
+//		if(isElse(w))
+//			viewIndex++;
+//		Control location = getChildren()[viewIndex];
+//		if(location != sel)
+//			sel.moveAbove(location);
+		//		sel.requestLayout();
+		//		sel.setFocus();
 		return w;
+	}
+	
+	private Control viewElement(int modelIndex) {
+		assert modelIndex < getChildren().length : modelIndex;
+		int elsesAndInserts = 0;
+		Control[] children = getChildren();
+		for(int i = 0, m = 0; m <= modelIndex && i < children.length; i++)
+			if(isElse(children[i]) || children[i] instanceof NewInsertWidget)
+				elsesAndInserts++;
+			else
+				m++;
+		
+		int v = modelIndex + elsesAndInserts;
+		return v < children.length ? children[v] : insertWidget;
 	}
 
 	// TODO to remove
@@ -262,7 +268,7 @@ public class SequenceWidget extends Composite {
 
 	void focusNextStatement(TextWidget widget) {
 		Control c = widget.getStatement();
-		
+
 		if(c instanceof Markable && ((Markable<?>) c).target instanceof SequenceContainer) {
 			((SequenceContainer) ((Markable<?>) c).target).getBody().focusFirst();
 		}
@@ -275,7 +281,7 @@ public class SequenceWidget extends Composite {
 				for (int i = 0; i < children.length-1; i++) {
 					if(children[i] == c) {
 						children[i+1].setFocus();
- 						break;
+						break;
 					}
 				}
 			}
@@ -314,25 +320,16 @@ public class SequenceWidget extends Composite {
 	}
 
 	void addModelElement(IProgramElement element, int index) {
-		if (element instanceof IVariable && element.not(Constants.FOR_FLAG)) {
-			IVariable v = (IVariable) element;
+		if (element instanceof IVariableDeclaration && element.not(Constants.FOR_FLAG)) {
+			IVariableDeclaration v = (IVariableDeclaration) element;
 			DeclarationWidget w = addElement(p -> new DeclarationWidget(p, v, null), v, index);
 			w.focusId();
 		} 
 
 		else if (element instanceof IVariableAssignment && element.not(Constants.FOR_FLAG)) {
 			IVariableAssignment a = (IVariableAssignment) element;
-//			String id = a.getTarget().getId();
-//			String idd = id == null ? "variable" : id;
-//			if(a.is("INC") || a.is("DEC")) {
-//				IncrementationWidget w = new IncrementationWidget(SequenceWidget.this, idd, a.is("INC"));
-//				addElement(w, index);
-//			}
-//			else {
-//				Selectable<AssignmentWidget> w = new Selectable<>(SequenceWidget.this, p -> new AssignmentWidget(p, a), a);
-				AssignmentWidget w = addElement(p -> new AssignmentWidget(p, a), a, index);
-				w.focusExpression();
-//			}
+			AssignmentWidget w = addElement(p -> new AssignmentWidget(p, a), a, index);
+			w.focusExpression();
 		} 
 
 		else if (element instanceof IArrayElementAssignment) {
@@ -361,11 +358,11 @@ public class SequenceWidget extends Composite {
 			w.focusIn();
 		} 
 
-//		else if (element instanceof IBlock && element.is(Constants.FOR_FLAG)) { 
-//			ForWidget w = new ForWidget(SequenceWidget.this, null, (IBlock) element);   // TODO guard
-//			addElement(w, index);
-//			w.focusDeclaration();
-//		} 
+		//		else if (element instanceof IBlock && element.is(Constants.FOR_FLAG)) { 
+		//			ForWidget w = new ForWidget(SequenceWidget.this, null, (IBlock) element);   // TODO guard
+		//			addElement(w, index);
+		//			w.focusDeclaration();
+		//		} 
 
 		else if (element instanceof IBreak) {
 			addElement(p -> new InstructionWidget(p, BREAK), element, index);
@@ -391,5 +388,5 @@ public class SequenceWidget extends Composite {
 			assert false;
 		}
 	}
-	
+
 }

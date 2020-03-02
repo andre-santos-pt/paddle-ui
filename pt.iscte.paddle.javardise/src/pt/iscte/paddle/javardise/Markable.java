@@ -14,7 +14,7 @@ import org.eclipse.swt.widgets.Shell;
 
 import pt.iscte.paddle.model.IProgramElement;
 
-class Markable <T extends EditorWidget> extends EditorWidget {
+class Markable <T extends CodeElement> extends EditorWidget {
 
 	static final WeakHashMap<IProgramElement, Markable<?>> map = new WeakHashMap<>();
 
@@ -22,11 +22,10 @@ class Markable <T extends EditorWidget> extends EditorWidget {
 
 	final T target;
 
-
 	Markable(Composite parent, Function<Composite, T> f, IProgramElement e) {
 		super(parent);
 		map.put(e, this);
-
+		
 		setLayout(new FillLayout());
 		border = new Composite(this, SWT.NONE);
 		FillLayout fillLayout = new FillLayout();
@@ -38,7 +37,7 @@ class Markable <T extends EditorWidget> extends EditorWidget {
 	}
 
 	Decoration addDecoration(Function<Composite, Control> f, BiFunction<Point, Point, Point> loc) {
-		return new Decoration(target, f, loc);
+		return new Decoration(target.getControl(), f, loc);
 	}
 
 	void mark(Color color) {
@@ -60,6 +59,6 @@ class Markable <T extends EditorWidget> extends EditorWidget {
 
 	@Override
 	public boolean setFocus() {
-		return target.setFocus();
+		return target.getControl().setFocus();
 	}
 }

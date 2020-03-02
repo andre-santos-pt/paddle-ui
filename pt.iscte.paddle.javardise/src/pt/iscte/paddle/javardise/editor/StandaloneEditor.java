@@ -118,7 +118,8 @@ public class StandaloneEditor {
 			}
 
 			public void run(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
-				classWidget = seq.addWidget(p -> new ClassWidget(p, module, Keyword.array(seq.getInsertTokens())));		
+				classWidget = seq.addElement(p -> new ClassWidget(p, module, Keyword.array(seq.getInsertTokens())), module, 0);
+//				classWidget = seq.addWidget(p -> new ClassWidget(p, module, Keyword.array(seq.getInsertTokens())));		
 				classWidget.setFocus();
 			}
 		});
@@ -149,7 +150,7 @@ public class StandaloneEditor {
 		});
 		
 		shell.setText(module.getId() + ".java");
-		seq.addWidget(p -> classWidget = new ClassWidget(p, module));
+		seq.addElement(p -> classWidget = new ClassWidget(p, module), module);
 		shell.setSize(600, 800);
 		shell.open();
 		return shell;

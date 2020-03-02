@@ -5,13 +5,14 @@ import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.widgets.Composite;
 
-import pt.iscte.paddle.model.IConstant;
+import pt.iscte.paddle.model.IConstantDeclaration;
 import pt.iscte.paddle.model.ILiteral;
 import pt.iscte.paddle.model.IProgramElement;
 import pt.iscte.paddle.model.IType;
 
+//TODO modifiers
 public class FieldWidget extends EditorWidget {
-	IConstant constant;
+	IConstantDeclaration constant;
 	private Id type;
 	private Id id;
 	private SimpleExpressionWidget expression;
@@ -29,7 +30,7 @@ public class FieldWidget extends EditorWidget {
 		new FixedToken(this, ";");
 	}
 	
-	public FieldWidget(Composite parent, IConstant constant) {
+	public FieldWidget(Composite parent, IConstantDeclaration constant) {
 		super(parent);
 		this.constant = constant;
 		
@@ -87,5 +88,14 @@ public class FieldWidget extends EditorWidget {
 	public void focusExpression() {
 		if(expression != null)
 			expression.setFocus();
+	}
+	
+	@Override
+	public void toCode(StringBuffer buffer) {
+		type.toCode(buffer);
+		id.toCode(buffer);
+		if(expression != null)
+			expression.toCode(buffer);
+		buffer.append(";");
 	}
 }

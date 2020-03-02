@@ -18,7 +18,7 @@ import org.eclipse.swt.widgets.Shell;
 public class Decoration {
 	private Shell s;
 
-	Decoration(EditorWidget target, Function<Composite, Control> f, BiFunction<Point, Point, Point> loc) {
+	Decoration(Control target, Function<Composite, Control> f, BiFunction<Point, Point, Point> loc) {
 		Shell parent = target.getShell();
 		s = new Shell(parent, SWT.NO_TRIM);
 		s.setLayout(new FillLayout());
@@ -35,7 +35,7 @@ public class Decoration {
 	
 	}
 
-	private void setLocation(EditorWidget target, BiFunction<Point, Point, Point> loc, Control c) {
+	private void setLocation(Control target, BiFunction<Point, Point, Point> loc, Control c) {
 		Point targetSize = target.computeSize(SWT.DEFAULT, SWT.DEFAULT);
 		targetSize.x += 5;
 		targetSize.y += 5;

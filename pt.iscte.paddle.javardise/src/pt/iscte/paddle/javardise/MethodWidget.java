@@ -8,7 +8,6 @@ import java.util.List;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -16,9 +15,8 @@ import org.eclipse.swt.widgets.Control;
 import pt.iscte.paddle.javardise.Constants.DeleteListener;
 import pt.iscte.paddle.model.IBlockElement;
 import pt.iscte.paddle.model.IProcedure;
-import pt.iscte.paddle.model.IProgramElement;
 import pt.iscte.paddle.model.IType;
-import pt.iscte.paddle.model.IVariable;
+import pt.iscte.paddle.model.IVariableDeclaration;
 
 public class MethodWidget extends EditorWidget implements SequenceContainer {
 
@@ -122,7 +120,7 @@ public class MethodWidget extends EditorWidget implements SequenceContainer {
 					IType t = IType.INT;
 					if(c == '[')
 						t = t.array();
-					addParam(new IVariable.UnboundVariable(t, "parameter"), false, false);
+					addParam(new IVariableDeclaration.UnboundVariable(t, "parameter"), false, false);
 				}
 			});
 			//			insertWidget.addFocusListener(Constants.FOCUS_SELECTALL);
@@ -150,7 +148,7 @@ public class MethodWidget extends EditorWidget implements SequenceContainer {
 			private final Id var;
 			private FixedToken comma;
 
-			public Param(IVariable v, boolean comma) {
+			public Param(IVariableDeclaration v, boolean comma) {
 				super(ParamList.this);
 				setLayout(Constants.ROW_LAYOUT_H_DOT);
 				if(comma)
@@ -168,7 +166,7 @@ public class MethodWidget extends EditorWidget implements SequenceContainer {
 				var.addKeyListener(new KeyAdapter() {
 					public void keyPressed(KeyEvent e) {
 						if(e.character == ',')
-							addParam(new IVariable.UnboundVariable(IType.INT, "parameter"), false, true);
+							addParam(new IVariableDeclaration.UnboundVariable(IType.INT, "parameter"), false, true);
 						else if(e.keyCode == Constants.DEL_KEY && var.isAtBeginning()) {
 							dispose();
 							Control[] children = ParamList.this.getChildren();
@@ -205,7 +203,7 @@ public class MethodWidget extends EditorWidget implements SequenceContainer {
 			}
 		}
 
-		private void addParam(IVariable var, boolean above, boolean focusType) {
+		private void addParam(IVariableDeclaration var, boolean above, boolean focusType) {
 			if(insertWidget != null) {
 				insertWidget.dispose();
 				insertWidget = null;

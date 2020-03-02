@@ -143,4 +143,9 @@ public class Token implements TextWidget, CodeElement {
 		buffer.append(text.getText());
 	}
 
+	@Override
+	public Control getControl() {
+		return text;
+	}
+
 }

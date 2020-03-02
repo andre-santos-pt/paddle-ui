@@ -4,26 +4,22 @@ import org.eclipse.swt.widgets.Composite;
 
 import pt.iscte.paddle.javardise.Constants.DeleteListener;
 import pt.iscte.paddle.model.IExpression;
-import pt.iscte.paddle.model.IVariable;
+import pt.iscte.paddle.model.IVariableDeclaration;
 
 public class DeclarationWidget extends EditorWidget {
 	private final Id type;
 	private final Id id;
 	private final ExpressionWidget expression;
 	
-	DeclarationWidget(Composite parent, IVariable var, IExpression exp) {
+	DeclarationWidget(Composite parent, IVariableDeclaration var, IExpression exp) {
 		super(parent);
+		this.type = new Id(this, var.getType());
+		this.id = new Id(this, Constants.variableId(var));
 		setLayout(Constants.ROW_LAYOUT_H);
 		DeleteListener deleteListener = new Constants.DeleteListener(this);
-
-		this.type = new Id(this, var.getType());
-		
-		String id = var.isUnbound() ? var.getId() : Constants.variableId(var);
-		
-		this.id = new Id(this, Constants.variableId(var));
 		if(exp != null) {
 			new FixedToken(this, "=");
-			this.expression = new ExpressionWidget(this, Expression.match(exp));
+			this.expression = new ExpressionWidget(this, Expression.match(exp), exp);
 			this.expression.addKeyListener(deleteListener);
 		}
 		else

@@ -5,18 +5,15 @@ import static java.lang.System.lineSeparator;
 import java.util.List;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 
-import pt.iscte.paddle.model.IConstant;
+import pt.iscte.paddle.model.IConstantDeclaration;
 import pt.iscte.paddle.model.IModule;
 import pt.iscte.paddle.model.IProcedure;
-import pt.iscte.paddle.model.IProgramElement;
 import pt.iscte.paddle.model.IType;
 
 public class ClassWidget extends EditorWidget implements SequenceContainer {
@@ -53,7 +50,6 @@ public class ClassWidget extends EditorWidget implements SequenceContainer {
 		});
 		
 		body.addAction(new NewInsertWidget.Action("method", 'm') {
-
 			public boolean isEnabled(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
 				if(tokens.size() < 1)
 					return false;
@@ -70,7 +66,6 @@ public class ClassWidget extends EditorWidget implements SequenceContainer {
 		});
 
 		body.addAction(new NewInsertWidget.Action("field", 'f') {
-
 			public boolean isEnabled(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
 				if(tokens.size() < 1)
 					return false;
@@ -81,9 +76,10 @@ public class ClassWidget extends EditorWidget implements SequenceContainer {
 			public void run(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
 				IType t = IType.match(tokens.get(tokens.size()-1));
 				
-				FieldWidget w = body.addWidget(p -> new FieldWidget(p, t, id.getId(), Keyword.array(tokens.subList(0, tokens.size()-1)), c == '='));
-				if(c == '=')
-					w.focusExpression();
+				// TODO field insert
+//				FieldWidget w = body.addWidget(p -> new FieldWidget(p, t, id.getId(), Keyword.array(tokens.subList(0, tokens.size()-1)), c == '='));
+//				if(c == '=')
+//					w.focusExpression();
 			}
 		});
 
@@ -94,12 +90,12 @@ public class ClassWidget extends EditorWidget implements SequenceContainer {
 			new FixedToken(this, "}");
 
 		module.addListener(new IModule.IListener() {
-			public void constantAdded(IConstant constant) {
+			public void constantAdded(IConstantDeclaration constant) {
 				int i = module.getConstants().indexOf(constant);
 				body.addElement(p -> new FieldWidget(p, constant), constant, i);
 			}
 
-			public void constantRemoved(IConstant constant) {
+			public void constantRemoved(IConstantDeclaration constant) {
 				body.delete(e -> e instanceof FieldWidget && ((FieldWidget) e).constant == constant);
 			}
 

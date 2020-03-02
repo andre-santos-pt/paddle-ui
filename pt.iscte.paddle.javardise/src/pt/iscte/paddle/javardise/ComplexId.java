@@ -10,7 +10,6 @@ import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
@@ -20,7 +19,7 @@ import org.eclipse.swt.widgets.Text;
 import pt.iscte.paddle.model.IArrayElement;
 import pt.iscte.paddle.model.IArrayLength;
 import pt.iscte.paddle.model.IExpression;
-import pt.iscte.paddle.model.IVariable;
+import pt.iscte.paddle.model.IVariableExpression;
 
 public class ComplexId extends EditorWidget implements TextWidget, Expression {
 
@@ -29,14 +28,16 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 	private boolean menuMode;
 	private List<CodeElementControl> elements;
 
+	// TODO fix for expression resolve
 	ComplexId(Composite parent, IArrayElement e) {
-		this(parent, Constants.variableId((IVariable) e.getTarget()), false);
+		this(parent, Constants.variableId(((IVariableExpression) e.getTarget()).getVariable()), false);
 		for(IExpression exp : e.getIndexes())
 			new Dimension(this, Expression.match(exp));
 	}
 
-	ComplexId(EditorWidget p, IArrayLength e) {
-		this(p, e.getVariable().getId(), false);
+	// TODO fix for expression resolve
+	ComplexId(Composite p, IArrayLength e) {
+		this(p, ((IVariableExpression) e.getTarget()).getVariable().getId(), false);
 		addField("length");
 	}
 	
@@ -45,7 +46,7 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 		this.type = type;
 		this.menuMode = false;
 		this.elements = new ArrayList<>();
-		setLayout(Constants.ROW_LAYOUT_H_SHRINK);
+		setLayout(Constants.ROW_LAYOUT_H_ZERO);
 		text = Constants.createText(this, id);
 		text.addVerifyListener(e -> e.doit = menuMode ||
 				isValidCharacter(e.character) || e.character == Constants.DEL_KEY || e.character == SWT.CR || e.character == '/');
@@ -148,7 +149,7 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 			if(f == null)
 				f = p -> new SimpleExpressionWidget(p, "expression");
 			left = new FixedToken(parent, "[");
-			expression = new ExpressionWidget(parent, f);
+			expression = new ExpressionWidget(parent, f, null);
 			right = new Token(parent, "]");
 			right.addKeyListener(new KeyAdapter() {
 				public void keyPressed(KeyEvent e) {
@@ -170,6 +171,11 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 				}
 			});
 
+		}
+
+		@Override
+		public Control getControl() {
+			return expression;
 		}
 
 		public boolean setFocus() {
@@ -222,6 +228,11 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 			dot.dispose();
 			field.dispose();
 		}
+		
+		@Override
+		public Control getControl() {
+			return field;
+		}
 	}
 
 	private void removeAllDimensions() {
@@ -258,8 +269,7 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 
 	@Override
 	public boolean setFocus() {
-		text.setFocus();
-		return true;
+		return text.setFocus();
 	}
 
 	public static boolean isValidCharacter(char c) {
@@ -342,7 +352,7 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 	}
 
 	@Override
-	public Expression copyTo(EditorWidget parent) {
+	public Expression copyTo(Composite parent) {
 		// TODO Auto-generated method stub
 		return null;
 	}

@@ -3,6 +3,8 @@ package pt.iscte.paddle.javardise;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.swt.widgets.Composite;
+
 import pt.iscte.paddle.model.IArrayType;
 import pt.iscte.paddle.model.IExpression;
 
@@ -12,14 +14,14 @@ public class ArrayAllocationExpression extends EditorWidget implements Expressio
 	private Id id;
 	private List<ExpressionWidget> expressions;
 
-	public ArrayAllocationExpression(EditorWidget parent, IArrayType type, Expression.Creator ... f) {
+	public ArrayAllocationExpression(Composite parent, IArrayType type, Expression.Creator ... f) {
 		super(parent);
 		new Token(this, Keyword.NEW);
 		id = new Id(this, type.getRootComponentType());
 		expressions = new ArrayList<>(type.getDimensions()+1);
 		for(int n = 0; n < type.getDimensions(); n++) {
 			new FixedToken(this, "[");
-			expressions.add(new ExpressionWidget(this, f[n]));
+			expressions.add(new ExpressionWidget(this, f[n], null));
 			new FixedToken(this, "]");
 		}
 	}
@@ -31,7 +33,7 @@ public class ArrayAllocationExpression extends EditorWidget implements Expressio
 	}
 
 	@Override
-	public Expression copyTo(EditorWidget parent) {
+	public Expression copyTo(Composite parent) {
 		IArrayType type = (IArrayType) id.inferType();
 		Expression.Creator[] f = new Expression.Creator[type.getDimensions()];
 		for(int i = 0; i < f.length; i++) {

@@ -24,11 +24,14 @@ import pt.iscte.paddle.javardise.Decoration;
 import pt.iscte.paddle.javardise.MarkerService;
 import pt.iscte.paddle.javardise.MarkerService.Mark;
 import pt.iscte.paddle.javardise.util.HyperlinkedText;
+import pt.iscte.paddle.model.IArrayElementAssignment;
 import pt.iscte.paddle.model.IBlock.IVisitor;
 import pt.iscte.paddle.model.IBlockElement;
+import pt.iscte.paddle.model.ILoop;
 import pt.iscte.paddle.model.IModule;
 import pt.iscte.paddle.model.IProcedure;
 import pt.iscte.paddle.model.IReturn;
+import pt.iscte.paddle.model.ISelection;
 import pt.iscte.paddle.model.IVariableAssignment;
 import pt.iscte.paddle.model.tests.TestNaturals;
 
@@ -140,6 +143,37 @@ public class DemoMark {
 				returnMarks.clear();
 			}
 		});
+
+		Button markExpressions = new Button(comp, SWT.PUSH);
+		markExpressions.setText("mark expressions");
+		markExpressions.addSelectionListener(new SelectionAdapter() {
+			Color blue = new Color (display, 0, 0, 255);
+			public void widgetSelected(SelectionEvent e) {
+				proc.accept(new IVisitor() {
+					public boolean visit(IReturn r) {
+						MarkerService.mark(blue, r.getExpression());
+						return true;
+					}
+					public boolean visit(IVariableAssignment assignment) {
+						MarkerService.mark(blue, assignment.getExpression());
+						return true;
+					}
+					public boolean visit(IArrayElementAssignment assignment) {
+						MarkerService.mark(blue, assignment.getExpression());
+						return true;
+					}
+					public boolean visit(ILoop loop) {
+						MarkerService.mark(blue, loop.getGuard());
+						return true;
+					}
+					public boolean visit(ISelection sel) {
+						MarkerService.mark(blue, sel.getGuard());
+						return true;
+					}
+				});
+			}
+		});
+
 
 
 
