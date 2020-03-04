@@ -3,6 +3,7 @@ package pt.iscte.paddle.javardise;
 import static java.lang.System.lineSeparator;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridLayout;
@@ -11,6 +12,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 
+import pt.iscte.paddle.javardise.UiMode.Syntax;
 import pt.iscte.paddle.model.IConstantDeclaration;
 import pt.iscte.paddle.model.IModule;
 import pt.iscte.paddle.model.IProcedure;
@@ -29,7 +31,7 @@ public class ClassWidget extends EditorWidget implements SequenceContainer {
 		GridLayout layout = new GridLayout(1, true);
 		layout.verticalSpacing = 10;
 		setLayout(layout);
-		if (!UiMode.isStatic()) {
+		if (UiMode.editorMode() == UiMode.Editor.REGULAR) {
 			Composite header = Constants.createHeader(this);
 			for(Keyword mod : modifiers)
 				new Token(header, mod);
@@ -41,8 +43,9 @@ public class ClassWidget extends EditorWidget implements SequenceContainer {
 			new FixedToken(header, "{");
 		}
 
-		int margin = UiMode.isStatic() ? 0 : Constants.TAB;
-		body = new SequenceWidget(this, margin, Constants.METHOD_SPACING, token -> Keyword.isMethodModifier(token) || Constants.isType(token) || IType.VOID.getId().equals(token));
+		int margin = UiMode.editorMode() == UiMode.Editor.STATIC ? 0 : Constants.TAB;
+		Predicate<String> tokenAccept = token -> acceptModifier(token) || Constants.isType(token) || IType.VOID.getId().equals(token);
+		body = new SequenceWidget(this, margin, Constants.METHOD_SPACING, tokenAccept);
 
 		body.setDeleteAction(index -> {
 			IProcedure p = module.getProcedures().get(index);
@@ -86,7 +89,7 @@ public class ClassWidget extends EditorWidget implements SequenceContainer {
 		
 		module.getProcedures().forEach(p -> body.addElement(comp -> new MethodWidget(comp, p), p));
 				
-		if (!UiMode.isStatic())
+		if (UiMode.editorMode() == UiMode.Editor.REGULAR)
 			new FixedToken(this, "}");
 
 		module.addListener(new IModule.IListener() {
@@ -128,8 +131,13 @@ public class ClassWidget extends EditorWidget implements SequenceContainer {
 //		});
 	}
 
+	private boolean acceptModifier(String token) {
+		return Keyword.isMethodModifier(token) && 
+				(UiMode.hasSyntax(Syntax.ENCAPSULATION) || !Keyword.isAccessModifier(token));
+	}
+
 	public boolean setFocus() {
-		return body.setFocus();
+		return id == null ? false : id.setFocus();
 	}
 
 	public SequenceWidget getBody() {

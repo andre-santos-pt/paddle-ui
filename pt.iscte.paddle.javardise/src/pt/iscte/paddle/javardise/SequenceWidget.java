@@ -26,6 +26,7 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
+import org.eclipse.ui.swt.IFocusService;
 
 import pt.iscte.paddle.model.IArrayElementAssignment;
 import pt.iscte.paddle.model.IBlock;
@@ -59,7 +60,7 @@ public class SequenceWidget extends Composite {
 		setLayout(layout);
 
 		insertWidget = new NewInsertWidget(this, true, tokenAccept);
-		insertWidget.setHideMode();
+//		insertWidget.setHideMode();
 		addMouseListener(new MouseAdapter() {
 			public void mouseDown(MouseEvent e) {
 				insertWidget.setFocus();
@@ -112,6 +113,13 @@ public class SequenceWidget extends Composite {
 	void insertLineAt(Control location) {
 		NewInsertWidget insert = insertWidget.copyTo(this);
 		insert.moveAbove(location);
+		requestLayout();
+		insert.setFocus();
+	}
+	
+	void insertLineAfter(Control location) {
+		NewInsertWidget insert = insertWidget.copyTo(this);
+		insert.moveBelow(location);
 		requestLayout();
 		insert.setFocus();
 	}
@@ -195,10 +203,7 @@ public class SequenceWidget extends Composite {
 	}
 
 	public <T extends EditorWidget> T addElement(Function<Composite, T> f, IProgramElement e, int modelIndex) {
-//		int viewIndex = toViewIndex(modelIndex);
-		
 		Control el = viewElement(modelIndex);
-
 		Markable<T> sel = new Markable<>(this, f, e);
 		T w = sel.target;
 		
@@ -206,14 +211,6 @@ public class SequenceWidget extends Composite {
 			sel.moveBelow(el);
 		else
 			sel.moveAbove(el);
-		
-//		if(isElse(w))
-//			viewIndex++;
-//		Control location = getChildren()[viewIndex];
-//		if(location != sel)
-//			sel.moveAbove(location);
-		//		sel.requestLayout();
-		//		sel.setFocus();
 		return w;
 	}
 	
@@ -256,8 +253,8 @@ public class SequenceWidget extends Composite {
 		else {
 			for (int i = 1; i < children.length; i++) {
 				if(children[i] == statement) {
-					if(children[i-1] instanceof SequenceContainer)
-						((SequenceContainer) children[i-1]).getBody().focusLast();
+					if(children[i-1] instanceof Markable && ((Markable<?>) children[i-1]).isSequenceContainer())
+						((Markable<?>) children[i-1]).getSequenceContainer().getBody().focusLast();
 					else
 						children[i-1].setFocus();
 					break;
@@ -269,8 +266,8 @@ public class SequenceWidget extends Composite {
 	void focusNextStatement(TextWidget widget) {
 		Control c = widget.getStatement();
 
-		if(c instanceof Markable && ((Markable<?>) c).target instanceof SequenceContainer) {
-			((SequenceContainer) ((Markable<?>) c).target).getBody().focusFirst();
+		if(c instanceof Markable && ((Markable<?>) c).isSequenceContainer()) {
+			((Markable<?>) c).getSequenceContainer().getBody().focusFirst();
 		}
 		else {
 			Control[] children = getChildren();
@@ -315,6 +312,7 @@ public class SequenceWidget extends Composite {
 	}
 
 	public void deleteAction(int index) {
+		System.out.println("delete " + index);
 		deleteAction.accept(index);
 		getChildren()[index].setFocus();
 	}
@@ -340,17 +338,29 @@ public class SequenceWidget extends Composite {
 
 		else if (element instanceof ISelection) {
 			ISelection s = (ISelection) element;
-			ControlWidget w = addElement(p -> new ControlWidget(p, IF, s.getGuard(), s.getBlock()), s, index);
+			IfElseWidget w = addElement(p -> new IfElseWidget(p, s), s, index);
 			w.focusIn();
-			if (s.hasAlternativeBlock())
-				addElement(p -> new ControlWidget(p, ELSE, null, s.getAlternativeBlock()), s.getAlternativeBlock(), index);
-			s.addPropertyListener((k,n,o) -> {
-				if(k.equals(Constants.ELSE_FLAG)) {
-					ControlWidget e = addElement(p -> new ControlWidget(p, ELSE, null, s.getAlternativeBlock()), s.getAlternativeBlock(), index);
-					e.focusIn();
-				}
-			});
 		} 
+		
+//		else if (element instanceof ISelection) {
+//			ISelection s = (ISelection) element;
+//			ControlWidget w = addElement(p -> new ControlWidget(p, IF, s.getGuard(), s.getBlock()), s, index);
+//			w.focusIn();
+//			if (s.hasAlternativeBlock())
+//				addElement(p -> new ControlWidget(p, ELSE, null, s.getAlternativeBlock()), s.getAlternativeBlock(), index);
+//			
+//			s.addPropertyListener((k,n,o) -> {
+//				if(k.equals(Constants.ELSE_FLAG)) {
+//					if(n == Boolean.TRUE) {
+//						ControlWidget e = addElement(p -> new ControlWidget(p, ELSE, null, s.getAlternativeBlock()), s.getAlternativeBlock(), index);
+//						e.focusIn();
+//					}
+//					else {
+//						System.out.println("else delete " + index);
+//					}
+//				}
+//			});
+//		} 
 
 		else if (element instanceof ILoop && element.not(Constants.FOR_FLAG)) {
 			ILoop l = (ILoop) element;

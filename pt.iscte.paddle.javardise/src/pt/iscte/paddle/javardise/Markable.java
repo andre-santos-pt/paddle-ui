@@ -61,4 +61,13 @@ class Markable <T extends CodeElement> extends EditorWidget {
 	public boolean setFocus() {
 		return target.getControl().setFocus();
 	}
+	
+	boolean isSequenceContainer () {
+		return target instanceof SequenceContainer;
+	}
+	
+	SequenceContainer getSequenceContainer() {
+		assert isSequenceContainer();
+		return (SequenceContainer) target;
+	}
 }

@@ -42,6 +42,14 @@ public interface TextWidget {
 		return getWidget().getCaretPosition() == getWidget().getText().length();
 	}
 	
+	default boolean isSelected() {
+		return getWidget().getSelectionCount() == getWidget().getText().length();
+	}
+
+	default boolean isModifiable() {
+		return getWidget().getEditable();
+	}
+	
 	default void setAtLeft() {
 		getWidget().setSelection(0, 0);
 	}
@@ -57,6 +65,9 @@ public interface TextWidget {
 			}
 		};
 	}
+
+
+	
 	
 }
 

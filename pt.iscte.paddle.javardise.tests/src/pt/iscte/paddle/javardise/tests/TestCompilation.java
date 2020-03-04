@@ -3,7 +3,9 @@ package pt.iscte.paddle.javardise.tests;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.util.Arrays;
@@ -65,9 +67,26 @@ public class TestCompilation {
 			IModule mod = test.getModule();
 			Shell shell = new Shell();
 			ClassWidget w = new ClassWidget(shell, mod);
-			assertTrue("Errors on " + mod.getId(), compile(mod.getId(), w.getCode()));
+			boolean compile = compile(mod.getId(), w.getCode());
+			if(!compile)
+				saveToFile(w, new File("src-gen/" + mod.getId() + ".java"));
+			assertTrue("Errors on " + mod.getId(), compile);
 		} catch (IllegalArgumentException | InvocationTargetException | NoSuchMethodException
 				| SecurityException | InstantiationException | IllegalAccessException | IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static void saveToFile(ClassWidget classWidget, File file) {
+		StringBuffer buffer = new StringBuffer();
+		classWidget.toCode(buffer, 0);
+		try {
+		
+			PrintWriter w = new PrintWriter(file);
+			w.append(buffer);
+			w.close();
+		} 
+		catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
 	}

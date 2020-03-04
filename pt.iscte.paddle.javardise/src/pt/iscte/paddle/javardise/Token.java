@@ -16,6 +16,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Text;
 
+
 public class Token implements TextWidget, CodeElement {
 	private final Text text;
 	private Map<Character, String> map;
@@ -83,8 +84,10 @@ public class Token implements TextWidget, CodeElement {
 		});
 		
 		text.setMenu(menu);
-		Constants.addArrowKeys(text, this);
 		Constants.addFocusSelectAll(text);
+
+		if(!Keyword.ELSE.isEqual(token))
+			Constants.addArrowKeys(text, this);
 	}
 
 	@Override

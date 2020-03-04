@@ -53,18 +53,18 @@ public class BinaryExpressionWidget extends EditorWidget implements Expression {
 		Menu menu = op.getMenu();
 		new MenuItem(menu, SWT.SEPARATOR);
 		
-		MenuItem brack = new MenuItem(menu, SWT.NONE);
-		brack.setText("( ... )");
-		brack.setAccelerator('(');
-		brack.addSelectionListener(new SelectionAdapter() {
-			public void widgetSelected(SelectionEvent e) {
-				data.exclude = brackets;
-				brackets = !brackets;
-				lBracket.setVisible(brackets);
-				rBracket.setVisible(brackets);
-				BinaryExpressionWidget.this.requestLayout();
-			}
-		});
+//		MenuItem brack = new MenuItem(menu, SWT.NONE);
+//		brack.setText("( ... )");
+//		brack.setAccelerator('(');
+//		brack.addSelectionListener(new SelectionAdapter() {
+//			public void widgetSelected(SelectionEvent e) {
+//				data.exclude = brackets;
+//				brackets = !brackets;
+//				lBracket.setVisible(brackets);
+//				rBracket.setVisible(brackets);
+//				BinaryExpressionWidget.this.requestLayout();
+//			}
+//		});
 		
 	}
 	

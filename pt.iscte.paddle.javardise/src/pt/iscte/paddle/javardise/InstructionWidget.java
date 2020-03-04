@@ -1,11 +1,12 @@
 package pt.iscte.paddle.javardise;
 
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Text;
 
 import pt.iscte.paddle.javardise.Constants.DeleteListener;
 import pt.iscte.paddle.model.IExpression;
 
-public class InstructionWidget extends EditorWidget {
+public class InstructionWidget extends EditorWidget implements TextWidget {
 	private final Keyword keyword;
 	private final Token keywordToken;
 	private final ExpressionWidget expressionWidget;
@@ -60,5 +61,10 @@ public class InstructionWidget extends EditorWidget {
 			}
 		}
 		buffer.append(";").append(System.lineSeparator());
+	}
+
+	@Override
+	public Text getWidget() {
+		return keywordToken.getWidget();
 	}
 }

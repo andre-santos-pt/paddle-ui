@@ -10,6 +10,7 @@ import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
+import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
@@ -23,11 +24,12 @@ import pt.iscte.paddle.model.IVariableExpression;
 
 public class ComplexId extends EditorWidget implements TextWidget, Expression {
 
-	final Text text;
+	private final Text text;
 	private final boolean type;
-	private boolean menuMode;
 	private List<CodeElementControl> elements;
 
+	private final VerifyListener verifyListener;
+		
 	// TODO fix for expression resolve
 	ComplexId(Composite parent, IArrayElement e) {
 		this(parent, Constants.variableId(((IVariableExpression) e.getTarget()).getVariable()), false);
@@ -44,22 +46,47 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 	ComplexId(Composite parent, String id, boolean type) {
 		super(parent);
 		this.type = type;
-		this.menuMode = false;
 		this.elements = new ArrayList<>();
 		setLayout(Constants.ROW_LAYOUT_H_ZERO);
 		text = Constants.createText(this, id);
-		text.addVerifyListener(e -> e.doit = menuMode ||
-				isValidCharacter(e.character) || e.character == Constants.DEL_KEY || e.character == SWT.CR || e.character == '/');
-		text.addFocusListener(new  FocusAdapter() {
+		verifyListener = e -> e.doit = 
+				isValidCharacter(e.character) || 
+				e.character == Constants.DEL_KEY || 
+				e.character == SWT.CR ||
+				e.character == '/' && (text.getText().isEmpty() || text.getText().startsWith("/")) ||
+				isComment();
+		text.addVerifyListener(verifyListener);
+		text.addFocusListener(new FocusAdapter() {
 			public void focusGained(FocusEvent e) {
+				text.setForeground(Constants.FONT_COLOR);
+				text.setBackground(Constants.COLOR_BACKGROUND);
 				text.selectAll();
+			}
+			public void focusLost(FocusEvent e) {
+				if(isComment()) {
+					text.setForeground(Constants.COLOR_COMMENT);
+					text.setBackground(Constants.COLOR_BACKGROUND);
+				}
+				else if(!text.getText().isBlank() && ComplexId.this.getParent() instanceof NewInsertWidget){
+					text.setForeground(Constants.COLOR_ERROR);
+					text.setBackground(Constants.COLOR_PH);
+				}
+				else {
+					text.setForeground(Constants.FONT_COLOR);
+					text.setBackground(Constants.COLOR_BACKGROUND);
+				}
 			}
 		});
 
 		text.addModifyListener(Constants.MODIFY_PACK);
-		text.addKeyListener(addListener);
+		text.addKeyListener(insertListener);
 		text.setMenu(new Menu(text)); // prevent system menu
 		Constants.addArrowKeys(text, this);
+		Constants.addInsertLine(this);
+	}
+
+	private boolean isComment() {
+		return text.getText().startsWith("//");
 	}
 
 	
@@ -88,11 +115,11 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 		return text;
 	}
 
-	private KeyListener addListener = new KeyAdapter() {
+	private KeyListener insertListener = new KeyAdapter() {
 		public void keyPressed(KeyEvent e) {
-			if(e.character == '[' && !Keyword.VOID.isEqual(text))
+			if(!isComment() && e.character == '[' && !Keyword.VOID.isEqual(text))
 				addDimension((Control) e.widget);
-			else if(e.character == '.' && !text.getText().isBlank())
+			else if(!isComment() && e.character == '.' && !text.getText().isBlank())
 				addField("field");
 		}
 	};
@@ -203,12 +230,12 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 			elements.add(this);
 			dot = new FixedToken(parent, ".");
 			field = Constants.createText(parent, id);
-			field.addVerifyListener(e -> e.doit = menuMode || Constants.isLetter(e.character) || e.character == SWT.BS);
+			field.addVerifyListener(e -> e.doit = Constants.isLetter(e.character) || e.character == SWT.BS);
 			field.addModifyListener(Constants.MODIFY_PACK);
 			// TODO empty modify
 			Constants.addArrowKeys(field, TextWidget.create(field));
 			Constants.addFocusSelectAll(field);
-			field.addKeyListener(addListener);
+			field.addKeyListener(insertListener);
 		}
 
 		public boolean setFocus() {
@@ -233,15 +260,6 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 		public Control getControl() {
 			return field;
 		}
-	}
-
-	private void removeAllDimensions() {
-		Control[] children = getChildren();
-		for(int i = 1; i < children.length; i++)
-			children[i].dispose();
-
-		requestLayout();
-		children[0].setFocus();
 	}
 
 	private void removeDimension(Control control) {
@@ -312,9 +330,9 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 	}
 	
 	public void clean() {
-		menuMode = true;
+		text.removeVerifyListener(verifyListener);
 		text.setText("");
-		menuMode = false;
+		text.addVerifyListener(verifyListener);
 		for(CodeElementControl e : elements)
 			e.dispose();
 		elements.clear();
@@ -369,58 +387,12 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 		return null;
 	}
 
-	
-	
-	
-	
-	
-//	private SelectionListener[] typeListeners;
-	
-	
-//	private void addKeyListeners() {
-//		text.addKeyListener(KeyListener.keyPressedAdapter(e -> {
-//			List<String> list = idProvider.get();
-//			if(e.keyCode == Constants.MENU_KEY && popupMenu != null) {
-//				popup(popupMenu, text);
-//			}
-//			else {
-//				for(String i : list) {
-//					if(i.charAt(0) == e.character && !text.getText().equals(i)) {
-//						menuMode = true;
-//						text.setText(i); 
-//						menuMode = false;
-//						e.doit = false;
-//						break;
-//					}
-//				}
-//			}
-//			setAtRight();
-//		}));
-//	}
-	
-//	private void addMenu(List<String> provider) {
-//		popupMenu = new Menu(text);
-//		MenuItem[] items = new MenuItem[provider.size()];
-//		typeListeners = new SelectionListener[provider.size()];
-//		for(int i = 0; i < provider.size(); i++) {
-//			MenuItem it = new MenuItem(popupMenu, SWT.CHECK);
-//			items[i] = it;
-//			items[i].setText(provider.get(i));
-//			//			items[i].setSelection(provider.get(i).equals(initialId));
-//			typeListeners[i] = new SelectionAdapter() {
-//				public void widgetSelected(SelectionEvent e) {
-//					for(MenuItem m : items)
-//						m.setSelection(m == it);
-//					menuMode = true;
-//					text.setText(it.getText());
-//					menuMode = false;
-//					Constants.setFont(text, false);
-//					text.requestLayout();
-//				}
-//			};
-//			items[i].addSelectionListener(typeListeners[i]);
-//		}
-//		setMenu(popupMenu);
-//	}
+	public int getSelectionCount() {
+		return text.getSelectionCount();
+	}
+
+	public int getCaretPosition() {
+		return text.getCaretPosition();
+	}
 
 }

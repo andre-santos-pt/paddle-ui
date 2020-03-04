@@ -1,18 +1,22 @@
 package pt.iscte.paddle.javardise;
 
+
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.KeyAdapter;
+import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.widgets.Composite;
 
 import pt.iscte.paddle.javardise.Constants.DeleteListener;
 import pt.iscte.paddle.model.IBlock;
 import pt.iscte.paddle.model.IBlockElement;
 import pt.iscte.paddle.model.IExpression;
+import pt.iscte.paddle.model.ISelection;
 
 public class ControlWidget extends EditorWidget implements SequenceContainer {
 
-	private final Token keyword;
+	final Token keyword;
 	private ExpressionWidget expression;
-	private final SequenceWidget blockSeq;
+	final SequenceWidget blockSeq;
 	private DeleteListener deleteListener;
 	private FixedToken openBracket;
 	private FixedToken closeBracket;
@@ -25,18 +29,14 @@ public class ControlWidget extends EditorWidget implements SequenceContainer {
 		header.setBackground(Constants.COLOR_BACKGROUND);
 		deleteListener = new Constants.DeleteListener(this);
 		this.keyword = new Token(header, keyword);
-
-		if(keyword == Keyword.ELSE)
-			; // TODO special case delete ELSE
-		else {
-			Constants.addInsertLine(this.keyword);
-			this.keyword.addKeyListener(deleteListener);
-		}
 		
-		if(keyword != Keyword.ELSE) {
+		if(guard != null) {
 			new FixedToken(header, "(");
 			fillHeader(guard, header);
 			new FixedToken(header, ")");
+
+			Constants.addInsertLine(this.keyword);
+			this.keyword.addKeyListener(deleteListener);
 		}
 
 		openBracket = new FixedToken(header, "{");

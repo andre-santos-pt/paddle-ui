@@ -40,7 +40,7 @@ public interface Constants {
 	Color COLOR_KW = Display.getDefault().getSystemColor(SWT.COLOR_DARK_MAGENTA);
 	Color COLOR_PH = Display.getDefault().getSystemColor(SWT.COLOR_DARK_GRAY);
 	//	Color COLOR_ERROR = new Color(Display.getDefault(), 255, 200, 200);
-	Color COLOR_ERROR = Display.getDefault().getSystemColor(SWT.COLOR_GRAY);
+	Color COLOR_ERROR = Display.getDefault().getSystemColor(SWT.COLOR_RED);
 	Color COLOR_BACKGROUND = Display.getDefault().getSystemColor(SWT.COLOR_WHITE);
 	Color COLOR_INSERT = new Color(Display.getDefault(), 245, 245, 245);
 	Color COLOR_HIGHLIGHT = new Color(Display.getDefault(), 0, 200, 200);
@@ -113,11 +113,11 @@ public interface Constants {
 		setFont(t, true);
 		return t;
 	}
-	
+
 	static void setFont(Control control, boolean init) {
 		assert control instanceof Text || control instanceof Label;
 		String text = control instanceof Text ? ((Text) control).getText() : ((Label) control).getText();
- 		if (Keyword.is(text)) {
+		if (Keyword.is(text)) {
 			control.setFont(FONT_KW);
 			control.setForeground(COLOR_KW);
 		} else {
@@ -196,13 +196,15 @@ public interface Constants {
 	}
 
 	KeyListener INSERT_LINE = new KeyAdapter() {
-		@Override
 		public void keyPressed(KeyEvent e) {
 			if(e.character == SWT.CR) {
 				TextWidget w = (TextWidget) e.widget.getData();
 				Control statement = w.getStatement();
 				SequenceWidget seq = (SequenceWidget) statement.getParent();
-				seq.insertLineAt(statement);
+				if(w instanceof Token || (w.isAtBeginning() && !w.isAtEnd())) 
+					seq.insertLineAt(statement);
+				else
+					seq.insertLineAfter(statement);
 				e.doit = false;
 			}
 		}
@@ -242,18 +244,18 @@ public interface Constants {
 		}
 
 		public void keyPressed(KeyEvent e) {
-			if(e.widget.isDisposed())
-				return;
-			Control w = ((Control) e.widget).getParent();
-			assert w instanceof TextWidget;
-			if(e.keyCode == Constants.DEL_KEY && 
-					(w instanceof TextWidget && ((TextWidget)w).isAtBeginning())) {
-				SequenceWidget parent = target.getOwnerSequence();
-				parent = target.getOwnerSequence();
-				int index = parent.findModelIndex(target);
-				parent.deleteAction(index);
+			if(e.keyCode == Constants.DEL_KEY) {
+				if(e.widget.isDisposed())
+					return;
+				Composite p = ((Control) e.widget).getParent();
+				if(!(p instanceof TextWidget) || !((TextWidget)p).isModifiable() || ((TextWidget)p).isAtBeginning()) {
+					SequenceWidget parent = target.getOwnerSequence();
+					parent = target.getOwnerSequence();
+					int index = parent.findModelIndex(target);
+					parent.deleteAction(index);
+				}
 			}
-		}	
+		}
 	};
 
 	private static void moveCursorUp(TextWidget widget) {

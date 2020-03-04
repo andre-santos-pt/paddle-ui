@@ -1,5 +1,10 @@
 package pt.iscte.paddle.javardise.editor;
 
+import static pt.iscte.paddle.javardise.UiMode.Syntax.ASSIGNMENT;
+import static pt.iscte.paddle.javardise.UiMode.Syntax.CALLS;
+import static pt.iscte.paddle.javardise.UiMode.Syntax.SELECTION;
+import static pt.iscte.paddle.javardise.UiMode.Syntax.WHILE_LOOP;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -18,6 +23,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
@@ -38,14 +45,12 @@ import pt.iscte.paddle.javardise.Keyword;
 import pt.iscte.paddle.javardise.NewInsertWidget;
 import pt.iscte.paddle.javardise.SequenceWidget;
 import pt.iscte.paddle.javardise.UiMode;
-import pt.iscte.paddle.javardise.NewInsertWidget.Action;
+import pt.iscte.paddle.javardise.UiMode.Syntax;
 import pt.iscte.paddle.model.IModule;
-
 
 public class StandaloneEditor {
 	private IModule module;
 	private ClassWidget classWidget;
-	private UiMode mode;
 	private Shell shell;
 
 	public StandaloneEditor(File file) {
@@ -71,7 +76,6 @@ public class StandaloneEditor {
 			module = IModule.create();
 			module.setId(className);
 		}
-		mode = new UiMode();
 	}
 
 	public StandaloneEditor(IModule module) {
@@ -128,18 +132,12 @@ public class StandaloneEditor {
 		seq.setMenu(menu);
 		MenuItem subSyntax = new MenuItem(menu, SWT.CASCADE);		
 		subSyntax.setText("Syntax");
-
 		Menu syntaxMenu = new Menu(menu);
 		subSyntax.setMenu(syntaxMenu);
-		MenuItem loop = new MenuItem(syntaxMenu, SWT.CHECK); 
-		loop.setText("Loops");
-		MenuItem simp = new MenuItem(syntaxMenu, SWT.CHECK); 
-		simp.setText("Simplified assignments");
-		MenuItem brackets = new MenuItem(syntaxMenu, SWT.CHECK); 
-		brackets.setText("Optional brackets");
-		MenuItem encap = new MenuItem(syntaxMenu, SWT.CHECK); 
-		encap.setText("Encapsulation");
-
+		
+		for(SyntaxLevel level : SyntaxLevel.values())
+			level.createMenuItem(syntaxMenu);
+		
 		Display.getDefault().addFilter(SWT.KeyDown, new Listener() {
 			public void handleEvent(Event event) {
 				if ((event.stateMask & SWT.MODIFIER_MASK) == SWT.CTRL && event.keyCode == 's') {
@@ -154,6 +152,34 @@ public class StandaloneEditor {
 		shell.setSize(600, 800);
 		shell.open();
 		return shell;
+	}
+	
+	enum SyntaxLevel {
+		RECURSIVE(SELECTION, CALLS),
+		LOOPS(WHILE_LOOP, ASSIGNMENT),
+		ARRAYS(Syntax.ARRAYS),
+		OBJECTS,
+		ENCAPSULATION(Syntax.ENCAPSULATION);
+		
+		Syntax[] elements;
+		
+		SyntaxLevel(Syntax ... elements) {
+			this.elements = elements;
+		}
+		
+		void createMenuItem(Menu parent) {
+			MenuItem item = new MenuItem(parent, SWT.CHECK);
+			item.setText(name());
+			item.addSelectionListener(new SelectionAdapter() {
+				public void widgetSelected(SelectionEvent e) {
+					if(item.getSelection())
+						UiMode.addSyntax(elements);
+					else
+						UiMode.removeSyntax(elements);
+				}
+			});
+			item.setSelection(true);
+		}
 	}
 
 	public File saveToFile() {

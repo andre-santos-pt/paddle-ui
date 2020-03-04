@@ -81,6 +81,8 @@ public enum Keyword implements CharSequence {
 
 	private static final List<Keyword> METHOD_MODIFIERS = Arrays.asList(PUBLIC, PRIVATE, PROTECTED, STATIC, ABSTRACT, FINAL);
 	
+	private static final List<Keyword> ACCESS_MODIFIERS = Arrays.asList(PUBLIC, PROTECTED, PRIVATE);
+	
 	public Keyword[] excludes() {
 		return EMPTY;
 	}
@@ -112,7 +114,9 @@ public enum Keyword implements CharSequence {
 		return isModifier(METHOD_MODIFIERS, keyword);
 	}
 	
-	
+	public static boolean isAccessModifier(String keyword) {
+		return isModifier(ACCESS_MODIFIERS, keyword);
+	}
 	
 	private static final String regex = String.join("|", keywords());
 	

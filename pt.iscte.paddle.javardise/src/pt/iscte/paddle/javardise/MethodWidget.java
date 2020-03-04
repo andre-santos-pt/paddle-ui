@@ -117,7 +117,7 @@ public class MethodWidget extends EditorWidget implements SequenceContainer {
 				}
 
 				public void run(char c, String text, int index, int caret, int selection, List<String> tokens) {
-					IType t = IType.INT;
+					IType t = IType.match(text);
 					if(c == '[')
 						t = t.array();
 					addParam(new IVariableDeclaration.UnboundVariable(t, "parameter"), false, false);

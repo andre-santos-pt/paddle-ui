@@ -55,13 +55,19 @@ public class NewInsertWidget extends Composite implements TextWidget {
 					e.doit = false;
 					return;
 				}
+				else if(!permanent && e.character == Constants.DEL_KEY && last.isBlank()) {
+					Composite parent = getParent();
+					dispose();
+					parent.requestLayout();
+					return;
+				}
 
 				// TODO FIX?
 				int index = getParent() instanceof SequenceWidget ? ((SequenceWidget) getParent()).findModelIndex(NewInsertWidget.this) : 0; 
 				List<String> tokens = getTokens();
 				for(Action a : actions) {
-					if(a.isEnabled(e.character, complexId, index, complexId.text.getCaretPosition(), complexId.text.getSelectionCount(), tokens)) {
-						a.run(e.character, complexId, index, complexId.text.getCaretPosition(), complexId.text.getSelectionCount(), tokens);
+					if(a.isEnabled(e.character, complexId, index, complexId.getCaretPosition(), complexId.getSelectionCount(), tokens)) {
+						a.run(e.character, complexId, index, complexId.getCaretPosition(), complexId.getSelectionCount(), tokens);
 						clearTokens();
 						if(!permanent)
 							dispose();
@@ -99,10 +105,10 @@ public class NewInsertWidget extends Composite implements TextWidget {
 				if(complexId.isEmpty()) {
 					setLayoutData(getParent().getLayout() instanceof GridLayout ? GridDatas.HIDE_GRID : GridDatas.HIDE_ROW);
 					requestLayout();
-					complexId.text.setBackground(Constants.COLOR_BACKGROUND);
+//					complexId.text.setBackground(Constants.COLOR_BACKGROUND);
 				}
 				else {
-					complexId.text.setBackground(Constants.COLOR_HIGHLIGHT);
+//					complexId.text.setBackground(Constants.COLOR_HIGHLIGHT);
 				}
 					
 			}
@@ -148,6 +154,6 @@ public class NewInsertWidget extends Composite implements TextWidget {
 
 	@Override
 	public Text getWidget() {
-		return complexId.text;
+		return complexId.getWidget();
 	}
 }
