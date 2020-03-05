@@ -9,15 +9,14 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Arrays;
 import java.util.List;
 
-import javax.tools.DiagnosticCollector;
-import javax.tools.JavaCompiler;
-import javax.tools.JavaFileObject;
-import javax.tools.StandardJavaFileManager;
-import javax.tools.StandardLocation;
-import javax.tools.ToolProvider;
+//import javax.tools.DiagnosticCollector;
+//import javax.tools.JavaCompiler;
+//import javax.tools.JavaFileObject;
+//import javax.tools.StandardJavaFileManager;
+//import javax.tools.StandardLocation;
+//import javax.tools.ToolProvider;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
@@ -46,6 +45,7 @@ import pt.iscte.paddle.javardise.NewInsertWidget;
 import pt.iscte.paddle.javardise.SequenceWidget;
 import pt.iscte.paddle.javardise.UiMode;
 import pt.iscte.paddle.javardise.UiMode.Syntax;
+import pt.iscte.paddle.javardise.parser.JavaParser;
 import pt.iscte.paddle.model.IModule;
 
 public class StandaloneEditor {
@@ -61,9 +61,8 @@ public class StandaloneEditor {
 		String className = file.getName().substring(0, file.getName().indexOf('.'));
 		
 		if(file.exists()) {
-			// TODO load model
-			module = IModule.create();
-			module.setId(className);
+			JavaParser parser = new JavaParser(file);
+			module = parser.parse();
 		}
 		else {
 			try {
@@ -203,29 +202,34 @@ public class StandaloneEditor {
 	}
 
 	
-	public boolean compile(File destinationDir) {
-		StringBuffer buffer = new StringBuffer();
-		classWidget.toCode(buffer, 0);
-		JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+//	public boolean compile(File destinationDir) {
+//		StringBuffer buffer = new StringBuffer();
+//		classWidget.toCode(buffer, 0);
+//		JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+//	
+//		DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
+//		JavaStringObject stringObject = new JavaStringObject("Test", buffer);
+//		StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
+//		try {
+//			fileManager.setLocation(StandardLocation.CLASS_OUTPUT, Arrays.asList(destinationDir));
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//		JavaCompiler.CompilationTask task = compiler.getTask(null,
+//				fileManager, diagnostics, null, null, Arrays.asList(stringObject));
+//		if (!task.call()) {
+//			diagnostics.getDiagnostics().forEach(d -> System.err.println(d));
+//			return false;
+//		}
+//		else
+//			return true;
+//	}
 	
-		DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
-		JavaStringObject stringObject = new JavaStringObject("Test", buffer);
-		StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
-		try {
-			fileManager.setLocation(StandardLocation.CLASS_OUTPUT, Arrays.asList(destinationDir));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		JavaCompiler.CompilationTask task = compiler.getTask(null,
-				fileManager, diagnostics, null, null, Arrays.asList(stringObject));
-		if (!task.call()) {
-			diagnostics.getDiagnostics().forEach(d -> System.err.println(d));
-			return false;
-		}
-		else
-			return true;
+	public boolean compile(File f) {
+		JavaParser parser = new JavaParser(f);
+		parser.parse();
+		return parser.hasParseProblems();
 	}
-	
 	
 	public static void main(String[] args) {
 		if(args.length == 0) {

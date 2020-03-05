@@ -38,6 +38,6 @@ public class UiMode {
 	}
 	
 	static boolean hideSemiColons() {
-		return true;
+		return false;
 	}
 }

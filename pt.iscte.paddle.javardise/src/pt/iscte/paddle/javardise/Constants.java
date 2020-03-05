@@ -14,6 +14,8 @@ import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseWheelListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
@@ -258,7 +260,7 @@ public interface Constants {
 		}
 	};
 
-	private static void moveCursorUp(TextWidget widget) {
+	static void moveCursorUp(TextWidget widget) {
 		Control statement = widget.getStatement();
 		if(statement != null) {
 			SequenceWidget seq = (SequenceWidget) statement.getParent();
@@ -266,7 +268,7 @@ public interface Constants {
 		}
 	}
 
-	private static void moveCursorDown(TextWidget widget) {
+	static void moveCursorDown(TextWidget widget) {
 		Control statement = widget.getStatement();
 		if(statement != null) {
 			SequenceWidget seq = (SequenceWidget) statement.getParent();

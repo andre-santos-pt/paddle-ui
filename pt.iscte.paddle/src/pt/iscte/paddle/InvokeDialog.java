@@ -23,7 +23,7 @@ import pt.iscte.paddle.interpreter.IProgramState;
 import pt.iscte.paddle.javali.translator.ElementLocation;
 import pt.iscte.paddle.javali.translator.ISourceLocation;
 import pt.iscte.paddle.model.IProcedure;
-import pt.iscte.paddle.model.IVariable;
+import pt.iscte.paddle.model.IVariableDeclaration;
 
 public class InvokeDialog extends Dialog {
 	private IProgramState state;
@@ -47,7 +47,7 @@ public class InvokeDialog extends Dialog {
 		Composite composite = (Composite) super.createDialogArea(parent);
 		composite.setLayout(new GridLayout(2, false));
 		argsText = new ArrayList<>(procedure.getParameters().size());
-		for(IVariable param : procedure.getParameters()) {
+		for(IVariableDeclaration param : procedure.getParameters()) {
 			new Label(composite, SWT.NONE).setText(param.getId());
 			argsText.add(new Text(composite, SWT.BORDER));
 		}

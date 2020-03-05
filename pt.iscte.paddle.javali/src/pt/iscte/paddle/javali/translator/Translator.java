@@ -66,7 +66,7 @@ import pt.iscte.paddle.javali.Xor;
 import pt.iscte.paddle.model.IArrayType;
 import pt.iscte.paddle.model.IBinaryOperator;
 import pt.iscte.paddle.model.IBlock;
-import pt.iscte.paddle.model.IConstant;
+import pt.iscte.paddle.model.IConstantDeclaration;
 import pt.iscte.paddle.model.IExpression;
 import pt.iscte.paddle.model.ILiteral;
 import pt.iscte.paddle.model.ILoop;
@@ -77,10 +77,10 @@ import pt.iscte.paddle.model.IProgramElement;
 import pt.iscte.paddle.model.IRecordType;
 import pt.iscte.paddle.model.ISelection;
 import pt.iscte.paddle.model.IType;
-import pt.iscte.paddle.model.IVariable;
+import pt.iscte.paddle.model.IVariableDeclaration;
 
 public class Translator {
-	private Map<String, IVariable> varTable;
+	private Map<String, IVariableDeclaration> varTable;
 	private Resource resource;
 
 	public Translator(IFile file) {
@@ -119,7 +119,7 @@ public class Translator {
 		return program;
 	}
 
-	private Map<String, IConstant> constantsTable = new HashMap<>();
+	private Map<String, IConstantDeclaration> constantsTable = new HashMap<>();
 
 	private void handleConstants(Module module, IModule program) {
 		for(Constant c : module.getConstants()) {
@@ -127,7 +127,7 @@ public class Translator {
 			if(type == null)
 				throw new RuntimeException("invalid constant type: " + c.getType());
 			
-			IConstant constant = program.addConstant(type, mapValue(c.getValue()));
+			IConstantDeclaration constant = program.addConstant(type, mapValue(c.getValue()));
 			constant.setId(c.getId().getId());
 			constantsTable.put(constant.getId(), constant);
 		}
@@ -164,7 +164,7 @@ public class Translator {
 
 		for (Entry<IRecordType, Record> e : recordTypes.entrySet()) {
 			for (VarDeclaration f : e.getValue().getFields()) {
-				IVariable field = e.getKey().addField(toModelType(f.getType()));
+				IVariableDeclaration field = e.getKey().addField(toModelType(f.getType()));
 				field.setId(f.getId().getId());
 			}
 		}
@@ -183,7 +183,7 @@ public class Translator {
 				proc.setProperty("DOCUMENTATION", p.getComment());
 
 			for (VarDeclaration paramDec : p.getParams()) {
-				IVariable param = proc.addParameter(toModelType(paramDec.getType()));
+				IVariableDeclaration param = proc.addParameter(toModelType(paramDec.getType()));
 				param.setId(paramDec.getId().getId());
 			}
 
@@ -195,7 +195,7 @@ public class Translator {
 			IProcedure proc = e.getKey();
 			Procedure p = e.getValue();
 
-			for(IVariable param : proc.getParameters())
+			for(IVariableDeclaration param : proc.getParameters())
 				varTable.put(param.getId(), param);
 
 			p.getBody().getStatements().forEach(s -> mapStatement(s, proc.getBody()));
@@ -221,7 +221,7 @@ public class Translator {
 			VarDeclaration varDec = (VarDeclaration) s;
 
 			String id = varDec.getId().getId();
-			IVariable var = block.addVariable(toModelType(varDec.getType()));
+			IVariableDeclaration var = block.addVariable(toModelType(varDec.getType()));
 			var.setId(id);
 			varTable.put(id, var);
 
@@ -231,7 +231,7 @@ public class Translator {
 		else if(s instanceof VarAssign) {
 			VarAssign ass = (VarAssign) s;
 			VarExpression varExp = ass.getVar();
-			IVariable var = varTable.get(varExp.getParts().get(0).getId());
+			IVariableDeclaration var = varTable.get(varExp.getParts().get(0).getId());
 			EList<Expression> arrayIndexes = ass.getVar().getArrayIndexes();
 			IExpression expression = mapExpression(ass.getExp());
 			if(arrayIndexes.isEmpty())
@@ -324,11 +324,11 @@ public class Translator {
 			// include constant
 			VarExpression var = (VarExpression) e;
 			String id = var.getParts().get(0).getId(); // TODO field access
-			IVariable v = varTable.get(id);
+			IVariableDeclaration v = varTable.get(id);
 			EList<Expression> arrayIndexes = var.getArrayIndexes();
 			
 			if(arrayIndexes.isEmpty())
-				exp = v;
+				exp = v.expression();
 			else
 				exp = v.element(mapExpressions(arrayIndexes));
 			
@@ -336,7 +336,7 @@ public class Translator {
 			//			if(single)
 
 			if(exp == null)
-				exp = constantsTable.get(id);
+				exp = constantsTable.get(id).expression();
 			if(exp == null)
 				System.err.println("var not found: " + id + " " + NodeModelUtils.getNode(var).getStartLine());
 		}

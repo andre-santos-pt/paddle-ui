@@ -4,7 +4,7 @@ import pt.iscte.paddle.model.IArrayElementAssignment;
 import pt.iscte.paddle.model.IBlock;
 import pt.iscte.paddle.model.IBlockElement;
 import pt.iscte.paddle.model.IBreak;
-import pt.iscte.paddle.model.IConstant;
+import pt.iscte.paddle.model.IConstantDeclaration;
 import pt.iscte.paddle.model.IContinue;
 import pt.iscte.paddle.model.IExpression;
 import pt.iscte.paddle.model.ILoop;
@@ -18,7 +18,8 @@ import pt.iscte.paddle.model.IReferenceType;
 import pt.iscte.paddle.model.IReturn;
 import pt.iscte.paddle.model.ISelection;
 import pt.iscte.paddle.model.IType;
-import pt.iscte.paddle.model.IVariable;
+import pt.iscte.paddle.model.IVariableDeclaration;
+import pt.iscte.paddle.model.IVariableExpression;
 import pt.iscte.paddle.model.IVariableAssignment;
 
 public class CTranslator implements IModel2CodeTranslator {
@@ -41,14 +42,14 @@ public class CTranslator implements IModel2CodeTranslator {
 	}
 	
 	@Override
-	public String declaration(IConstant c) {
+	public String declaration(IConstantDeclaration c) {
 		return "const " + c.getType().getId() + " " + c.getId() + " = " + c.getValue().getStringValue() + ";\n";
 	}
 
 	@Override
 	public String declaration(IRecordType t) {
 		String text = "typedef struct\n{\n";
-		for (IVariable member : t.getFields()) {
+		for (IVariableDeclaration member : t.getFields()) {
 			text += "\t" + member.getDeclaration() + ";\n";
 		}
 		text += "} " + type(t) + ";\n";
@@ -59,13 +60,13 @@ public class CTranslator implements IModel2CodeTranslator {
 	public String header(IProcedure p) {
 		String text = p.getReturnType() + " " + p.getId() + "(";
 		String args = "";
-		for (IVariable param : p.getParameters()) {
+		for (IVariableDeclaration param : p.getParameters()) {
 			if(!args.isEmpty())
 				args += ", ";
 			args += type(param.getType())  + " " + param.getId();
 		}
 		text += args + ") {\n";
-		for (IVariable v : p.getLocalVariables()) {
+		for (IVariableDeclaration v : p.getLocalVariables()) {
 			text += "\t" + type(v.getType()) + " " + v.getId() + ";\n";
 		}
 		return text;
@@ -91,7 +92,7 @@ public class CTranslator implements IModel2CodeTranslator {
 	
 	@Override
 	public String statement(IBlockElement e) {
-		if(e instanceof IVariable)
+		if(e instanceof IVariableExpression)
 			return "";
 		if(e instanceof IArrayElementAssignment) {
 			IArrayElementAssignment a = (IArrayElementAssignment) e;
@@ -131,7 +132,7 @@ public class CTranslator implements IModel2CodeTranslator {
 	}
 	
 	@Override
-	public String declaration(IVariable v) {
+	public String declaration(IVariableDeclaration v) {
 		return v.getType().getId() + " " + v.getId() + ";\n";
 	}
 	

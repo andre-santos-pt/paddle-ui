@@ -11,6 +11,8 @@ import pt.iscte.paddle.model.IArrayElement;
 import pt.iscte.paddle.model.IArrayLength;
 import pt.iscte.paddle.model.IArrayType;
 import pt.iscte.paddle.model.IBinaryExpression;
+import pt.iscte.paddle.model.IConstantDeclaration;
+import pt.iscte.paddle.model.IConstantExpression;
 import pt.iscte.paddle.model.IExpression;
 import pt.iscte.paddle.model.ILiteral;
 import pt.iscte.paddle.model.IProcedureCall;
@@ -46,6 +48,9 @@ public interface Expression extends CodeElement {
 	static Expression.Creator match(IExpression e) {
 		if(e instanceof ILiteral) {
 			return p -> new SimpleExpressionWidget(p, ((ILiteral) e).getStringValue());
+		}
+		else if(e instanceof IConstantExpression) {
+			return p -> new SimpleExpressionWidget(p, ((IConstantExpression) e).getStringValue());
 		}
 		else if(e instanceof IVariableExpression) {
 			IVariableExpression var = (IVariableExpression) e;
@@ -87,7 +92,7 @@ public interface Expression extends CodeElement {
 		}
 		else {
 			assert false : e;
-		return null;
+			return null;
 		}
 
 	}
