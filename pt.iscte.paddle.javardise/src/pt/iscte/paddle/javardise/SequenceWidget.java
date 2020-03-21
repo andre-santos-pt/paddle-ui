@@ -2,8 +2,6 @@ package pt.iscte.paddle.javardise;
 
 import static pt.iscte.paddle.javardise.Keyword.BREAK;
 import static pt.iscte.paddle.javardise.Keyword.CONTINUE;
-import static pt.iscte.paddle.javardise.Keyword.ELSE;
-import static pt.iscte.paddle.javardise.Keyword.IF;
 import static pt.iscte.paddle.javardise.Keyword.RETURN;
 import static pt.iscte.paddle.javardise.Keyword.WHILE;
 
@@ -17,18 +15,15 @@ import java.util.function.Supplier;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseWheelListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
-import org.eclipse.ui.swt.IFocusService;
 
 import pt.iscte.paddle.model.IArrayElementAssignment;
 import pt.iscte.paddle.model.IBlock;
@@ -129,8 +124,8 @@ public class SequenceWidget extends Composite {
 	int findModelIndex(Control location) {
 		int i = 0;
 		for (Control c : getChildren()) {
-			if(c instanceof Markable)
-				c = ((Markable)c).target.getControl();
+//			if(c instanceof Markable)
+//				c = ((Markable)c).target.getControl();
 
 			if (c == location)
 				return i;
@@ -154,8 +149,8 @@ public class SequenceWidget extends Composite {
 	}
 
 	private static boolean isElse(Control c) {
-		if(c instanceof Markable)
-			c = ((Markable) c).target.getControl();
+//		if(c instanceof Markable)
+//			c = ((Markable) c).target.getControl();
 		
 		return c instanceof ControlWidget && ((ControlWidget) c).is(Keyword.ELSE);
 	}
@@ -206,13 +201,17 @@ public class SequenceWidget extends Composite {
 
 	public <T extends EditorWidget> T addElement(Function<Composite, T> f, IProgramElement e, int modelIndex) {
 		Control el = viewElement(modelIndex);
-		Markable<T> sel = new Markable<>(this, f, e);
-		T w = sel.target;
-		
+//		Markable<T> sel = new Markable<>(this, f, e);
+//		T w = sel.target;
+//		if(isElse(w))
+//			sel.moveBelow(el);
+//		else
+//			sel.moveAbove(el);
+		T w = f.apply(this);
 		if(isElse(w))
-			sel.moveBelow(el);
+			w.moveBelow(el);
 		else
-			sel.moveAbove(el);
+			w.moveAbove(el);
 		return w;
 	}
 	
@@ -255,8 +254,9 @@ public class SequenceWidget extends Composite {
 		else {
 			for (int i = 1; i < children.length; i++) {
 				if(children[i] == statement) {
-					if(children[i-1] instanceof Markable && ((Markable<?>) children[i-1]).isSequenceContainer())
-						((Markable<?>) children[i-1]).getSequenceContainer().getBody().focusLast();
+//					if(children[i-1] instanceof Markable && ((Markable<?>) children[i-1]).isSequenceContainer())
+					if(children[i-1] instanceof SequenceContainer)
+						((SequenceContainer) children[i-1]).getBody().focusLast();
 					else
 						children[i-1].setFocus();
 					break;
@@ -268,8 +268,9 @@ public class SequenceWidget extends Composite {
 	void focusNextStatement(TextWidget widget) {
 		Control c = widget.getStatement();
 
-		if(c instanceof Markable && ((Markable<?>) c).isSequenceContainer()) {
-			((Markable<?>) c).getSequenceContainer().getBody().focusFirst();
+//		if(c instanceof Markable && ((Markable<?>) c).isSequenceContainer()) {
+		if(c instanceof SequenceContainer) {
+			((SequenceContainer) c).getBody().focusFirst();
 		}
 		else {
 			Control[] children = getChildren();
@@ -366,7 +367,7 @@ public class SequenceWidget extends Composite {
 
 		else if (element instanceof ILoop && element.not(Constants.FOR_FLAG)) {
 			ILoop l = (ILoop) element;
-			ControlWidget w =  addElement(p -> new ControlWidget(p, WHILE, l.getGuard(), l.getBlock()), l, index);
+			ControlWidget w =  addElement(p -> new ControlWidget(p, WHILE, l), l, index);
 			w.focusIn();
 		} 
 
@@ -377,23 +378,22 @@ public class SequenceWidget extends Composite {
 		//		} 
 
 		else if (element instanceof IBreak) {
-			addElement(p -> new InstructionWidget(p, BREAK), element, index);
+			addElement(p -> new InstructionWidget(p, BREAK, (IBreak) element), element, index);
 
 		} 
 		else if (element instanceof IContinue) {
-			addElement(p -> new InstructionWidget(p, CONTINUE), element, index);
+			addElement(p -> new InstructionWidget(p, CONTINUE, (IContinue) element), element, index);
 		} 
 
 		else if (element instanceof IProcedureCall) {
 			IProcedureCall call = (IProcedureCall) element;
-			String id = call.getProcedure().getId();
-			CallWidget w = addElement(p -> new CallWidget(p, id, true, Expression.creators(call.getArguments())), call, index);
+			CallWidget w = addElement(p -> new CallWidget(p, call.getProcedure(), true, Expression.creators(call.getArguments())), call, index);
 			w.focusArgument();
 		} 
 
 		else if (element instanceof IReturn) {
 			IReturn ret = (IReturn) element;
-			InstructionWidget w = addElement(p -> new InstructionWidget(p, RETURN, ret.getExpression()), ret, index);
+			InstructionWidget w = addElement(p -> new InstructionWidget(p, RETURN, ret, ret.getExpression()), ret, index);
 			w.focusExpression();
 		} else {
 			System.err.println("unhandled: " + element);

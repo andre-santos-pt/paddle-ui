@@ -9,7 +9,7 @@ public class ExpressionWidget extends EditorWidget implements Expression {
 	Expression expression;
 
 	public ExpressionWidget(Composite parent, Expression.Creator f, IProgramElement e) {
-		super(parent);
+		super(parent, e);
 		setLayout(Constants.ROW_LAYOUT_H_ZERO);
 		expression = f.apply(this);
 	}

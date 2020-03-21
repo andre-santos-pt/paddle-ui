@@ -16,8 +16,10 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Text;
 
+import pt.iscte.paddle.javardise.service.ICodeElement;
 
-public class Token implements TextWidget, CodeElement {
+
+public class Token implements TextWidget, ICodeElement {
 	private final Text text;
 	private Map<Character, String> map;
 	

@@ -8,19 +8,26 @@ import java.util.List;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
 import pt.iscte.paddle.javardise.Constants.DeleteListener;
+import pt.iscte.paddle.javardise.service.ICodeDecoration;
+import pt.iscte.paddle.javardise.service.IDeclarationWidget;
+import pt.iscte.paddle.javardise.service.IMethodWidget;
+import pt.iscte.paddle.javardise.service.IWidget;
 import pt.iscte.paddle.model.IBlockElement;
 import pt.iscte.paddle.model.IProcedure;
+import pt.iscte.paddle.model.IProgramElement;
 import pt.iscte.paddle.model.IType;
 import pt.iscte.paddle.model.IVariableDeclaration;
 
-public class MethodWidget extends EditorWidget implements SequenceContainer {
+public class MethodWidget extends EditorWidget implements SequenceContainer, IMethodWidget {
 
-	final IProcedure procedure;
+	private final IProcedure procedure;
 	private Id retType;
 	private Id id;
 	private SequenceWidget body;
@@ -29,7 +36,7 @@ public class MethodWidget extends EditorWidget implements SequenceContainer {
 	private List<Keyword> modifiers;
 	
 	public MethodWidget(Composite parent, IProcedure procedure) {
-		super(parent);
+		super(parent, procedure);
 		this.procedure = procedure;
 		setLayout(Constants.ROW_LAYOUT_V_ZERO);
 		header = Constants.createHeader(this);
@@ -75,7 +82,11 @@ public class MethodWidget extends EditorWidget implements SequenceContainer {
 			body.addModelElement(e, i++);
 	}
 
-	void addModifier(Keyword mod) {
+	public IProcedure getProcedure() {
+		return procedure;
+	}
+	
+	public void addModifier(Keyword mod) {
 		modifiers.add(mod);
 		Token modifier = new Token(header, mod);
 		modifier.addKeyListener(new KeyAdapter() { 
@@ -143,24 +154,18 @@ public class MethodWidget extends EditorWidget implements SequenceContainer {
 				}
 		}
 		
-		private class Param extends EditorWidget {
+		private class Param extends EditorWidget implements IDeclarationWidget {
 			private final Id type;
 			private final Id var;
 			private FixedToken comma;
 
 			public Param(IVariableDeclaration v, boolean comma) {
-				super(ParamList.this);
-				setLayout(Constants.ROW_LAYOUT_H_DOT);
+				super(ParamList.this, v);
+				setLayout(Constants.ROW_LAYOUT_H);
 				if(comma)
 					this.comma = new FixedToken(this, ",");
 				
 				this.type = new Id(this, v.getType());
-//				this.type = new Id(this, type, true, Constants.PRIMITIVE_TYPES_SUPPLIER);
-//				if(array)
-//					this.type.addDimension();
-				
-				
-				this.type.setToolTip("Parameter type");
 				
 				var = new Id(this, Constants.variableId(v));
 				var.addKeyListener(new KeyAdapter() {
@@ -183,7 +188,6 @@ public class MethodWidget extends EditorWidget implements SequenceContainer {
 						}
 					}
 				});
-				var.setToolTip("Parameter name");
 			}
 
 			void focusVariable() {
@@ -200,6 +204,16 @@ public class MethodWidget extends EditorWidget implements SequenceContainer {
 			public boolean setFocus() {
 				type.setFocus();
 				return true;
+			}
+
+			@Override
+			public IWidget getVariableType() {
+				return type;
+			}
+
+			@Override
+			public IWidget getVariableName() {
+				return var;
 			}
 		}
 
@@ -251,4 +265,13 @@ public class MethodWidget extends EditorWidget implements SequenceContainer {
 		params.setFocus();
 	}
 
+	@Override
+	public IWidget getReturnType() {
+		return retType;
+	}
+	
+	@Override
+	public IWidget getMethodName() {
+		return id;
+	}
 }

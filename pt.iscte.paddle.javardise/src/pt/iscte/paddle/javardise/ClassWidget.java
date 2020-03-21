@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.function.Predicate;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseWheelListener;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -16,12 +14,15 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 
 import pt.iscte.paddle.javardise.UiMode.Syntax;
+import pt.iscte.paddle.javardise.service.IClassWidget;
+import pt.iscte.paddle.javardise.service.IMethodWidget;
+import pt.iscte.paddle.javardise.service.IWidget;
 import pt.iscte.paddle.model.IConstantDeclaration;
 import pt.iscte.paddle.model.IModule;
 import pt.iscte.paddle.model.IProcedure;
 import pt.iscte.paddle.model.IType;
 
-public class ClassWidget extends EditorWidget implements SequenceContainer {
+public class ClassWidget extends EditorWidget implements SequenceContainer, IClassWidget {
 
 	private IModule module;
 	private Id id;
@@ -29,7 +30,7 @@ public class ClassWidget extends EditorWidget implements SequenceContainer {
 	private Keyword[] modifiers;
 	
 	public ClassWidget(Composite parent, IModule module, Keyword ... modifiers) {
-		super(parent);
+		super(parent, module);
 		this.module = module;
 		GridLayout layout = new GridLayout(1, true);
 		layout.verticalSpacing = 10;
@@ -112,7 +113,7 @@ public class ClassWidget extends EditorWidget implements SequenceContainer {
 			}
 
 			public void procedureRemoved(IProcedure procedure) {
-				body.delete(e -> e instanceof MethodWidget && ((MethodWidget) e).procedure == procedure);
+				body.delete(e -> e instanceof MethodWidget && ((MethodWidget) e).getProcedure() == procedure);
 			}
 		});
 
@@ -170,4 +171,17 @@ public class ClassWidget extends EditorWidget implements SequenceContainer {
 		buffer.append("}").append(lineSeparator()).append(lineSeparator());
 	}
 
+	@Override
+	public IWidget getClassName() {
+		return id;
+	}
+
+	@Override
+	public IMethodWidget getProcedure(IProcedure procedure) {
+		for(Control c : body.getChildren())
+			if(c instanceof MethodWidget && ((MethodWidget) c).getProcedure() == procedure)
+				return (IMethodWidget) c;
+				
+		return null;
+	}
 }

@@ -1,10 +1,15 @@
+@immutable 
 class Test {
-	int ff() {
-		y = expression;
-		u = expression;
-		j = expression;
-		i = expression;
-		k = expression;
+	@function
+	@recursive("daas")
+	int ff(@fixed int n) {
+		@gatherer int sum = 0;
+		return k;
+ 
+		int v;
+		v = 32;
+		if(true) {
+		}
 	}
 
 }

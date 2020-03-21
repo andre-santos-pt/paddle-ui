@@ -6,6 +6,6 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
-	<classpathentry excluding="pt/iscte/paddle/javardise/editor/JavaStringObject.java" kind="src" path="src"/>
+	<classpathentry excluding="pt/iscte/paddle/javardise/editor/JavaStringObject.java|pt/iscte/paddle/javardise/Markable.java|pt/iscte/paddle/javardise/service/DecorationService.java|pt/iscte/paddle/javardise/Decorations.java" kind="src" path="src"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

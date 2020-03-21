@@ -3,16 +3,18 @@ package pt.iscte.paddle.javardise;
 import org.eclipse.swt.widgets.Composite;
 
 import pt.iscte.paddle.javardise.Constants.DeleteListener;
+import pt.iscte.paddle.javardise.service.IDeclarationWidget;
+import pt.iscte.paddle.javardise.service.IWidget;
 import pt.iscte.paddle.model.IExpression;
 import pt.iscte.paddle.model.IVariableDeclaration;
 
-public class DeclarationWidget extends EditorWidget {
+public class DeclarationWidget extends EditorWidget implements IDeclarationWidget {
 	private final Id type;
 	private final Id id;
 	private final ExpressionWidget expression;
 	
 	DeclarationWidget(Composite parent, IVariableDeclaration var, IExpression exp) {
-		super(parent);
+		super(parent, var);
 		this.type = new Id(this, var.getType());
 		this.id = new Id(this, Constants.variableId(var));
 		setLayout(Constants.ROW_LAYOUT_H);
@@ -50,5 +52,15 @@ public class DeclarationWidget extends EditorWidget {
 			expression.toCode(buffer);
 		}
 		buffer.append(";");
+	}
+	
+	@Override
+	public IWidget getVariableType() {
+		return type;
+	}
+	
+	@Override
+	public IWidget getVariableName() {
+		return id;
 	}
 }

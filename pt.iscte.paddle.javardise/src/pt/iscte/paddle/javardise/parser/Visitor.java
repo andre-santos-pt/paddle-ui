@@ -1,11 +1,9 @@
 package pt.iscte.paddle.javardise.parser;
 
 import java.util.ArrayDeque;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.ArrayAccess;
@@ -53,7 +51,6 @@ import pt.iscte.paddle.model.IType;
 import pt.iscte.paddle.model.IUnaryOperator;
 import pt.iscte.paddle.model.IVariableDeclaration;
 import pt.iscte.paddle.model.IVariableExpression;
-import pt.iscte.paddle.model.validation.Args;
 
 public class Visitor extends DefaultASTVisitor {
 
@@ -97,8 +94,6 @@ public class Visitor extends DefaultASTVisitor {
 	}
 
 	public boolean visit(SingleVariableDeclaration node) {
-//		IVariableDeclaration param = proc.addParameter(match(node.getType()));
-//		param.setId(node.getName().toString());
 		return true;
 	}
 
@@ -160,6 +155,8 @@ public class Visitor extends DefaultASTVisitor {
 
 	@Override
 	public boolean visit(Assignment node) {
+		assert node.getOperator() == Assignment.Operator.ASSIGN;
+		
 		IBlock block = blockStack.peek();
 		IExpression exp = match(node.getRightHandSide());
 
@@ -213,6 +210,7 @@ public class Visitor extends DefaultASTVisitor {
 	public boolean visit(ExpressionStatement node) { 	return true; }
 	public boolean visit(SimpleName node) {				return true; }
 	public boolean visit(PrimitiveType node) {			return true; }
+	public boolean visit(BooleanLiteral node) { 		return true; }
 	public boolean visit(NumberLiteral node) { 			return true; }
 	public boolean visit(ArrayType node) { 				return true; }
 	public boolean visit(ArrayAccess node) { 			return true; }
@@ -256,9 +254,7 @@ public class Visitor extends DefaultASTVisitor {
 		}
 		else if(e instanceof FieldAccess) {
 			FieldAccess fa = (FieldAccess) e;
-			System.out.println(fa.getExpression());
 			IExpression target = match(fa.getExpression());
-			System.out.println(target.getType());
 		}
 		
 		else if(e instanceof PrefixExpression) {
@@ -279,7 +275,7 @@ public class Visitor extends DefaultASTVisitor {
 			MethodInvocation inv = (MethodInvocation) e;
 			IExpression[] args = matchExpressions(inv.arguments());
 			IProcedure p = module.resolveProcedure(inv.getName().toString(), getTypes(args));
-			return p.call(args);
+			return p.expression(args);
 		}
 		
 		else if(e instanceof ArrayCreation) {

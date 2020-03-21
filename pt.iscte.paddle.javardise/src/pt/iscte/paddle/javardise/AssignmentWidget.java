@@ -5,6 +5,7 @@ import org.eclipse.swt.widgets.Composite;
 import pt.iscte.paddle.javardise.Constants.DeleteListener;
 import pt.iscte.paddle.model.IArrayElementAssignment;
 import pt.iscte.paddle.model.IExpression;
+import pt.iscte.paddle.model.IStatement;
 import pt.iscte.paddle.model.IVariableAssignment;
 import pt.iscte.paddle.model.IVariableDeclaration;
 import pt.iscte.paddle.model.IVariableExpression;
@@ -15,19 +16,19 @@ public class AssignmentWidget extends EditorWidget {
 	private ExpressionWidget expression;
 	
 	AssignmentWidget(Composite parent, IVariableAssignment a) {
-		this(parent, a.getTarget(), a.getExpression());
+		this(parent, a, a.getTarget(), a.getExpression());
 	}
 	
 	// TODO fix target
 	AssignmentWidget(Composite parent, IArrayElementAssignment a) {
-		this(parent, ((IVariableExpression) a.getTarget().resolveReference()).getVariable(), a.getExpression()); // TODO check other types
+		this(parent, a, ((IVariableExpression) a.getTarget().resolveReference()).getVariable(), a.getExpression()); // TODO check other types
 		
 		for(IExpression i : a.getIndexes())
 			this.id.addDimensionIndex(Expression.match(i));
 	}
 	
-	private AssignmentWidget(Composite parent, IVariableDeclaration var, IExpression exp) {
-		super(parent);
+	private AssignmentWidget(Composite parent, IStatement statement, IVariableDeclaration var, IExpression exp) {
+		super(parent, statement);
 		setLayout(Constants.ROW_LAYOUT_H);
 		
 		this.id = new ComplexId(this, Constants.variableId(var), false);
@@ -40,8 +41,9 @@ public class AssignmentWidget extends EditorWidget {
 		Expression.Creator f = exp == null ?
 				p -> new SimpleExpressionWidget(p, "expression") : Expression.match(exp);
 				
-		Markable<CodeElement> markable = new Markable<CodeElement>(this, p ->  new ExpressionWidget(p, f, exp), exp);
-		this.expression = (ExpressionWidget) markable.target;
+//		Markable<CodeElement> markable = new Markable<CodeElement>(this, p ->  new ExpressionWidget(p, f, exp), exp);
+//		this.expression = (ExpressionWidget) markable.target;
+		this.expression = new ExpressionWidget(this, f, exp);
 //		this.expression = new ExpressionWidget(this, f, exp);
 		this.expression.addKeyListener(deleteListener);
 		

@@ -2,9 +2,8 @@ package pt.iscte.paddle.javardise;
 
 import org.eclipse.swt.widgets.Composite;
 
-import pt.iscte.paddle.model.IBlock;
 import pt.iscte.paddle.model.IExpression;
-import pt.iscte.paddle.model.IType;
+import pt.iscte.paddle.model.ILoop;
 
 // TODO for
 public class ForWidget extends ControlWidget implements SequenceContainer {
@@ -13,8 +12,8 @@ public class ForWidget extends ControlWidget implements SequenceContainer {
 	private DeclarationWidget dec;
 	private ExpressionWidget statement;
 
-	ForWidget(SequenceWidget parent, IExpression guard, IBlock block) {
-		super(parent,Keyword.FOR, guard, block);
+	ForWidget(SequenceWidget parent, ILoop loop) {
+		super(parent, Keyword.FOR, loop);
 	}
 
 	@Override

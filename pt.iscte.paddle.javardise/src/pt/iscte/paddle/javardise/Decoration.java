@@ -1,76 +1,82 @@
 package pt.iscte.paddle.javardise;
 
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Text;
 
-public class Decoration {
-	private Shell s;
+import pt.iscte.paddle.javardise.service.ICodeDecoration;
 
-	Decoration(Control target, Function<Composite, Control> f, BiFunction<Point, Point, Point> loc) {
+class Decoration<T extends Control> implements ICodeDecoration<T> {
+	private Shell shell;
+	private T control;
+
+	Decoration(Control target, BiFunction<Composite, Control, T> f, BiFunction<Point, Point, Point> loc) {
 		Shell parent = target.getShell();
-		s = new Shell(parent, SWT.NO_TRIM);
-		s.setLayout(new FillLayout());
-		Control c = f.apply(s);
-		s.pack();
-		setLocation(target, loc, c);
+		shell = new Shell(parent, SWT.NO_TRIM);
+		shell.setLayout(new FillLayout());
+		control = f.apply(shell, target);
+		shell.pack();
+		setLocation(target, loc, control);
 		
 		parent.addControlListener(new ControlAdapter() {
 			public void controlMoved(ControlEvent e) {
-				if(!s.isDisposed())
-					setLocation(target, loc, c);
+				if(!shell.isDisposed())
+					setLocation(target, loc, control);
+			}
+			public void controlResized(ControlEvent e) {
+				if(!shell.isDisposed())
+					setLocation(target, loc, control);
 			}
 		});
-	
 	}
 
+	void setAlpha(int alpha) {
+		shell.setAlpha(alpha);
+	}
+
+	void setBackground(Color color) {
+		shell.setBackground(color);
+	}
+	
+	@Override
+	public T getControl() {
+		return control;
+	}
+	
 	private void setLocation(Control target, BiFunction<Point, Point, Point> loc, Control c) {
 		Point targetSize = target.computeSize(SWT.DEFAULT, SWT.DEFAULT);
 		targetSize.x += 5;
 		targetSize.y += 5;
 		Point decoratorSize = c.computeSize(SWT.DEFAULT, SWT.DEFAULT);
-		s.setLocation(target.getParent().toDisplay(loc.apply(targetSize, decoratorSize)));
+		shell.setLocation(target.toDisplay(loc.apply(targetSize, decoratorSize)));
 	}
 
+	public void setText(String text) {
+		if(control instanceof Text) {
+			((Text) control).setText(text);
+			shell.pack();
+		}
+	}
+	
 	public void show() {
-		s.setVisible(true);
+		shell.setVisible(true);
 	}
 	
 	public void hide() {
-		s.setVisible(false);
+		shell.setVisible(false);
 	}
 
 	public void delete() {
-		s.dispose();
+		shell.dispose();
 	}
-
 	
-	
-	public enum Location implements BiFunction<Point, Point, Point> {
-		LEFT((t,d) -> new Point(-d.x, t.y/2 - d.y/2)),
-		RIGHT((t,d) -> new Point(t.x, t.y/2 - d.y/2)),
-		TOP((t,d) -> new Point(t.x/2 - d.x/2, -d.y)),
-		BOTTOM((t,d) -> new Point(t.x/2 - d.x/2, d.y));
-
-		BiFunction<Point, Point, Point> f;
-
-		private Location(BiFunction<Point, Point, Point> f) {
-			this.f = f;
-		}
-
-		public Point apply(Point targetSize, Point decoratorSize) {
-			return f.apply(targetSize, decoratorSize);
-		}
-	}
 }

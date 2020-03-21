@@ -11,14 +11,11 @@ import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.events.VerifyListener;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.swt.widgets.ToolTip;
 
 import pt.iscte.paddle.javardise.Constants.GridDatas;
 
@@ -55,6 +52,7 @@ public class InsertWidget extends Composite implements TextWidget {
 		Text text = new Text(this, SWT.SINGLE);
 		text.setText(" ");
 		text.setForeground(Constants.FONT_COLOR);
+		text.setBackground(Constants.COLOR_BACKGROUND);
 		text.setEditable(true);
 		text.setFont(Constants.FONT);
 		text.addVerifyListener(new VerifyListener() {

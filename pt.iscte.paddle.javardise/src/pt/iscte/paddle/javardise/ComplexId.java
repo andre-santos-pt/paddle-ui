@@ -17,6 +17,7 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Text;
 
+import pt.iscte.paddle.javardise.service.ICodeElement;
 import pt.iscte.paddle.model.IArrayElement;
 import pt.iscte.paddle.model.IArrayLength;
 import pt.iscte.paddle.model.IExpression;
@@ -69,7 +70,7 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 				}
 				else if(!text.getText().isBlank() && ComplexId.this.getParent() instanceof NewInsertWidget){
 					text.setForeground(Constants.COLOR_ERROR);
-					text.setBackground(Constants.COLOR_PH);
+					text.setBackground(Constants.COLOR_HIGHLIGHT);
 				}
 				else {
 					text.setForeground(Constants.FONT_COLOR);
@@ -162,7 +163,7 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 		requestLayout();
 	}
 
-	private interface CodeElementControl extends CodeElement {
+	private interface CodeElementControl extends ICodeElement {
 		void dispose();
 	}
 	
@@ -309,8 +310,8 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 
 	@Override
 	public void toCode(StringBuffer buffer) {
-		CodeElement.toCode(text, buffer);
-		for(CodeElement e : elements)
+		ICodeElement.toCode(text, buffer);
+		for(ICodeElement e : elements)
 			e.toCode(buffer);
 	}
 

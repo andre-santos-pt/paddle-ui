@@ -18,6 +18,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Text;
 
+import pt.iscte.paddle.javardise.service.ICodeElement;
 import pt.iscte.paddle.model.IArrayType;
 import pt.iscte.paddle.model.IReferenceType;
 import pt.iscte.paddle.model.IType;
@@ -261,7 +262,7 @@ public class Id extends EditorWidget implements TextWidget {
 	
 	@Override
 	public void toCode(StringBuffer buffer) {
-		CodeElement.toCode(text, buffer);
+		ICodeElement.toCode(text, buffer);
 		int n = numberOfDimensions();
 		while(n-- > 0)
 			buffer.append("[]");

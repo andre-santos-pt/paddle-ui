@@ -2,27 +2,46 @@ package pt.iscte.paddle.javardise;
 
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.KeyAdapter;
-import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.widgets.Composite;
 
 import pt.iscte.paddle.javardise.Constants.DeleteListener;
 import pt.iscte.paddle.model.IBlock;
 import pt.iscte.paddle.model.IBlockElement;
+import pt.iscte.paddle.model.IControlStructure;
 import pt.iscte.paddle.model.IExpression;
-import pt.iscte.paddle.model.ISelection;
 
 public class ControlWidget extends EditorWidget implements SequenceContainer {
 
-	final Token keyword;
+	 Token keyword;
 	private ExpressionWidget expression;
-	final SequenceWidget blockSeq;
+	 SequenceWidget blockSeq;
 	private DeleteListener deleteListener;
 	private FixedToken openBracket;
 	private FixedToken closeBracket;
+	
+	ControlWidget(Composite parent, Keyword keyword, IBlock block) {
+		this(parent, keyword, null, block);
+	}
+	
+	ControlWidget(Composite parent, Keyword keyword, IControlStructure structure) {
+		super(parent, structure);
+		create(keyword, structure.getGuard(), structure.getBlock());
+	}
 
 	ControlWidget(Composite parent, Keyword keyword, IExpression guard, IBlock block) {
 		super(parent);
+		create(keyword, guard, block);
+		
+//		blockSeq.addControlListener(new ControlAdapter() {
+//			public void controlResized(ControlEvent e) {
+//				int t = blockSeq.totalElements();
+//				openBracket.setVisible(t != 1);
+//				closeBracket.setVisible(t != 1);
+//			}
+//		});
+	}
+
+	private void create(Keyword keyword, IExpression guard, IBlock block) {
 		setLayout(Constants.ROW_LAYOUT_V_ZERO);
 		Composite header = new Composite(this, SWT.NONE);
 		header.setLayout(Constants.ROW_LAYOUT_H_ZERO);
@@ -49,21 +68,14 @@ public class ControlWidget extends EditorWidget implements SequenceContainer {
 		int i = 0;
 		for(IBlockElement e : block)
 			blockSeq.addModelElement(e, i++);
-		
-//		blockSeq.addControlListener(new ControlAdapter() {
-//			public void controlResized(ControlEvent e) {
-//				int t = blockSeq.totalElements();
-//				openBracket.setVisible(t != 1);
-//				closeBracket.setVisible(t != 1);
-//			}
-//		});
 	}
 
 	void fillHeader(IExpression expression, Composite header) {
-		Markable<CodeElement> markable = new Markable<CodeElement>(header, p -> new ExpressionWidget(p, Expression.match(expression), expression), expression);
+//		Markable<CodeElement> markable = new Markable<CodeElement>(header, p -> new ExpressionWidget(p, Expression.match(expression), expression), expression);
 		
 //		this.expression = new ExpressionWidget(header, Expression.match(expression), expression);
-		this.expression = (ExpressionWidget) markable.target;
+//		this.expression = (ExpressionWidget) markable.target;
+		this.expression = new ExpressionWidget(header, Expression.match(expression), expression);
 		this.expression.addKeyListener(deleteListener);
 	}
 

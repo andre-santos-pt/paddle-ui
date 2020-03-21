@@ -12,6 +12,7 @@ import org.eclipse.swt.widgets.Label;
 
 import pt.iscte.paddle.model.IExpression;
 import pt.iscte.paddle.model.IProcedure;
+import pt.iscte.paddle.model.IProcedureDeclaration;
 
 public class CallWidget extends EditorWidget implements Expression {
 	private ComplexId id;
@@ -19,11 +20,11 @@ public class CallWidget extends EditorWidget implements Expression {
 	private boolean statement;
 	private InsertWidget insert;
 
-	public CallWidget(Composite parent, String id, boolean statement, Expression.Creator ... f) {
+	public CallWidget(Composite parent, IProcedureDeclaration procedure, boolean statement, Expression.Creator ... f) {
 		super(parent);
 		setLayout(Constants.ROW_LAYOUT_H_ZERO);
 
-		this.id = new ComplexId(this, id, false);
+		this.id = new ComplexId(this, procedure.getId(), false);
 		this.statement = statement;
 		new FixedToken(this, "(");
 		args = new Composite(this, SWT.NONE);
@@ -57,7 +58,7 @@ public class CallWidget extends EditorWidget implements Expression {
 					arg.setFocus();
 				}
 				else if(c == '(') {
-					arg = addArgument(p -> new CallWidget(p, text, false));
+					arg = addArgument(p -> new CallWidget(p, new IProcedureDeclaration.Unbound(text), false));
 					((CallWidget) arg.expression).focusArgument();
 				}
 				else { // CR
@@ -133,6 +134,6 @@ public class CallWidget extends EditorWidget implements Expression {
 			if(c instanceof ExpressionWidget)
 				list.add(((ExpressionWidget) c).toModel());
 
-		return new IProcedure.UnboundProcedure(id.getId()).call(list);
+		return new IProcedure.UnboundProcedure(id.getId()).expression(list);
 	}
 }

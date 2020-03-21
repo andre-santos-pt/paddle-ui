@@ -141,7 +141,7 @@ public class StandaloneEditor {
 			public void handleEvent(Event event) {
 				if ((event.stateMask & SWT.MODIFIER_MASK) == SWT.CTRL && event.keyCode == 's') {
 					File f = saveToFile();
-					compile(f.getParentFile());
+					compile(f);
 				}
 			}
 		});

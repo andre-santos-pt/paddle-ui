@@ -1,11 +1,13 @@
-package pt.iscte.paddle.javardise;
+package pt.iscte.paddle.javardise.service;
 
 import static java.lang.System.lineSeparator;
 
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 
-public interface CodeElement {
+import pt.iscte.paddle.javardise.Constants;
+
+public interface ICodeElement {
 
 	default void toCode(StringBuffer buffer) {
 		buffer.append("#TODO" + this.getClass().getSimpleName() + "#");

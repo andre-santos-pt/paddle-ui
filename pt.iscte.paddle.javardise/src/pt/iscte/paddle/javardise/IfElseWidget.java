@@ -12,7 +12,7 @@ public class IfElseWidget extends ControlWidget {
 	private ControlWidget elseBlock;
 
 	IfElseWidget(Composite parent, ISelection selection) {
-		super(parent, Keyword.IF, selection.getGuard(), selection.getBlock());
+		super(parent, Keyword.IF, selection);
 		if(selection.hasAlternativeBlock())
 			createElseBlock(selection);
 		

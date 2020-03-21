@@ -15,7 +15,7 @@ public class ArrayAllocationExpression extends EditorWidget implements Expressio
 	private List<ExpressionWidget> expressions;
 
 	public ArrayAllocationExpression(Composite parent, IArrayType type, Expression.Creator ... f) {
-		super(parent);
+		super(parent); // TODO program element
 		new Token(this, Keyword.NEW);
 		id = new Id(this, type.getRootComponentType());
 		expressions = new ArrayList<>(type.getDimensions()+1);

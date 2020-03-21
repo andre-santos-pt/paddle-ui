@@ -12,21 +12,44 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Text;
 
+import pt.iscte.paddle.model.IConstantExpression;
 import pt.iscte.paddle.model.IExpression;
+import pt.iscte.paddle.model.ILiteral;
+import pt.iscte.paddle.model.IProcedureDeclaration;
 import pt.iscte.paddle.model.IType;
 import pt.iscte.paddle.model.IVariableDeclaration;
+import pt.iscte.paddle.model.IVariableExpression;
 
-public class SimpleExpressionWidget extends Composite implements TextWidget, Expression {
+public class SimpleExpressionWidget extends EditorWidget implements TextWidget, Expression {
 
-	final Text text;
+	private Text text;
 	private Class<?> literalType;
 	
+	public SimpleExpressionWidget(Composite parent, ILiteral l) {
+		super(parent, l);
+		init(parent, l.getStringValue());
+	}
+	
+	public SimpleExpressionWidget(Composite parent, IVariableExpression e) {
+		super(parent, e);
+		init(parent, e.getVariable().getId());
+	}
+	
+	public SimpleExpressionWidget(Composite parent, IConstantExpression c) {
+		super(parent, c);
+		init(parent, c.getConstant().getId());
+	}
+	
 	public SimpleExpressionWidget(Composite parent, String literal) {
-		super(parent, SWT.NONE);
-		assert literal != null;
+		super(parent);
+		init(parent, literal);
+	}
+	
+	private void init(Composite parent, String string) {
+		assert string != null;
 		setLayout(Constants.ROW_LAYOUT_H_ZERO);
 		
-		text = Constants.createText(this, literal);
+		text = Constants.createText(this, string);
 		text.addVerifyListener(e -> e.doit = 
 				validCharacter(e.character) || 
 				e.character == '.' && text.getText().indexOf('.') == -1 || 
@@ -77,7 +100,7 @@ public class SimpleExpressionWidget extends Composite implements TextWidget, Exp
 					w = a;
 				}
 				else if(e.character == '(' && Id.isValid(text.getText()) && text.getCaretPosition() == text.getText().length() && text.getSelectionCount() == 0) {
-					CallWidget c = new CallWidget((EditorWidget) getParent(), text.getText(), false);
+					CallWidget c = new CallWidget((EditorWidget) getParent(), new IProcedureDeclaration.Unbound(text.getText()), false);
 					c.focusArgument();
 					w = c;
 				}

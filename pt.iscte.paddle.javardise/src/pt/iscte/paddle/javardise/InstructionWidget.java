@@ -5,18 +5,19 @@ import org.eclipse.swt.widgets.Text;
 
 import pt.iscte.paddle.javardise.Constants.DeleteListener;
 import pt.iscte.paddle.model.IExpression;
+import pt.iscte.paddle.model.IStatement;
 
 public class InstructionWidget extends EditorWidget implements TextWidget {
 	private final Keyword keyword;
 	private final Token keywordToken;
 	private final ExpressionWidget expressionWidget;
 
-	InstructionWidget(Composite parent, Keyword keyword) {
-		this(parent, keyword, null);
+	InstructionWidget(Composite parent, Keyword keyword, IStatement statement) {
+		this(parent, keyword, statement, null);
 	}
 
-	InstructionWidget(Composite parent, Keyword keyword, IExpression expression) {
-		super(parent);
+	InstructionWidget(Composite parent, Keyword keyword, IStatement statement, IExpression expression) {
+		super(parent, statement);
 		
 		this.keyword = keyword;
 		setLayout(Constants.ROW_LAYOUT_H);
@@ -26,8 +27,9 @@ public class InstructionWidget extends EditorWidget implements TextWidget {
 		Constants.addInsertLine(keywordToken);
 
 		if(expression != null) {
-			Markable<CodeElement> markable = new Markable<CodeElement>(this, p -> new ExpressionWidget(p, Expression.match(expression), expression), expression);
-			expressionWidget = (ExpressionWidget) markable.target;
+//			Markable<CodeElement> markable = new Markable<CodeElement>(this, p -> new ExpressionWidget(p, Expression.match(expression), expression), expression);
+			expressionWidget = new ExpressionWidget(this, Expression.match(expression), expression);
+//			expressionWidget = (ExpressionWidget) markable.target;
 //			expressionWidget = new ExpressionWidget(this, Expression.match(expression), expression);
 			expressionWidget.addKeyListener(deleteListener);
 		}

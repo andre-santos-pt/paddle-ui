@@ -19,7 +19,6 @@ import pt.iscte.paddle.model.IProcedure;
 import pt.iscte.paddle.model.IRecordFieldExpression;
 import pt.iscte.paddle.model.ISelection;
 import pt.iscte.paddle.model.IType;
-import pt.iscte.paddle.model.IValueType;
 import pt.iscte.paddle.model.IVariableDeclaration;
 
 abstract class BlockAction extends NewInsertWidget.Action {

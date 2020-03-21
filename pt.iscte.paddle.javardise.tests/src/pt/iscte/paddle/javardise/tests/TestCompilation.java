@@ -19,14 +19,13 @@ import javax.tools.SimpleJavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.StandardLocation;
 import javax.tools.ToolProvider;
-import javax.tools.JavaFileObject.Kind;
 
 import org.eclipse.swt.widgets.Shell;
 import org.junit.Test;
 
-
-import pt.iscte.paddle.javardise.ClassWidget;
 import pt.iscte.paddle.javardise.parser.JavaParser;
+import pt.iscte.paddle.javardise.service.IClassWidget;
+import pt.iscte.paddle.javardise.service.IJavardiseService;
 import pt.iscte.paddle.model.IModule;
 import pt.iscte.paddle.model.tests.BaseTest;
 import pt.iscte.paddle.model.tests.TestArrayCount;
@@ -37,7 +36,6 @@ import pt.iscte.paddle.model.tests.TestCircle;
 import pt.iscte.paddle.model.tests.TestFactorial;
 import pt.iscte.paddle.model.tests.TestIdMatrix;
 import pt.iscte.paddle.model.tests.TestInvert;
-import pt.iscte.paddle.model.tests.TestMatrixScalar;
 import pt.iscte.paddle.model.tests.TestMatrixTranspose;
 import pt.iscte.paddle.model.tests.TestMax;
 import pt.iscte.paddle.model.tests.TestNaturals;
@@ -77,7 +75,7 @@ public class TestCompilation {
 			test.setupProcedures();
 			IModule mod = test.getModule();
 			Shell shell = new Shell();
-			ClassWidget w = new ClassWidget(shell, mod);
+			IClassWidget w = IJavardiseService.createClassWidget(shell, mod);
 			boolean compile = compile(mod.getId(), w.getCode());
 				
 			assertTrue("Errors on " + mod.getId(), compile);
@@ -100,9 +98,9 @@ public class TestCompilation {
 	}
 	
 	
-	public static void saveToFile(ClassWidget classWidget, File file) {
+	public static void saveToFile(IClassWidget classWidget, File file) {
 		StringBuffer buffer = new StringBuffer();
-		classWidget.toCode(buffer, 0);
+		classWidget.toCode(buffer);
 		try {
 		
 			PrintWriter w = new PrintWriter(file);
