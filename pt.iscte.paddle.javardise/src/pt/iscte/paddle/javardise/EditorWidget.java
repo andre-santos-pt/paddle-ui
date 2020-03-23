@@ -48,8 +48,8 @@ public class EditorWidget extends Composite implements ICodeElement, IWidget {
 		this.element = element;
 		if(element != null) 
 			map.put(element, this);
-		else
-			System.err.println(this.getClass());
+//		else
+//			System.err.println(this.getClass());
 	}
 
 	public void setReadOnly(boolean readonly) {
