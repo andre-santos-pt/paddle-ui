@@ -12,6 +12,7 @@ import org.eclipse.swt.widgets.Label;
 
 import pt.iscte.paddle.model.IExpression;
 import pt.iscte.paddle.model.IProcedure;
+import pt.iscte.paddle.model.IProcedureCall;
 import pt.iscte.paddle.model.IProcedureDeclaration;
 
 public class CallWidget extends EditorWidget implements Expression {
@@ -20,11 +21,10 @@ public class CallWidget extends EditorWidget implements Expression {
 	private boolean statement;
 	private InsertWidget insert;
 
-	public CallWidget(Composite parent, IProcedureDeclaration procedure, boolean statement, Expression.Creator ... f) {
-		super(parent);
+	public CallWidget(Composite parent, IProcedureCall procedure, boolean statement, Expression.Creator ... f) {
+		super(parent, procedure);
 		setLayout(Constants.ROW_LAYOUT_H_ZERO);
-
-		this.id = new ComplexId(this, procedure.getId(), false);
+		this.id = new ComplexId(this, procedure.getProcedure().getId(), false);
 		this.statement = statement;
 		new FixedToken(this, "(");
 		args = new Composite(this, SWT.NONE);
@@ -58,7 +58,7 @@ public class CallWidget extends EditorWidget implements Expression {
 					arg.setFocus();
 				}
 				else if(c == '(') {
-					arg = addArgument(p -> new CallWidget(p, new IProcedureDeclaration.Unbound(text), false));
+					arg = addArgument(p -> new CallWidget(p, null, false)); // TODO null issue
 					((CallWidget) arg.expression).focusArgument();
 				}
 				else { // CR

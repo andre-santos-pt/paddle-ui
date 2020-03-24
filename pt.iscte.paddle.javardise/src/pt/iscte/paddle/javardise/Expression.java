@@ -88,7 +88,7 @@ public interface Expression extends ICodeElement {
 		else if(e instanceof IProcedureCall) {
 			IProcedureCall proc = (IProcedureCall) e;
 			Creator[] f = creators(proc.getArguments());
-			return p -> new CallWidget(p, proc.getProcedure(), false, f);
+			return p -> new CallWidget(p, proc, false, f);
 		}
 		else {
 			assert false : e;

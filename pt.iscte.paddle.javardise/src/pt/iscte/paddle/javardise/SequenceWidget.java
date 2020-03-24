@@ -387,7 +387,7 @@ public class SequenceWidget extends Composite {
 
 		else if (element instanceof IProcedureCall) {
 			IProcedureCall call = (IProcedureCall) element;
-			CallWidget w = addElement(p -> new CallWidget(p, call.getProcedure(), true, Expression.creators(call.getArguments())), call, index);
+			CallWidget w = addElement(p -> new CallWidget(p, call, true, Expression.creators(call.getArguments())), call, index);
 			w.focusArgument();
 		} 
 

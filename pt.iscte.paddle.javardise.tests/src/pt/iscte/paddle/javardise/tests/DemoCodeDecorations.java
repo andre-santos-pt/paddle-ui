@@ -36,7 +36,10 @@ import pt.iscte.paddle.model.IExpression;
 import pt.iscte.paddle.model.IModule;
 import pt.iscte.paddle.model.IProcedure;
 import pt.iscte.paddle.model.IReturn;
+import pt.iscte.paddle.model.IType;
 import pt.iscte.paddle.model.IVariableAssignment;
+import pt.iscte.paddle.model.IVariableDeclaration;
+import pt.iscte.paddle.model.tests.TestInvert;
 import pt.iscte.paddle.model.tests.TestNaturals;
 import pt.iscte.pidesco.cfgviewer.ext.CFGViewer;
 
@@ -51,6 +54,12 @@ public class DemoCodeDecorations {
 		IModule module = t.getModule();
 		IProcedure proc = module.getProcedure("naturals");
 
+		IProcedure main = module.addProcedure("main", IType.VOID);
+		IVariableDeclaration nats = main.getBody().addVariable(IType.INT.array().reference());
+		nats.setId("nats");
+		main.getBody().addAssignment(nats, proc.expression(IType.INT.literal(5)));
+		main.getBody().addAssignment(nats, IType.INT.literal(10));
+	
 		Display display = new Display();
 		shell = new Shell(display);
 		GridLayout layout = new GridLayout(1, false);
@@ -70,7 +79,7 @@ public class DemoCodeDecorations {
 		cfg.setInput(proc.getCFG().getNodes());
 		cfg.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		
-		createMarksGroup(proc, display, widget);
+		createMarksGroup(main, display, widget);
 		createOtherGroup(proc, display);
 
 		Color blue = Display.getDefault().getSystemColor(SWT.COLOR_BLUE);

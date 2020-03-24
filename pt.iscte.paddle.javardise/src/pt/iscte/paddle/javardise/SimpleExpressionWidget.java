@@ -15,6 +15,7 @@ import org.eclipse.swt.widgets.Text;
 import pt.iscte.paddle.model.IConstantExpression;
 import pt.iscte.paddle.model.IExpression;
 import pt.iscte.paddle.model.ILiteral;
+import pt.iscte.paddle.model.IProcedureCall;
 import pt.iscte.paddle.model.IProcedureDeclaration;
 import pt.iscte.paddle.model.IType;
 import pt.iscte.paddle.model.IVariableDeclaration;
@@ -100,7 +101,7 @@ public class SimpleExpressionWidget extends EditorWidget implements TextWidget, 
 					w = a;
 				}
 				else if(e.character == '(' && Id.isValid(text.getText()) && text.getCaretPosition() == text.getText().length() && text.getSelectionCount() == 0) {
-					CallWidget c = new CallWidget((EditorWidget) getParent(), new IProcedureDeclaration.Unbound(text.getText()), false);
+					CallWidget c = new CallWidget((EditorWidget) getParent(), IProcedureCall.unboundExpression(text.getText()), false);
 					c.focusArgument();
 					w = c;
 				}
