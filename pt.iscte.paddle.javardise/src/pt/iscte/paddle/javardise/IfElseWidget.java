@@ -17,7 +17,7 @@ public class IfElseWidget extends ControlWidget {
 			createElseBlock(selection);
 		
 		selection.addPropertyListener((k,n,o) -> {
-			if(k.equals(Constants.ELSE_FLAG)) {
+			if(Flag.ELSE.is(k.toString())) {
 				if(n == Boolean.TRUE) {
 					createElseBlock(selection);
 					elseBlock.focusIn();

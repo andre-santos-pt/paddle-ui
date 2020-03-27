@@ -13,26 +13,21 @@ import org.eclipse.swt.widgets.Label;
 import pt.iscte.paddle.model.IExpression;
 import pt.iscte.paddle.model.IProcedure;
 import pt.iscte.paddle.model.IProcedureCall;
-import pt.iscte.paddle.model.IProcedureDeclaration;
 
 public class CallWidget extends EditorWidget implements Expression {
 	private ComplexId id;
 	private Composite args;
 	private boolean statement;
-	private InsertWidget insert;
 
 	public CallWidget(Composite parent, IProcedureCall procedure, boolean statement, Expression.Creator ... f) {
 		super(parent, procedure);
 		setLayout(Constants.ROW_LAYOUT_H_ZERO);
-		this.id = new ComplexId(this, procedure.getProcedure().getId(), false);
+		this.id = new ComplexId(this, procedure);
 		this.statement = statement;
 		new FixedToken(this, "(");
 		args = new Composite(this, SWT.NONE);
 		args.setLayout(Constants.ROW_LAYOUT_H);
 		args.setBackground(Constants.COLOR_BACKGROUND);
-		insert = new InsertWidget(args, true, token -> Constants.isNumber(token));
-		//		insert.setHideMode();
-
 		for(Expression.Creator c : f)
 			addArgument(c);
 
@@ -41,44 +36,13 @@ public class CallWidget extends EditorWidget implements Expression {
 			new FixedToken(this, ";");
 			this.id.addKeyListener(new Constants.DeleteListener(this));
 		}
-
-		insert.addAction(new InsertWidget.Action("argument", (char) 0) {
-			public boolean isEnabled(char c, String text, int index, int caret, int selection, List<String> tokens) {
-				return (!Keyword.is(text) || Constants.isNumber(text)) && (c == ',' && !text.isBlank() || c == SWT.CR && args.getChildren().length == 1) ||
-						Id.isValid(text) && c == '(';
-			}
-
-			public void run(char c, String text, int index, int caret, int selection, List<String> tokens) {
-				//				insert.dispose();
-				ExpressionWidget arg = null;
-				if(c == ',') {
-					if(args.getChildren().length == 1)
-						addArgument(p -> new SimpleExpressionWidget(p, text));
-					arg = addArgument(p -> new SimpleExpressionWidget(p, "argument"));
-					arg.setFocus();
-				}
-				else if(c == '(') {
-					arg = addArgument(p -> new CallWidget(p, null, false)); // TODO null issue
-					((CallWidget) arg.expression).focusArgument();
-				}
-				else { // CR
-					if(!text.isBlank()) {
-						arg = addArgument(p -> new SimpleExpressionWidget(p, text));
-						arg.traverse(SWT.TRAVERSE_TAB_NEXT);
-					}
-				}
-				if(arg != null) {
-					insert.moveBelow(arg);
-					arg.requestLayout();
-				}
-				else
-					insert.traverse(SWT.TRAVERSE_TAB_NEXT);
-			}
-		});
+		
+		if(f.length == 0)
+			addArgument(p -> new SimpleExpressionWidget(p, ""));
 	}
 
 	private ExpressionWidget addArgument(Expression.Creator f) {
-		if(args.getChildren().length > 1)
+		if(args.getChildren().length > 0)
 			new FixedToken(args, ",");
 		
 		ExpressionWidget exp = new ExpressionWidget(args, f, null);
@@ -112,7 +76,7 @@ public class CallWidget extends EditorWidget implements Expression {
 	}
 
 	public void focusArgument() {
-		insert.setFocus();
+		getChildren()[0].setFocus();
 	}
 
 	@Override

@@ -16,7 +16,6 @@ import pt.iscte.paddle.model.IConstantExpression;
 import pt.iscte.paddle.model.IExpression;
 import pt.iscte.paddle.model.ILiteral;
 import pt.iscte.paddle.model.IProcedureCall;
-import pt.iscte.paddle.model.IProcedureDeclaration;
 import pt.iscte.paddle.model.IType;
 import pt.iscte.paddle.model.IVariableDeclaration;
 import pt.iscte.paddle.model.IVariableExpression;
@@ -25,31 +24,31 @@ public class SimpleExpressionWidget extends EditorWidget implements TextWidget, 
 
 	private Text text;
 	private Class<?> literalType;
-	
+
 	public SimpleExpressionWidget(Composite parent, ILiteral l) {
 		super(parent, l);
 		init(parent, l.getStringValue());
 	}
-	
+
 	public SimpleExpressionWidget(Composite parent, IVariableExpression e) {
 		super(parent, e);
 		init(parent, e.getVariable().getId());
 	}
-	
+
 	public SimpleExpressionWidget(Composite parent, IConstantExpression c) {
 		super(parent, c);
 		init(parent, c.getConstant().getId());
 	}
-	
+
 	public SimpleExpressionWidget(Composite parent, String literal) {
 		super(parent);
 		init(parent, literal);
 	}
-	
+
 	private void init(Composite parent, String string) {
 		assert string != null;
 		setLayout(Constants.ROW_LAYOUT_H_ZERO);
-		
+
 		text = Constants.createText(this, string);
 		text.addVerifyListener(e -> e.doit = 
 				validCharacter(e.character) || 
@@ -66,9 +65,9 @@ public class SimpleExpressionWidget extends EditorWidget implements TextWidget, 
 				updateContent();
 			}
 		});
-		
+
 		Constants.addArrowKeys(text, this);
-		
+
 		addTransformationKeyListener();
 		text.addModifyListener(Constants.MODIFY_PACK);
 		text.setMenu(new Menu(text));
@@ -78,7 +77,7 @@ public class SimpleExpressionWidget extends EditorWidget implements TextWidget, 
 	public Control getControl() {
 		return text;
 	}
-	
+
 	private void addTransformationKeyListener() {
 		text.addKeyListener(new KeyAdapter() {
 			public void keyPressed(KeyEvent e) {
@@ -96,7 +95,7 @@ public class SimpleExpressionWidget extends EditorWidget implements TextWidget, 
 					w = b;
 				}
 				else if(e.character == SWT.SPACE && Keyword.NEW.isEqual(text)) {
-					ArrayAllocationExpression a = new ArrayAllocationExpression((EditorWidget) getParent(), IType.INT.array(), p -> new SimpleExpressionWidget(p, "expression"));
+					AllocationExpression a = new AllocationExpression((EditorWidget) getParent(), IType.INT.array(), p -> new SimpleExpressionWidget(p, "expression"));
 					a.setFocus();
 					w = a;
 				}
@@ -114,22 +113,12 @@ public class SimpleExpressionWidget extends EditorWidget implements TextWidget, 
 					ComplexId id = new ComplexId((EditorWidget) getParent(), text.getText(), false);
 					id.addDimension();
 					id.focusLastDimension();
-//					ArrayElementExpression a = new ArrayElementExpression((EditorWidget) getParent(), text.getText(), "expression");
-//					a.addExpressionInserts();
-//					a.focusExpression();
 					w = id;
 				}
-				
-//				else if(e.character == '.' && Id.isValid(text.getText())) {
-//					FieldExpression f = new FieldExpression((EditorWidget) getParent(), text.getText());
-//					f.focusExpression();
-//					w = f;
-//				}
-				
 				else if(e.character == SWT.CR) {
 					text.traverse(SWT.TRAVERSE_TAB_NEXT);
 				}
-				
+
 				if(w != null) {
 					((Expression) getParent()).substitute(SimpleExpressionWidget.this, w); // TODO bug cast
 					e.doit = false;
@@ -142,7 +131,7 @@ public class SimpleExpressionWidget extends EditorWidget implements TextWidget, 
 	public void setData(Object data) {
 		text.setData(data);
 	}
-	
+
 	private String match(char character, List<String> operators) {
 		for(String o : operators)
 			if(o.charAt(0) == character)
@@ -167,7 +156,7 @@ public class SimpleExpressionWidget extends EditorWidget implements TextWidget, 
 	public boolean setFocus() {
 		return text.setFocus();
 	}
-	
+
 	@Override
 	public String toString() {
 		return text.getText();
@@ -177,17 +166,17 @@ public class SimpleExpressionWidget extends EditorWidget implements TextWidget, 
 	public Text getWidget() {
 		return text;
 	}
-	
+
 	@Override
 	public Expression copyTo(Composite parent) {
 		return new SimpleExpressionWidget(parent, text.getText());
 	}
-	
+
 	@Override
 	public void addKeyListener(KeyListener listener) {
 		text.addKeyListener(listener);
 	}
-	
+
 	@Override
 	public void toCode(StringBuffer buffer) {
 		buffer.append(text.getText().isBlank() ? Constants.EMPTY_EXPRESSION_SERIALIZE : text.getText());
@@ -196,9 +185,9 @@ public class SimpleExpressionWidget extends EditorWidget implements TextWidget, 
 	@Override
 	public void substitute(Expression current, Expression newExpression) {
 		// TODO Auto-generated method stub
-		
+
 	}
-	
+
 	@Override
 	public IExpression toModel() {
 		if(literalType == Integer.class)
@@ -230,7 +219,7 @@ public class SimpleExpressionWidget extends EditorWidget implements TextWidget, 
 				}
 				else if(text.getText().matches("true|false")) {
 					literalType = Boolean.class;
-					text.setForeground(Constants.COLOR_KW);
+					text.setForeground(Constants.COLOR_KEYWORD);
 				}
 				else if(Id.isValid(text.getText()))
 					literalType = null;

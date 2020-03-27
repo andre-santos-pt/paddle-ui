@@ -32,6 +32,7 @@ import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
@@ -47,6 +48,7 @@ import pt.iscte.paddle.javardise.UiMode;
 import pt.iscte.paddle.javardise.UiMode.Syntax;
 import pt.iscte.paddle.javardise.parser.JavaParser;
 import pt.iscte.paddle.model.IModule;
+import pt.iscte.paddle.model.commands.ICommand;
 
 public class StandaloneEditor {
 	private IModule module;
@@ -59,7 +61,7 @@ public class StandaloneEditor {
 		}
 
 		String className = file.getName().substring(0, file.getName().indexOf('.'));
-		
+
 		if(file.exists()) {
 			JavaParser parser = new JavaParser(file);
 			module = parser.parse();
@@ -71,7 +73,7 @@ public class StandaloneEditor {
 			} catch (IOException e) {
 				throw new RuntimeException(e.getMessage());
 			}
-			
+
 			module = IModule.create();
 			module.setId(className);
 		}
@@ -85,6 +87,9 @@ public class StandaloneEditor {
 
 
 	public Shell launch(Display display) {
+		//		Display.setAppName("Javardise");
+		System.setProperty("apple.laf.useScreenMenuBar", "true");
+		System.setProperty("com.apple.mrj.application.apple.menu.about.name", "Javardise");
 		shell = new Shell(display);
 		RowLayout layout = new RowLayout(SWT.VERTICAL);
 		layout.wrap = false;
@@ -115,15 +120,22 @@ public class StandaloneEditor {
 		});		
 
 		SequenceWidget seq = new SequenceWidget(area, 0, Constants.METHOD_SPACING, token -> Keyword.isClassModifier(token));
-		seq.addAction(new NewInsertWidget.Action("class", 'c') {
+		seq.addAction(new NewInsertWidget.Action("class") {
 			public boolean isEnabled(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
 				return seq.getChildren().length == 1 && c == SWT.SPACE && id.isKeyword(Keyword.CLASS);
 			}
 
 			public void run(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
-				classWidget = seq.addElement(p -> new ClassWidget(p, module, Keyword.array(seq.getInsertTokens())), module, 0);
-//				classWidget = seq.addWidget(p -> new ClassWidget(p, module, Keyword.array(seq.getInsertTokens())));		
+				classWidget = seq.addElement(p -> new ClassWidget(p, module, Keyword.match(seq.getInsertTokens())), 0);
+				//				classWidget = seq.addWidget(p -> new ClassWidget(p, module, Keyword.array(seq.getInsertTokens())));		
 				classWidget.setFocus();
+			}
+		});
+
+		module.addListener(new IModule.IListener() {
+			public void commandExecuted(ICommand<?> command) {
+				if(!shell.getText().startsWith("*"))
+					shell.setText("*" + shell.getText());
 			}
 		});
 
@@ -133,42 +145,54 @@ public class StandaloneEditor {
 		subSyntax.setText("Syntax");
 		Menu syntaxMenu = new Menu(menu);
 		subSyntax.setMenu(syntaxMenu);
-		
+
 		for(SyntaxLevel level : SyntaxLevel.values())
 			level.createMenuItem(syntaxMenu);
-		
+
 		Display.getDefault().addFilter(SWT.KeyDown, new Listener() {
 			public void handleEvent(Event event) {
 				if ((event.stateMask & SWT.MODIFIER_MASK) == SWT.CTRL && event.keyCode == 's') {
 					File f = saveToFile();
 					compile(f);
+					if(shell.getText().startsWith("*"))
+						shell.setText(shell.getText().substring(1));
 				}
 			}
 		});
-		
+
 		shell.setText(module.getId() + ".java");
-		seq.addElement(p -> classWidget = new ClassWidget(p, module), module);
+		seq.addElement(p -> classWidget = new ClassWidget(p, module));
+		classWidget.setFocus();
 		shell.setSize(600, 800);
 		shell.open();
 		return shell;
 	}
-	
+
 	enum SyntaxLevel {
-		RECURSIVE(SELECTION, CALLS),
-		LOOPS(WHILE_LOOP, ASSIGNMENT),
-		ARRAYS(Syntax.ARRAYS),
-		OBJECTS,
-		ENCAPSULATION(Syntax.ENCAPSULATION);
-		
+		RECURSIVE("Recursion", true, SELECTION, CALLS),
+		LOOPS("Loops", true, WHILE_LOOP, ASSIGNMENT),
+		ARRAYS("Arrays", true, Syntax.ARRAYS),
+		OBJECTS("Objects", false), // TODO
+		ENCAPSULATION("Encapsulation", false, Syntax.ENCAPSULATION);
+
+		String uiText;
+		boolean selected;
 		Syntax[] elements;
 		
-		SyntaxLevel(Syntax ... elements) {
+		SyntaxLevel(String uiText, boolean selected, Syntax ... elements) {
+			this.uiText = uiText;
+			this.selected = selected;
 			this.elements = elements;
+			if(selected)
+				UiMode.addSyntax(elements);
+			else
+				UiMode.removeSyntax(elements);
 		}
-		
+
 		void createMenuItem(Menu parent) {
 			MenuItem item = new MenuItem(parent, SWT.CHECK);
-			item.setText(name());
+			item.setText(uiText);
+			item.setSelection(selected);
 			item.addSelectionListener(new SelectionAdapter() {
 				public void widgetSelected(SelectionEvent e) {
 					if(item.getSelection())
@@ -177,7 +201,6 @@ public class StandaloneEditor {
 						UiMode.removeSyntax(elements);
 				}
 			});
-			item.setSelection(true);
 		}
 	}
 
@@ -186,12 +209,12 @@ public class StandaloneEditor {
 		saveToFile(file);
 		return file;
 	}
-	
+
 	public void saveToFile(File file) {
 		StringBuffer buffer = new StringBuffer();
 		classWidget.toCode(buffer, 0);
 		try {
-		
+
 			PrintWriter w = new PrintWriter(file);
 			w.append(buffer);
 			w.close();
@@ -201,52 +224,58 @@ public class StandaloneEditor {
 		}
 	}
 
-	
-//	public boolean compile(File destinationDir) {
-//		StringBuffer buffer = new StringBuffer();
-//		classWidget.toCode(buffer, 0);
-//		JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-//	
-//		DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
-//		JavaStringObject stringObject = new JavaStringObject("Test", buffer);
-//		StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
-//		try {
-//			fileManager.setLocation(StandardLocation.CLASS_OUTPUT, Arrays.asList(destinationDir));
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-//		JavaCompiler.CompilationTask task = compiler.getTask(null,
-//				fileManager, diagnostics, null, null, Arrays.asList(stringObject));
-//		if (!task.call()) {
-//			diagnostics.getDiagnostics().forEach(d -> System.err.println(d));
-//			return false;
-//		}
-//		else
-//			return true;
-//	}
-	
+
+	//	public boolean compile(File destinationDir) {
+	//		StringBuffer buffer = new StringBuffer();
+	//		classWidget.toCode(buffer, 0);
+	//		JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+	//	
+	//		DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
+	//		JavaStringObject stringObject = new JavaStringObject("Test", buffer);
+	//		StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
+	//		try {
+	//			fileManager.setLocation(StandardLocation.CLASS_OUTPUT, Arrays.asList(destinationDir));
+	//		} catch (IOException e) {
+	//			e.printStackTrace();
+	//		}
+	//		JavaCompiler.CompilationTask task = compiler.getTask(null,
+	//				fileManager, diagnostics, null, null, Arrays.asList(stringObject));
+	//		if (!task.call()) {
+	//			diagnostics.getDiagnostics().forEach(d -> System.err.println(d));
+	//			return false;
+	//		}
+	//		else
+	//			return true;
+	//	}
+
 	public boolean compile(File f) {
 		JavaParser parser = new JavaParser(f);
 		parser.parse();
 		return parser.hasParseProblems();
 	}
-	
+
 	public static void main(String[] args) {
+		Display display = new Display();
+		String filePath;
 		if(args.length == 0) {
-			System.err.println("Please provide a file as argument");
+			FileDialog fileDialog = new FileDialog(new Shell(display));
+			fileDialog.setText("Select File");
+			fileDialog.setFilterExtensions(new String[] { "*.java" });
+			fileDialog.setFilterNames(new String[] { "Java files (*.java)" });
+			filePath = fileDialog.open();
 		}
-		else {
-			StandaloneEditor editor = new StandaloneEditor(new File(args[0]));
-			Display display = new Display();
-			Shell shell = editor.launch(display);
-			while (!shell.isDisposed()) {
-				if (!display.readAndDispatch()) {
-					display.sleep();
-				}
+		else
+			filePath = args[0];
+		
+		StandaloneEditor editor = new StandaloneEditor(new File(filePath));
+		Shell shell = editor.launch(display);
+		while (!shell.isDisposed()) {
+			if (!display.readAndDispatch()) {
+				display.sleep();
 			}
-			display.dispose();
 		}
+		display.dispose();
 	}
 
-	
+
 }

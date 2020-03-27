@@ -13,6 +13,8 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.KeyAdapter;
+import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -25,6 +27,7 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 
+import pt.iscte.paddle.javardise.service.ICodeElement;
 import pt.iscte.paddle.model.IArrayElementAssignment;
 import pt.iscte.paddle.model.IBlock;
 import pt.iscte.paddle.model.IBreak;
@@ -34,6 +37,7 @@ import pt.iscte.paddle.model.IProcedureCall;
 import pt.iscte.paddle.model.IProgramElement;
 import pt.iscte.paddle.model.IReturn;
 import pt.iscte.paddle.model.ISelection;
+import pt.iscte.paddle.model.IType;
 import pt.iscte.paddle.model.IVariableAssignment;
 import pt.iscte.paddle.model.IVariableDeclaration;
 
@@ -56,52 +60,51 @@ public class SequenceWidget extends Composite {
 		setBackground(Constants.COLOR_BACKGROUND);
 		setLayout(layout);
 
-		insertWidget = new NewInsertWidget(this, true, tokenAccept);
+		insertWidget = new NewInsertWidget(this, true, getParent() instanceof ClassWidget, tokenAccept);
 //		insertWidget.setHideMode();
 		addMouseListener(new MouseAdapter() {
 			public void mouseDown(MouseEvent e) {
 				insertWidget.setFocus();
 			}
 		});
-
-		Supplier<List<Action>> sup = () -> {
-			ArrayList<Action> list = new ArrayList<>();
-			list.add(new Action() {
-				public void run() {
-					System.out.println("!!");
-				}
-				public String getText() {
-					return "action";
-				}
-			});
-			return list;
-		};
-		Menu menu = new Menu(insertWidget);
-		menu.addListener(SWT.Show, new Listener() {
-
-			@Override
-			public void handleEvent(Event event) {
-				for(MenuItem i : menu.getItems())
-					i.dispose();
-				for(Action a : sup.get()) {
-					MenuItem i = new MenuItem(menu, SWT.PUSH);
-					i.setText(a.getText());
-					i.addSelectionListener(new SelectionAdapter() {
-						public void widgetSelected(SelectionEvent e) {
-							a.run();
-						}
-					});
-				}
-
-			}
-		});
-		insertWidget.setMenu(menu);
+//
+//		Supplier<List<Action>> sup = () -> {
+//			ArrayList<Action> list = new ArrayList<>();
+//			list.add(new Action() {
+//				public void run() {
+//					System.out.println("!!");
+//				}
+//				public String getText() {
+//					return "action";
+//				}
+//			});
+//			return list;
+//		};
+//		
+//		Menu menu = new Menu(insertWidget);
+//		menu.addListener(SWT.Show, new Listener() {
+//			public void handleEvent(Event event) {
+//				for(MenuItem i : menu.getItems())
+//					i.dispose();
+//				for(Action a : sup.get()) {
+//					MenuItem i = new MenuItem(menu, SWT.PUSH);
+//					i.setText(a.getText());
+//					i.addSelectionListener(new SelectionAdapter() {
+//						public void widgetSelected(SelectionEvent e) {
+//							a.run();
+//						}
+//					});
+//				}
+//
+//			}
+//		});
+//		insertWidget.setMenu(menu);
 	}
 
-	interface Action {
-		String getText();
-		void run();
-	}
+//	interface Action {
+//		String getText();
+//		void run();
+//	}
 
 	void setDeleteAction(Consumer<Integer> action) {
 		deleteAction = action;
@@ -195,18 +198,12 @@ public class SequenceWidget extends Composite {
 		});
 	}
 
-	public <T extends EditorWidget> T addElement(Function<Composite, T> f, IProgramElement e) {
-		return addElement(f, e, totalElements());
+	public <T extends EditorWidget> T addElement(Function<Composite, T> f) {
+		return addElement(f, totalElements());
 	}
 
-	public <T extends EditorWidget> T addElement(Function<Composite, T> f, IProgramElement e, int modelIndex) {
+	public <T extends EditorWidget> T addElement(Function<Composite, T> f, int modelIndex) {
 		Control el = viewElement(modelIndex);
-//		Markable<T> sel = new Markable<>(this, f, e);
-//		T w = sel.target;
-//		if(isElse(w))
-//			sel.moveBelow(el);
-//		else
-//			sel.moveAbove(el);
 		T w = f.apply(this);
 		if(isElse(w))
 			w.moveBelow(el);
@@ -306,8 +303,8 @@ public class SequenceWidget extends Composite {
 
 	public void toCode(StringBuffer buffer, int level) {
 		for (Control control : getChildren())
-			if (control instanceof EditorWidget)
-				((EditorWidget) control).toCode(buffer, level);
+			if (control instanceof ICodeElement)
+				((ICodeElement) control).toCode(buffer, level);
 	}
 
 	public List<String> getInsertTokens() {
@@ -321,53 +318,33 @@ public class SequenceWidget extends Composite {
 	}
 
 	void addModelElement(IProgramElement element, int index) {
-		if (element instanceof IVariableDeclaration && element.not(Constants.FOR_FLAG)) {
+		if (element instanceof IVariableDeclaration && Flag.FOR.isNot(element)) {
 			IVariableDeclaration v = (IVariableDeclaration) element;
-			DeclarationWidget w = addElement(p -> new DeclarationWidget(p, v, null), v, index);
+			DeclarationWidget w = addElement(p -> new DeclarationWidget(p, v, null), index);
 			w.focusId();
 		} 
 
-		else if (element instanceof IVariableAssignment && element.not(Constants.FOR_FLAG)) {
+		else if (element instanceof IVariableAssignment && Flag.FOR.isNot(element)) {
 			IVariableAssignment a = (IVariableAssignment) element;
-			AssignmentWidget w = addElement(p -> new AssignmentWidget(p, a), a, index);
+			AssignmentWidget w = addElement(p -> new AssignmentWidget(p, a), index);
 			w.focusExpression();
 		} 
 
 		else if (element instanceof IArrayElementAssignment) {
 			IArrayElementAssignment a = (IArrayElementAssignment) element;
-			AssignmentWidget w = addElement(p -> new AssignmentWidget(p, a), a, index);
+			AssignmentWidget w = addElement(p -> new AssignmentWidget(p, a), index);
 			w.focusExpression();
 		} 
 
 		else if (element instanceof ISelection) {
 			ISelection s = (ISelection) element;
-			IfElseWidget w = addElement(p -> new IfElseWidget(p, s), s, index);
+			IfElseWidget w = addElement(p -> new IfElseWidget(p, s), index);
 			w.focusIn();
 		} 
 		
-//		else if (element instanceof ISelection) {
-//			ISelection s = (ISelection) element;
-//			ControlWidget w = addElement(p -> new ControlWidget(p, IF, s.getGuard(), s.getBlock()), s, index);
-//			w.focusIn();
-//			if (s.hasAlternativeBlock())
-//				addElement(p -> new ControlWidget(p, ELSE, null, s.getAlternativeBlock()), s.getAlternativeBlock(), index);
-//			
-//			s.addPropertyListener((k,n,o) -> {
-//				if(k.equals(Constants.ELSE_FLAG)) {
-//					if(n == Boolean.TRUE) {
-//						ControlWidget e = addElement(p -> new ControlWidget(p, ELSE, null, s.getAlternativeBlock()), s.getAlternativeBlock(), index);
-//						e.focusIn();
-//					}
-//					else {
-//						System.out.println("else delete " + index);
-//					}
-//				}
-//			});
-//		} 
-
-		else if (element instanceof ILoop && element.not(Constants.FOR_FLAG)) {
+		else if (element instanceof ILoop && Flag.FOR.isNot(element)) {
 			ILoop l = (ILoop) element;
-			ControlWidget w =  addElement(p -> new ControlWidget(p, WHILE, l), l, index);
+			ControlWidget w =  addElement(p -> new ControlWidget(p, WHILE, l), index);
 			w.focusIn();
 		} 
 
@@ -378,23 +355,32 @@ public class SequenceWidget extends Composite {
 		//		} 
 
 		else if (element instanceof IBreak) {
-			addElement(p -> new InstructionWidget(p, BREAK, (IBreak) element), element, index);
+			addElement(p -> new InstructionWidget(p, BREAK, (IBreak) element), index);
 
 		} 
 		else if (element instanceof IContinue) {
-			addElement(p -> new InstructionWidget(p, CONTINUE, (IContinue) element), element, index);
+			addElement(p -> new InstructionWidget(p, CONTINUE, (IContinue) element), index);
 		} 
 
 		else if (element instanceof IProcedureCall) {
 			IProcedureCall call = (IProcedureCall) element;
-			CallWidget w = addElement(p -> new CallWidget(p, call, true, Expression.creators(call.getArguments())), call, index);
+			CallWidget w = addElement(p -> new CallWidget(p, call, true, Expression.creators(call.getArguments())), index);
 			w.focusArgument();
 		} 
 
 		else if (element instanceof IReturn) {
 			IReturn ret = (IReturn) element;
-			InstructionWidget w = addElement(p -> new InstructionWidget(p, RETURN, ret, ret.getExpression()), ret, index);
+			InstructionWidget w = addElement(p -> new InstructionWidget(p, RETURN, ret, ret.getExpression()), index);
 			w.focusExpression();
+			w.getWidget().addKeyListener(new KeyAdapter() {
+				public void keyPressed(KeyEvent e) {
+					if(e.keyCode == SWT.SPACE) {
+						IType retType = ret.getOwnerProcedure().getReturnType();
+						w.addExpression(retType.getDefaultExpression());
+						w.focusExpression();
+					}
+				}
+			});
 		} else {
 			System.err.println("unhandled: " + element);
 			assert false;

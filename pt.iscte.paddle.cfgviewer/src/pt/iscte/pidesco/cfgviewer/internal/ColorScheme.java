@@ -44,6 +44,7 @@ public class ColorScheme implements IStyleProvider {
 		} else {
 			return ColorConstants.black;
 		}
+		
 	}
 	
 	@Override

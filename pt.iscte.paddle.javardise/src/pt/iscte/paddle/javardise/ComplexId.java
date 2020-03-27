@@ -2,6 +2,7 @@ package pt.iscte.paddle.javardise;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusAdapter;
@@ -21,16 +22,23 @@ import pt.iscte.paddle.javardise.service.ICodeElement;
 import pt.iscte.paddle.model.IArrayElement;
 import pt.iscte.paddle.model.IArrayLength;
 import pt.iscte.paddle.model.IExpression;
+import pt.iscte.paddle.model.IProcedureCall;
+import pt.iscte.paddle.model.IType;
 import pt.iscte.paddle.model.IVariableExpression;
 
 public class ComplexId extends EditorWidget implements TextWidget, Expression {
 
 	private final Text text;
 	private final boolean type;
-	private List<CodeElementControl> elements;
-
+	private final List<CodeElementControl> elements;
 	private final VerifyListener verifyListener;
 		
+	private Supplier<Boolean> allowEmpty = () -> true;
+	
+	ComplexId(Composite parent, IType t) {
+		this(parent, t.getId(), true);
+	}
+	
 	// TODO fix for expression resolve
 	ComplexId(Composite parent, IArrayElement e) {
 		this(parent, Constants.variableId(((IVariableExpression) e.getTarget()).getVariable()), false);
@@ -44,6 +52,12 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 		addField("length");
 	}
 	
+	ComplexId(Composite p, IProcedureCall c) {
+		this(p, c.getId() != null ? c.getId() : 
+				c.getProcedure() != null ? c.getProcedure().getId() : 
+				"procedure", false);
+	}
+	
 	ComplexId(Composite parent, String id, boolean type) {
 		super(parent);
 		this.type = type;
@@ -54,28 +68,17 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 				isValidCharacter(e.character) || 
 				e.character == Constants.DEL_KEY || 
 				e.character == SWT.CR ||
-				e.character == '/' && (text.getText().isEmpty() || text.getText().startsWith("/")) ||
-				isComment();
+				!type && e.character == '/' && (text.getText().isEmpty() || text.getText().startsWith("/")) ||
+				!type && isComment();
 		text.addVerifyListener(verifyListener);
 		text.addFocusListener(new FocusAdapter() {
 			public void focusGained(FocusEvent e) {
-				text.setForeground(Constants.FONT_COLOR);
+				text.setForeground(Constants.COLOR_FONT);
 				text.setBackground(Constants.COLOR_BACKGROUND);
 				text.selectAll();
 			}
 			public void focusLost(FocusEvent e) {
-				if(isComment()) {
-					text.setForeground(Constants.COLOR_COMMENT);
-					text.setBackground(Constants.COLOR_BACKGROUND);
-				}
-				else if(!text.getText().isBlank() && ComplexId.this.getParent() instanceof NewInsertWidget){
-					text.setForeground(Constants.COLOR_ERROR);
-					text.setBackground(Constants.COLOR_HIGHLIGHT);
-				}
-				else {
-					text.setForeground(Constants.FONT_COLOR);
-					text.setBackground(Constants.COLOR_BACKGROUND);
-				}
+				setBackgroundColor();
 			}
 		});
 
@@ -85,8 +88,36 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 		Constants.addArrowKeys(text, this);
 		Constants.addInsertLine(this);
 	}
+	
+	private void setBackgroundColor() {
+		if(isComment()) {
+			text.setForeground(Constants.COLOR_COMMENT);
+			text.setBackground(Constants.COLOR_BACKGROUND);
+		}
+		else if(!text.getText().isBlank() && ComplexId.this.getParent() instanceof NewInsertWidget){
+			text.setForeground(Constants.COLOR_ERROR);
+			text.setBackground(Constants.COLOR_HIGHLIGHT);
+		}
+		else if(Keyword.is(text.getText())) {
+			text.setForeground(Constants.COLOR_KEYWORD);
+			text.setBackground(Constants.COLOR_BACKGROUND);
+		}
+		else if(text.getText().isBlank() && !allowEmpty.get()) {
+			text.setForeground(Constants.COLOR_FONT);
+			text.setBackground(Constants.COLOR_ERROR);
+		}
+		else {
+			text.setForeground(Constants.COLOR_FONT);
+			text.setBackground(Constants.COLOR_BACKGROUND);
+		}
+	}
 
-	private boolean isComment() {
+	void setAllowEmpty(Supplier<Boolean> allowEmpty) {
+		this.allowEmpty = allowEmpty;
+		setBackgroundColor();
+	}
+	
+	public boolean isComment() {
 		return text.getText().startsWith("//");
 	}
 
@@ -103,6 +134,13 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 		return isSingleId() && Keyword.is(text.getText());
 	}
 
+	public boolean isKeyword(Keyword ... keywords) {
+		for(Keyword k : keywords)
+			if(k.isEqual(text))
+				return true;
+		return false;
+	}
+	
 	public boolean isKeyword(Keyword keyword) {
 		return isSingleId() && keyword.isEqual(text);
 	}
@@ -120,7 +158,7 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 		public void keyPressed(KeyEvent e) {
 			if(!isComment() && e.character == '[' && !Keyword.VOID.isEqual(text))
 				addDimension((Control) e.widget);
-			else if(!isComment() && e.character == '.' && !text.getText().isBlank())
+			else if(!type && !isComment() && e.character == '.' && !text.getText().isBlank())
 				addField("field");
 		}
 	};
@@ -140,7 +178,7 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 		dimension.setFocus();
 	}
 	
-	public void addDimension(Control left) {
+	private void addDimension(Control left) {
 		if(type) {
 			Token t = new Token(this, "[]");
 			t.addKeyListener(new KeyAdapter() {
@@ -280,12 +318,6 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 
 	
 
-	
-
-	public void setToolTip(String text) {
-		this.text.setToolTipText(text);
-	}
-
 	@Override
 	public boolean setFocus() {
 		return text.setFocus();
@@ -315,10 +347,6 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 			e.toCode(buffer);
 	}
 
-	public void set(String id) {
-		text.setText(id);
-	}
-
 
 	@Override
 	public void addKeyListener(KeyListener listener) {
@@ -337,6 +365,7 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 		for(CodeElementControl e : elements)
 			e.dispose();
 		elements.clear();
+		setBackgroundColor();
 		requestLayout();
 	}
 

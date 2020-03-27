@@ -10,7 +10,9 @@ import pt.iscte.paddle.model.IStatement;
 public class InstructionWidget extends EditorWidget implements TextWidget {
 	private final Keyword keyword;
 	private final Token keywordToken;
-	private final ExpressionWidget expressionWidget;
+	private ExpressionWidget expressionWidget;
+	private DeleteListener deleteListener;
+	private FixedToken semiColon;
 
 	InstructionWidget(Composite parent, Keyword keyword, IStatement statement) {
 		this(parent, keyword, statement, null);
@@ -21,21 +23,23 @@ public class InstructionWidget extends EditorWidget implements TextWidget {
 		
 		this.keyword = keyword;
 		setLayout(Constants.ROW_LAYOUT_H);
-		DeleteListener deleteListener = new Constants.DeleteListener(this);
+		deleteListener = new Constants.DeleteListener(this);
 		keywordToken = new Token(this, keyword);
 		keywordToken.addKeyListener(deleteListener);
 		Constants.addInsertLine(keywordToken);
 
-		if(expression != null) {
-//			Markable<CodeElement> markable = new Markable<CodeElement>(this, p -> new ExpressionWidget(p, Expression.match(expression), expression), expression);
-			expressionWidget = new ExpressionWidget(this, Expression.match(expression), expression);
-//			expressionWidget = (ExpressionWidget) markable.target;
-//			expressionWidget = new ExpressionWidget(this, Expression.match(expression), expression);
-			expressionWidget.addKeyListener(deleteListener);
-		}
-		else
-			expressionWidget = null;
-		new FixedToken(this, ";");
+		if(expression != null)
+			addExpression(expression);
+		
+		semiColon = new FixedToken(this, ";");
+	}
+
+	void addExpression(IExpression expression) {
+		expressionWidget = new ExpressionWidget(this, Expression.match(expression), expression);
+		if(semiColon != null)
+			expressionWidget.moveAbove(semiColon.getControl());
+		expressionWidget.addKeyListener(deleteListener);
+		expressionWidget.requestLayout();
 	}
 
 	@Override

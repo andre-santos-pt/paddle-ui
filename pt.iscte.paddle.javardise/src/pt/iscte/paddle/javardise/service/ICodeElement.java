@@ -32,10 +32,19 @@ public interface ICodeElement {
 			buffer.append(text.getText());
 	}
 	
+	static void append(StringBuffer buffer, int level, String content) {
+		appendTabs(buffer, level);
+		buffer.append(content);
+	}
+	
 	default String getCode() {
 		StringBuffer b = new StringBuffer();
 		toCode(b);
 		return b.toString();
+	}
+	
+	default boolean isSerializationEmpty(String id) {
+		return Constants.EMPTY_EXPRESSION_SERIALIZE.equals(id);
 	}
 	
 	Control getControl();

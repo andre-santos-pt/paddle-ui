@@ -3,6 +3,7 @@ package pt.iscte.paddle.javardise.parser;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -11,14 +12,17 @@ import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.BlockComment;
+import org.eclipse.jdt.core.dom.Comment;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.LineComment;
 
 import pt.iscte.paddle.model.IModule;
 
 public class JavaParser {
 	
 	private final String source;
-	private Visitor visitor;
+	private ParserVisitor visitor;
 	private IProblem[] problems;
 	
 	public JavaParser(File file) {
@@ -30,8 +34,8 @@ public class JavaParser {
 	}
 	
 	public IModule parse() {
-		visitor = new Visitor();
-		problems = JavaParser.parse(source, visitor);
+		visitor = new ParserVisitor();
+		problems = parse(source);
 		return visitor.module;
 	}
 	
@@ -39,7 +43,7 @@ public class JavaParser {
 		return problems.length > 0 || visitor.incomplete();
 	}
 	
-	static IProblem[] parse(String source, ASTVisitor visitor) {
+	IProblem[] parse(String source) {
 		ASTParser parser = ASTParser.newParser(AST.JLS12);
 		Map<String, String> options = JavaCore.getOptions();
 		JavaCore.setComplianceOptions(JavaCore.VERSION_1_8, options);
@@ -49,6 +53,10 @@ public class JavaParser {
 		parser.setResolveBindings(true);
 		CompilationUnit cu = (CompilationUnit) parser.createAST(null);
 		cu.accept(visitor);
+		
+		for (Comment comment : (List<Comment>) cu.getCommentList())
+			comment.accept(new CommentVisitor(cu, source));
+		
 		return cu.getProblems();
 	}
 	
@@ -63,6 +71,36 @@ public class JavaParser {
 			e.printStackTrace();
 		}
 		return src.toString();
+	}
+	
+	static class CommentVisitor extends ASTVisitor {
+		CompilationUnit cu;
+		String source;
+	 
+		public CommentVisitor(CompilationUnit cu, String source) {
+			super();
+			this.cu = cu;
+			this.source = source;
+		}
+	 
+		public boolean visit(LineComment node) {
+			int start = node.getStartPosition();
+			int end = start + node.getLength();
+			String comment = source.substring(start, end);
+			System.out.println(comment);
+			int l=cu.getLineNumber(node.getStartPosition());
+			System.err.println(l);
+			return true;
+		}
+	 
+		public boolean visit(BlockComment node) {
+			int start = node.getStartPosition();
+			int end = start + node.getLength();
+			String comment = source.substring(start, end);
+			System.out.println(comment);
+			return true;
+		}
+	 
 	}
 }
 

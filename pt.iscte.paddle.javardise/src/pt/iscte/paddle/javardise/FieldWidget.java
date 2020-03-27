@@ -1,6 +1,10 @@
 package pt.iscte.paddle.javardise;
 
 
+import java.util.List;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
 import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.widgets.Composite;
@@ -9,44 +13,43 @@ import pt.iscte.paddle.model.IConstantDeclaration;
 import pt.iscte.paddle.model.ILiteral;
 import pt.iscte.paddle.model.IProgramElement;
 import pt.iscte.paddle.model.IType;
+import pt.iscte.paddle.model.IVariableDeclaration;
 
-//TODO modifiers
-public class FieldWidget extends EditorWidget {
-	IConstantDeclaration constant;
-	private Id type;
+public class FieldWidget extends ModiferWidget {
+	private ComplexId type;
 	private Id id;
 	private SimpleExpressionWidget expression;
 	
-	public FieldWidget(Composite parent, IType type, String id, Keyword[] modifiers, boolean assign) {
-		super(parent);
-		for(Keyword mod : modifiers)
-			new Token(this, mod);
-		this.type = new Id(this, type.getId(), true, Constants.PRIMITIVE_TYPES_SUPPLIER);
+	@Override
+	Composite getHeader() {
+		return this;
+	}
+	
+	@Override
+	Function<List<Keyword>, List<Keyword>> getModifierProvider() {
+		return list -> Keyword.fieldModifiers();
+	}
+	
+	private FieldWidget(Composite parent, IProgramElement e, Supplier<IType> ts) {
+		super(parent, e);
+		addModifiers(e);
+		this.type = new ComplexId(this, ts.get());
+		addModifierKey(type);
+		String id = e.getId();
+		if(id == null)
+			id = "field";
+		
 		this.id = new Id(this, id);
-		if(assign) {
-			new FixedToken(this, "=");
-			this.expression = new SimpleExpressionWidget(this, "expression");			
-		}
+		this.id.setEditAction(() -> e.setId(this.id.getText()));
+	}
+	
+	public FieldWidget(Composite parent, IVariableDeclaration var) {
+		this(parent, var, () -> var.getType());
 		new FixedToken(this, ";");
 	}
 	
 	public FieldWidget(Composite parent, IConstantDeclaration constant) {
-		super(parent);
-		this.constant = constant;
-		
-		for (Keyword mod : Keyword.fieldModifiers())
-			if(constant.is(mod.toString()))
-				new Token(this, mod);
-		
-		this.type = new Id(this, constant.getType().getId(), true, Constants.PRIMITIVE_TYPES_SUPPLIER);
-		
-		String id = constant.getId();
-		if(id == null)
-			id = "CONSTANT";
-		
-		this.id = new Id(this, id);
-		this.id.setEditAction(() -> constant.setId(this.id.getText()));
-		
+		this(parent, constant, () -> constant.getType());
 		new FixedToken(this, "=");
 		this.expression = new SimpleExpressionWidget(this, constant.getValue().getStringValue());
 		
@@ -63,8 +66,6 @@ public class FieldWidget extends EditorWidget {
 		});
 		
 		constant.addPropertyListener(new IProgramElement.IPropertyListener() {
-			
-			@Override
 			public void propertyChanged(Object key, Object newValue, Object oldValue) {
 				if(key.equals("ID"))
 					FieldWidget.this.id.set(oldValue == null ? "" : oldValue.toString());
@@ -72,6 +73,12 @@ public class FieldWidget extends EditorWidget {
 					FieldWidget.this.expression.set(newValue.toString());
 			}
 		});
+	}
+
+	private void addModifiers(IProgramElement e) {
+		for (Keyword mod : Keyword.fieldModifiers())
+			if(e.is(mod.keyword()))
+				addModifier(mod);
 	}
 	
 	@Override
@@ -81,7 +88,7 @@ public class FieldWidget extends EditorWidget {
 	
 	@Override
 	public boolean setFocus() {
-		type.setFocus();
+		id.setFocus();
 		return true;
 	}
 
@@ -92,10 +99,14 @@ public class FieldWidget extends EditorWidget {
 	
 	@Override
 	public void toCode(StringBuffer buffer) {
+		super.toCode(buffer);
 		type.toCode(buffer);
+		buffer.append(' ');
 		id.toCode(buffer);
-		if(expression != null)
+		if(expression != null) {
+			buffer.append(" = ");
 			expression.toCode(buffer);
+		}
 		buffer.append(";");
 	}
 }

@@ -79,7 +79,7 @@ public class DemoCodeDecorations {
 		cfg.setInput(proc.getCFG().getNodes());
 		cfg.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		
-		createMarksGroup(main, display, widget);
+		createMarksGroup(proc, display, widget);
 		createOtherGroup(proc, display);
 
 		Color blue = Display.getDefault().getSystemColor(SWT.COLOR_BLUE);

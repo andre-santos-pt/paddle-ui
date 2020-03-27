@@ -1,14 +1,10 @@
 package pt.iscte.paddle.javardise;
 import static java.lang.System.lineSeparator;
 
-import java.lang.annotation.Target;
-import java.util.Arrays;
 import java.util.WeakHashMap;
 import java.util.function.BiFunction;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.FocusEvent;
-import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
@@ -23,7 +19,6 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.ui.internal.IObjectContributor;
 
 import pt.iscte.paddle.javardise.service.ICodeDecoration;
 import pt.iscte.paddle.javardise.service.ICodeElement;
@@ -72,27 +67,6 @@ public class EditorWidget extends Composite implements ICodeElement, IWidget {
 
 	void popup(Menu menu, Control control) {
 		menu.setLocation(control.toDisplay(0, 40));
-	}
-
-	void setSibling(Control sibling) {
-		sibling.addFocusListener(new FocusListener() {
-			Color prev;
-			public void focusLost(FocusEvent e) {
-				setBackground(prev);
-			}
-			public void focusGained(FocusEvent e) {
-				prev = getBackground();
-				setBackground(Constants.COLOR_HIGHLIGHT);
-			}
-		});
-		addFocusListener(new FocusListener() {
-			public void focusLost(FocusEvent e) {
-				sibling.setBackground(Constants.COLOR_INSERT);
-			}
-			public void focusGained(FocusEvent e) {
-				sibling.setBackground(Constants.COLOR_HIGHLIGHT);
-			}
-		});
 	}
 
 	void appendTabs(StringBuffer buffer, int n) {

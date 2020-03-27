@@ -54,7 +54,7 @@ public class ExpressionWidget extends EditorWidget implements Expression {
 	}
 
 	public boolean isEmpty() {
-		return expression.isEmpty();
+		return expression instanceof SimpleExpressionWidget && ((SimpleExpressionWidget) expression).isEmpty();
 	}
 
 	@Override

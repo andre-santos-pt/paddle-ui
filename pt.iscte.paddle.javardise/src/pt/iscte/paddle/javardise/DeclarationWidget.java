@@ -9,13 +9,13 @@ import pt.iscte.paddle.model.IExpression;
 import pt.iscte.paddle.model.IVariableDeclaration;
 
 public class DeclarationWidget extends EditorWidget implements IDeclarationWidget {
-	private final Id type;
+	private final ComplexId type;
 	private final Id id;
 	private final ExpressionWidget expression;
 	
 	DeclarationWidget(Composite parent, IVariableDeclaration var, IExpression exp) {
 		super(parent, var);
-		this.type = new Id(this, var.getType());
+		this.type = new ComplexId(this, var.getType());
 		this.id = new Id(this, Constants.variableId(var));
 		setLayout(Constants.ROW_LAYOUT_H);
 		DeleteListener deleteListener = new Constants.DeleteListener(this);

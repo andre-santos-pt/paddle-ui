@@ -1,5 +1,7 @@
 package pt.iscte.paddle.javardise;
 
+import org.eclipse.swt.events.KeyAdapter;
+import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
@@ -34,6 +36,10 @@ public interface TextWidget {
 		return (SequenceContainer) c;
 	}
 	
+	default boolean isEmpty() {
+		return getWidget().getText().isBlank();
+	}
+	
 	default boolean isAtBeginning() {
 		return getWidget().getCaretPosition() == 0 && getWidget().getSelectionCount() == 0;
 	}
@@ -58,6 +64,10 @@ public interface TextWidget {
 		getWidget().setSelection(getWidget().getText().length());
 	}
 	
+	default void setToolTip(String text) {
+		getWidget().setToolTipText(text);
+	}
+	
 	static TextWidget create(Text text) {
 		return new TextWidget() {
 			public Text getWidget() {
@@ -67,6 +77,9 @@ public interface TextWidget {
 	}
 
 
+	default void addKeyListener(KeyListener	listener) {
+		getWidget().addKeyListener(listener);
+	}
 	
 	
 }

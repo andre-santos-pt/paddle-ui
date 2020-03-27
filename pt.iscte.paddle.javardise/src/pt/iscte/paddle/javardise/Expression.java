@@ -39,9 +39,9 @@ public interface Expression extends ICodeElement {
 
 	void substitute(Expression current, Expression newExpression);
 
-	default boolean isEmpty() {
-		return (this instanceof TextWidget) && ((TextWidget) this).getText().isBlank();
-	}
+//	default boolean isEmpty() {
+//		return (this instanceof TextWidget) && ((TextWidget) this).getText().isBlank();
+//	}
 
 	IExpression toModel();
 
@@ -75,7 +75,7 @@ public interface Expression extends ICodeElement {
 			
 			IArrayType t = (IArrayType) type;
 			Creator[] f = creators(((IArrayAllocation) e).getParts());
-			return p -> new ArrayAllocationExpression(p, t, f);
+			return p -> new AllocationExpression(p, t, f);
 		}
 		else if(e instanceof IArrayElement) {
 			IArrayElement a = (IArrayElement) e;

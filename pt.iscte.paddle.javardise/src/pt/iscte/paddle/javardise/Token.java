@@ -1,7 +1,11 @@
 package pt.iscte.paddle.javardise;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyAdapter;
@@ -16,21 +20,28 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Text;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+
 import pt.iscte.paddle.javardise.service.ICodeElement;
 
 
 public class Token implements TextWidget, ICodeElement {
 	private final Text text;
-	private Map<Character, String> map;
-	
+	private Multimap<Character, String> map;
+
 	private static final List<String>[] EMPTY_ARRAY  = new List[0];
-	
+
 	public Token(Composite parent, Keyword token) {
 		this(parent, token.toString());
 	}
-	
+
 	public Token(Composite parent, String token) {
 		this(parent, token, EMPTY_ARRAY);
+	}
+
+	public Token(Composite parent, Keyword keyword, List<Keyword> keywords) {
+		this(parent, keyword.keyword(), keywords.stream().map(k -> k.keyword()).collect(Collectors.toList())) ;
 	}
 
 	public Token(Composite parent, String token, List<String> ... alternatives) {
@@ -38,35 +49,31 @@ public class Token implements TextWidget, ICodeElement {
 		text.setText(token);
 		text.setEditable(false);
 		text.setBackground(Constants.COLOR_BACKGROUND);
-		
+
 		if(Keyword.is(token)) {
-			text.setFont(Constants.FONT_KW);
-			text.setForeground(Constants.COLOR_KW);
+			text.setFont(Constants.FONT_KEYWORD);
+			text.setForeground(Constants.COLOR_KEYWORD);
 		}
 		else {
 			text.setFont(token.equals(".") ? Constants.FONT_DOT : Constants.FONT);
-			text.setForeground(Constants.FONT_COLOR);
+			text.setForeground(Constants.COLOR_FONT);
 		}
-		map = new HashMap<>();
-		
+		map = ArrayListMultimap.create();
+
 		Menu menu = new Menu(text);
-		String prev = null;
 		for(List<String> set : alternatives) {
 			for(String t : set) {
 				MenuItem item = new MenuItem(menu, SWT.NONE);
 				item.setText(t);
-				if(prev != null && prev.charAt(0) != t.charAt(0)) {
-					item.setAccelerator(t.charAt(0));
-					map.put(t.charAt(0), t);
-				}
+				map.put(t.charAt(0), t);
 				item.addSelectionListener(new SelectionAdapter() {
 					public void widgetSelected(SelectionEvent e) {
 						((Text) text).setText(item.getText());
 						text.requestLayout();
+						text.selectAll();
+						text.setFocus();
 					}
 				});
-				
-				prev = t;
 			}
 			new MenuItem(menu, SWT.SEPARATOR);
 		}
@@ -78,13 +85,16 @@ public class Token implements TextWidget, ICodeElement {
 					menu.setVisible(true);
 				}
 				else if(map.containsKey(e.character)) {
-					text.setText(map.get(e.character));
+					ArrayList<String> list = new ArrayList<>(map.get(e.character));
+					int i = list.indexOf(text.getText());
+					String item = list.get((i+1) % list.size());
+					text.setText(item);
 					text.requestLayout();
 					text.selectAll();
 				}
 			}
 		});
-		
+
 		text.setMenu(menu);
 		Constants.addFocusSelectAll(text);
 
@@ -113,11 +123,11 @@ public class Token implements TextWidget, ICodeElement {
 	public String toString() {
 		return getText();
 	}
-	
+
 	boolean isKeyword(String keyword) {
 		return getText().equals(keyword);
 	}
-	
+
 	boolean isKeyword(Keyword keyword) {
 		return getText().equals(keyword.toString());
 	}
@@ -134,13 +144,17 @@ public class Token implements TextWidget, ICodeElement {
 	public boolean setFocus() {
 		return text.setFocus();
 	}
-	
+
 	public void addKeyListener(KeyListener listener) {
 		text.addKeyListener(listener);
 	}
 
 	public void moveAbove(Control c) {
 		text.moveAbove(c);
+	}
+
+	public void moveBelow(Control c) {
+		text.moveBelow(c);
 	}
 	
 	@Override

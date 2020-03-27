@@ -3,6 +3,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.layout.RowData;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 
 public class FixedToken {
@@ -41,5 +42,9 @@ public class FixedToken {
 
 	public void setFocus() {
 		label.setFocus();
+	}
+	
+	public Control getControl() {
+		return label;
 	}
 }

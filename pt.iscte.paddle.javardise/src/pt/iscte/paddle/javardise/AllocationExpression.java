@@ -10,14 +10,14 @@ import pt.iscte.paddle.model.IExpression;
 
 
 // TODO add dim
-public class ArrayAllocationExpression extends EditorWidget implements Expression {
-	private Id id;
+public class AllocationExpression extends EditorWidget implements Expression {
+	private Id id; // ComplexId
 	private List<ExpressionWidget> expressions;
 
-	public ArrayAllocationExpression(Composite parent, IArrayType type, Expression.Creator ... f) {
+	public AllocationExpression(Composite parent, IArrayType type, Expression.Creator ... f) {
 		super(parent); // TODO program element
 		new Token(this, Keyword.NEW);
-		id = new Id(this, type.getRootComponentType());
+		id = new Id(this, type.getRootComponentType().getId());
 		expressions = new ArrayList<>(type.getDimensions()+1);
 		for(int n = 0; n < type.getDimensions(); n++) {
 			new FixedToken(this, "[");
@@ -33,17 +33,6 @@ public class ArrayAllocationExpression extends EditorWidget implements Expressio
 	}
 
 	@Override
-	public Expression copyTo(Composite parent) {
-		IArrayType type = (IArrayType) id.inferType();
-		Expression.Creator[] f = new Expression.Creator[type.getDimensions()];
-		for(int i = 0; i < f.length; i++) {
-			int j = i;
-			f[i] = p -> expressions.get(j).copyTo(p);
-		}
-		return new ArrayAllocationExpression(parent, type, f);
-	}
-
-	@Override
 	public void toCode(StringBuffer buffer) {
 		Keyword.NEW.toCode(buffer);
 		buffer.append(' ');
@@ -55,6 +44,17 @@ public class ArrayAllocationExpression extends EditorWidget implements Expressio
 		}
 	}
 
+	@Override
+	public Expression copyTo(Composite parent) {
+		IArrayType type = null; // TODO null
+		Expression.Creator[] f = new Expression.Creator[type.getDimensions()];
+		for(int i = 0; i < f.length; i++) {
+			int j = i;
+			f[i] = p -> expressions.get(j).copyTo(p);
+		}
+		return new AllocationExpression(parent, type, f);
+	}
+	
 	@Override
 	public void substitute(Expression current, Expression newExpression) {
 		// TODO Auto-generated method stub

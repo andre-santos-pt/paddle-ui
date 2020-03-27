@@ -1,7 +1,6 @@
 package pt.iscte.paddle.javardise;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -29,41 +28,37 @@ import pt.iscte.paddle.model.IType;
 import pt.iscte.paddle.model.IVariableDeclaration;
 
 public interface Constants {
-	//	class Operator {
-	//		final String token;
-	//		final char accelerator;
-	//		final String description;		
-	//	}
 
-	int TAB = 40;
+	int TAB = 25;
+	int METHOD_SPACING = 30;
+	
 	String FONT_FACE = "Monaco";
-	Color COLOR_KW = Display.getDefault().getSystemColor(SWT.COLOR_DARK_MAGENTA);
-	Color COLOR_PH = Display.getDefault().getSystemColor(SWT.COLOR_DARK_GRAY);
-	//	Color COLOR_ERROR = new Color(Display.getDefault(), 255, 200, 200);
+
+	Color COLOR_FONT = Display.getDefault().getSystemColor(SWT.COLOR_BLACK);
+	Color COLOR_KEYWORD = Display.getDefault().getSystemColor(SWT.COLOR_DARK_MAGENTA);
 	Color COLOR_ERROR = Display.getDefault().getSystemColor(SWT.COLOR_RED);
 	Color COLOR_BACKGROUND = Display.getDefault().getSystemColor(SWT.COLOR_WHITE);
-	Color COLOR_INSERT = new Color(Display.getDefault(), 245, 245, 245);
-	Color COLOR_HIGHLIGHT = new Color(Display.getDefault(), 0, 200, 200);
 	Color COLOR_COMMENT = Display.getDefault().getSystemColor(SWT.COLOR_DARK_GREEN);
 	Color COLOR_LITERAL = Display.getDefault().getSystemColor(SWT.COLOR_BLUE);
+	Color COLOR_HIGHLIGHT = new Color(Display.getDefault(), 0, 200, 200);
 
 
-	int ARRAY_DIMS = 3;
-	List<String> BINARY_OPERATORS = Arrays.asList("+", "-", "*", "/", "%", "==", "!=", "<", "<=", ">", ">=", "&&", "||", "^");
-	List<String> ARITHMETIC_OPERATORS = Arrays. asList("+", "-", "*", "/", "%");
-	List<String> RELATIONAL_OPERATORS = Arrays. asList( "==", "!=", "<", "<=", ">", ">=");
-	List<String> LOGICAL_OPERATORS = Arrays. asList("&&", "||", "^");
-	//	Supplier<List<String>> BINARY_OPERATORS_SUPPLIER = () -> BINARY_OPERATORS;
-	Supplier<List<String>> EMPTY_TOKEN_SUPPLIER = () -> Collections.emptyList();
+	List<String> BINARY_OPERATORS = 		Arrays.asList("+", "-", "*", "/", "%", "==", "!=", "<", "<=", ">", ">=", "&&", "||", "^");
+	List<String> ARITHMETIC_OPERATORS = 	Arrays.asList("+", "-", "*", "/", "%");
+	List<String> RELATIONAL_OPERATORS = 	Arrays.asList("==", "!=", "<", "<=", ">", ">=");
+	List<String> LOGICAL_OPERATORS = 		Arrays.asList("&&", "||", "^");
+
+	List<String> UNARY_OPERATORS = Arrays.asList("!", "-", "+");  //"(int)", "(double)");
+	
 	int FONT_SIZE = 16;
 	int MENU_KEY = SWT.SPACE;
 	int DEL_KEY = SWT.BS;
 	Font FONT_TINY = new Font(null, FONT_FACE, 10, SWT.NONE);
 	Font FONT = new Font(null, FONT_FACE, FONT_SIZE, SWT.NONE);
 	Font FONT_DOT = new Font(null, "Arial", FONT_SIZE, SWT.BOLD);
-	Font FONT_KW = new Font(null, FONT_FACE, FONT_SIZE, SWT.BOLD);
+	Font FONT_KEYWORD = new Font(null, FONT_FACE, FONT_SIZE, SWT.BOLD);
 	Font FONT_PH = new Font(null, FONT_FACE, FONT_SIZE, SWT.NONE);
-	Color FONT_COLOR = Display.getDefault().getSystemColor(SWT.COLOR_BLACK);
+
 
 
 	List<String> PRIMITIVE_TYPES = Arrays.asList("boolean", "int", "char", "double");
@@ -72,19 +67,15 @@ public interface Constants {
 	List<String> PRIMITIVE_TYPES_VOID = Arrays.asList("void", "boolean", "int", "char","double");
 
 	Supplier<List<String>> PRIMITIVE_TYPES_VOID_SUPPLIER = () -> PRIMITIVE_TYPES_VOID;
-	List<String> UNARY_OPERATORS = Arrays.asList("!", "-", "+");  //"(int)", "(double)");
-	//	Supplier<List<String>> UNARY_OPERATORS_SUPPLIER = () -> UNARY_OPERATORS;
+
 	RowLayout ROW_LAYOUT_H_SHRINK = create(SWT.HORIZONTAL, -3);
 	RowLayout ROW_LAYOUT_H_ZERO = create(SWT.HORIZONTAL, 0);
 	RowLayout ROW_LAYOUT_H = create(SWT.HORIZONTAL, 3);
 	RowLayout ROW_LAYOUT_H_DOT = create(SWT.HORIZONTAL, 0);
 	RowLayout ROW_LAYOUT_V_ZERO = create(SWT.VERTICAL, 2);
+	
 	GridData ALIGN_TOP = new GridData(SWT.LEFT, SWT.TOP, false, false);
-	String FOR_FLAG = Keyword.FOR.name();
-	String ELSE_FLAG = Keyword.ELSE.name();
-
-	int SINGLE_SPACE = 1;
-
+	
 	static RowLayout create(int style, int spacing) {
 		RowLayout layout = new RowLayout(style);
 		layout.marginLeft = 0;
@@ -103,13 +94,9 @@ public interface Constants {
 		return c >= '0' && c <= '9';
 	}
 
-	//	static boolean isKeyword(String token) {
-	//		return token.matches("class|static|final|return|new|void|if|else|while|for|break|continue|byte|short|int|long|float|double|boolean|char|true|false|null");
-	//	}
-
 	static Text createText(Composite parent, String text) {
 		Text t = new Text(parent, SWT.NONE);
-		t.setText(text);
+		t.setText(Constants.EMPTY_EXPRESSION_SERIALIZE.equals(text) ? "" : text);
 		setFont(t, true);
 		return t;
 	}
@@ -118,13 +105,12 @@ public interface Constants {
 		assert control instanceof Text || control instanceof Label;
 		String text = control instanceof Text ? ((Text) control).getText() : ((Label) control).getText();
 		if (Keyword.is(text)) {
-			control.setFont(FONT_KW);
-			control.setForeground(COLOR_KW);
+			control.setFont(FONT_KEYWORD);
+			control.setForeground(COLOR_KEYWORD);
+
 		} else {
-			//			control.setFont(init ? FONT_PH : FONT);
-			//			control.setForeground(init ? COLOR_PH : FONT_COLOR);
 			control.setFont(FONT);
-			control.setForeground(FONT_COLOR);
+			control.setForeground(COLOR_FONT);
 		}
 		control.setBackground(COLOR_BACKGROUND);
 	}
@@ -217,6 +203,8 @@ public interface Constants {
 
 	ModifyListener MODIFY_PACK = new ModifyListener() {
 		public void modifyText(ModifyEvent e) {
+			
+//			((Control) e.widget).setLayoutData(new RowData(SWT.DEFAULT, SWT.DEFAULT));
 			((Control) e.widget).pack();
 			((Control) e.widget).requestLayout();
 		}
@@ -233,8 +221,7 @@ public interface Constants {
 	};
 
 	String EMPTY_EXPRESSION_SERIALIZE = "$EMPTY$";
-	int METHOD_SPACING = 30;
-	int MARK_MARGIN = 2;
+
 
 	class DeleteListener extends KeyAdapter { 
 		final EditorWidget target;
@@ -273,7 +260,6 @@ public interface Constants {
 			seq.focusNextStatement(widget);
 		}
 	}
-
 
 	static Composite createHeader(Composite parent) {
 		Composite c = new Composite(parent, SWT.NONE);

@@ -1,9 +1,14 @@
 package pt.iscte.paddle.javardise;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
+
+import pt.iscte.paddle.javardise.UiMode.Syntax;
+import pt.iscte.paddle.model.IProgramElement;
 
 public enum Keyword implements CharSequence {
 
@@ -65,14 +70,13 @@ public enum Keyword implements CharSequence {
 	BREAK,
 	CONTINUE,
 	
-	NEW;
-
-//	private Keyword[] excludes;
-//	
-//	private Keyword (Keyword ... excludes) {
-//		this.excludes = excludes;
-//	}
+	NEW,
 	
+	SUPER,
+	THIS,
+	EXTENDS,
+	IMPLEMENTS;
+
 	private static final Keyword[] EMPTY = {};
 	
 	private static final List<Keyword> CLASS_MODIFIERS = Arrays.asList(PUBLIC, ABSTRACT, FINAL);
@@ -88,15 +92,24 @@ public enum Keyword implements CharSequence {
 	}
 	
 	public static List<Keyword> classModifiers() {
-		return CLASS_MODIFIERS;
+		if(UiMode.hasSyntax(Syntax.ENCAPSULATION))
+			return CLASS_MODIFIERS;
+		else
+			return Arrays.asList(ABSTRACT, FINAL);
 	}
 	
 	public static List<Keyword> fieldModifiers() {
-		return METHOD_MODIFIERS;
+		if(UiMode.hasSyntax(Syntax.ENCAPSULATION))
+			return FIELD_MODIFIERS;
+		else
+			return Arrays.asList(STATIC, FINAL);
 	}
 	
 	public static List<Keyword> methodModifiers() {
-		return METHOD_MODIFIERS;
+		if(UiMode.hasSyntax(Syntax.ENCAPSULATION))
+			return METHOD_MODIFIERS;
+		else
+			return Arrays.asList(STATIC, ABSTRACT, FINAL);
 	}
 	
 	private static boolean isModifier(List<Keyword> list, String keyword) {
@@ -121,7 +134,6 @@ public enum Keyword implements CharSequence {
 	private static final String regex = String.join("|", keywords());
 	
 	private static final Keyword[] modifiers = {STATIC, FINAL, PUBLIC, PRIVATE, PROTECTED, ABSTRACT};
-	static final int LONGEST = CONTINUE.name().length();
 			
 	private static String[] keywords() {
 		Keyword[] keywords = values();
@@ -183,15 +195,19 @@ public enum Keyword implements CharSequence {
 		return Keyword.valueOf(last.toUpperCase());
 	}
 
-	public static Keyword[] array(List<String> insertTokens) {
-		Keyword[] set = new Keyword[insertTokens.size()];
-		for(int i = 0; i < insertTokens.size(); i++)
-			set[i] = Keyword.valueOf(insertTokens.get(i).toUpperCase());
+	public static Keyword[] match(List<String> tokens) {
+		Keyword[] set = new Keyword[tokens.size()];
+		for(int i = 0; i < tokens.size(); i++)
+			set[i] = Keyword.valueOf(tokens.get(i).toUpperCase());
 		return set;
 	}
 
 	public void toCode(StringBuffer buffer) {
 		buffer.append(name().toLowerCase());
+	}
+
+	public void setFlag(IProgramElement e) {
+		e.setFlag(keyword());
 	}
 	
 	

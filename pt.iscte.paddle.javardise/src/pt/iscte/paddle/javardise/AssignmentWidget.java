@@ -41,16 +41,10 @@ public class AssignmentWidget extends EditorWidget {
 		Expression.Creator f = exp == null ?
 				p -> new SimpleExpressionWidget(p, "expression") : Expression.match(exp);
 				
-//		Markable<CodeElement> markable = new Markable<CodeElement>(this, p ->  new ExpressionWidget(p, f, exp), exp);
-//		this.expression = (ExpressionWidget) markable.target;
 		this.expression = new ExpressionWidget(this, f, exp);
-//		this.expression = new ExpressionWidget(this, f, exp);
 		this.expression.addKeyListener(deleteListener);
-		
 		new FixedToken(this, ";");
 	}
-	
-	
 	
 	public boolean setFocus() {
 		return id.setFocus();

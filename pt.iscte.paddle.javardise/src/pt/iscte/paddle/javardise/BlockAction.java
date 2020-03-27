@@ -20,18 +20,15 @@ import pt.iscte.paddle.model.IRecordFieldExpression;
 import pt.iscte.paddle.model.ISelection;
 import pt.iscte.paddle.model.IType;
 import pt.iscte.paddle.model.IVariableDeclaration;
+import pt.iscte.paddle.model.IVariableExpression;
 
 abstract class BlockAction extends NewInsertWidget.Action {
 
 	final IBlock block;
 	final Supplier<Boolean> enabled;
 	
-//	BlockAction(Keyword keyword, IBlock block, Supplier<Boolean> enabled) {
-//		this(keyword.toString(), keyword.getAccelerator(), enabled);
-//	}
-	
-	BlockAction(CharSequence text, char accelerator, IBlock block, Supplier<Boolean> enabled) {
-		super(text, accelerator);
+	BlockAction(CharSequence text, IBlock block, Supplier<Boolean> enabled) {
+		super(text);
 		this.block = block;
 		this.enabled = enabled;
 	}
@@ -64,7 +61,7 @@ abstract class BlockAction extends NewInsertWidget.Action {
 	}
 	
 	static BlockAction declaration(IBlock block) {
-		return new BlockAction("variable", 'v', block, () -> UiMode.hasSyntax(UiMode.Syntax.ASSIGNMENT)) {
+		return new BlockAction("variable", block, () -> UiMode.hasSyntax(UiMode.Syntax.ASSIGNMENT)) {
 			public boolean isEnabledInternal(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
 				return Constants.isType(id.getText()) && atEnd(id.getText(), caret) && (c == SWT.SPACE || c == '[');
 			}
@@ -80,7 +77,7 @@ abstract class BlockAction extends NewInsertWidget.Action {
 	}
 	
 	static BlockAction assignment(IBlock block) {
-		return new BlockAction("assignment", 'a', block, () -> UiMode.hasSyntax(UiMode.Syntax.ASSIGNMENT)) {
+		return new BlockAction("assignment", block, () -> UiMode.hasSyntax(UiMode.Syntax.ASSIGNMENT)) {
 			public boolean isEnabledInternal(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
 				return c == '=' && !Constants.isType(id.getText()) && !id.isKeyword() && !id.isEmpty();
 			}
@@ -108,19 +105,20 @@ abstract class BlockAction extends NewInsertWidget.Action {
 	}
 
 	static BlockAction ifStatement(IBlock block) {
-		return new BlockAction(Keyword.IF, 'i', block, () -> UiMode.hasSyntax(UiMode.Syntax.SELECTION)) {
+		return new BlockAction(Keyword.IF, block, () -> UiMode.hasSyntax(UiMode.Syntax.SELECTION)) {
 			public boolean isEnabledInternal(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
 				return id.isKeyword(Keyword.IF) && (c == '(' || c == SWT.SPACE) && atEnd(id.getId(), caret);
 			}
 			
 			public void run(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
-				block.addSelectionAt(BOOLEAN.literal(true), index);
+				IVariableExpression exp = new IVariableDeclaration.UnboundVariable("expression").expression();
+				block.addSelectionAt(exp, index);
 			}
 		};
 	}
 	
 	static BlockAction elseStatement(IBlock block) {
-		return new BlockAction(Keyword.ELSE.keyword(), 'e', block, () -> UiMode.hasSyntax(UiMode.Syntax.SELECTION)) {
+		return new BlockAction(Keyword.ELSE.keyword(), block, () -> UiMode.hasSyntax(UiMode.Syntax.SELECTION)) {
 			public boolean isEnabledInternal(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
 				if(id.isKeyword(Keyword.ELSE) && (c == '{' || c == SWT.SPACE || c == SWT.CR) && index > 0 && atEnd(id.getId(), caret)) {
 					IBlockElement e = block.getChildren().get(index - 1);
@@ -138,36 +136,38 @@ abstract class BlockAction extends NewInsertWidget.Action {
 	
 	
 	static BlockAction whileLoop(IBlock block) {
-		return new BlockAction(Keyword.WHILE, 'w', block, () -> UiMode.hasSyntax(UiMode.Syntax.WHILE_LOOP)) {
+		return new BlockAction(Keyword.WHILE, block, () -> UiMode.hasSyntax(UiMode.Syntax.WHILE_LOOP)) {
 			public boolean isEnabledInternal(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
 				return id.isKeyword(Keyword.WHILE) && (c == '(' || c == SWT.SPACE) && atEnd(id.getId(), caret);
 			}
 
 			public void run(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
-				block.addLoopAt(BOOLEAN.literal(true), index);
+				IVariableExpression exp = new IVariableDeclaration.UnboundVariable("expression").expression();
+				block.addLoopAt(exp, index);
 			}
 		};
 	}
 	
 	static BlockAction forLoop(IBlock block) {
-		return new BlockAction(Keyword.FOR, 'f', block, () -> UiMode.hasSyntax(UiMode.Syntax.FOR_LOOP)) {
+		return new BlockAction(Keyword.FOR, block, () -> UiMode.hasSyntax(UiMode.Syntax.FOR_LOOP)) {
 			public boolean isEnabledInternal(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
 				return id.isKeyword(Keyword.FOR) && (c == '(' || c == SWT.SPACE) && atEnd(id.getId(), caret);
 			}
 
 			public void run(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
-				IBlock forBlock = block.addBlockAt(index, Constants.FOR_FLAG);
-				IVariableDeclaration progVar = forBlock.addVariable(INT, Constants.FOR_FLAG);
-				ILoop loop = forBlock.addLoop(BOOLEAN.literal(true), Constants.FOR_FLAG);
-				loop.addAssignment(progVar, IOperator.ADD.on(progVar, INT.literal(1)), Constants.FOR_FLAG);
+				IBlock forBlock = block.addBlockAt(index, Flag.FOR.name());
+				IVariableDeclaration progVar = forBlock.addVariable(INT, Flag.FOR.name());
+				ILoop loop = forBlock.addLoop(BOOLEAN.literal(true), Flag.FOR.name());
+				loop.addAssignment(progVar, IOperator.ADD.on(progVar, INT.literal(1)), Flag.FOR.name());
 			}
 		};
 	}
 	
 	static BlockAction call(IBlock block) {
-		return new BlockAction("call(...)", 'p', block, () -> UiMode.hasSyntax(UiMode.Syntax.CALLS)) {
+		return new BlockAction("call(...)", block, () -> UiMode.hasSyntax(UiMode.Syntax.CALLS)) {
 			public boolean isEnabledInternal(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
-				return !id.isKeyword() && !id.isEmpty() && atEnd(id.getId(), caret) && c == '(';
+				return (!id.isKeyword() || id.isKeyword(Keyword.SUPER, Keyword.THIS)) && 
+						!id.isEmpty() && atEnd(id.getId(), caret) && c == '(';
 			}
 
 			public void run(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
@@ -180,16 +180,16 @@ abstract class BlockAction extends NewInsertWidget.Action {
 	}
 	
 	static BlockAction returnStatement(IBlock block) {
-		return new BlockAction(Keyword.RETURN, 'r', block, () -> true) {
+		return new BlockAction(Keyword.RETURN, block, () -> true) {
 			public boolean isEnabledInternal(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
 				return id.isKeyword(Keyword.RETURN) && (c == ';' || c == SWT.SPACE) && atEnd(id.getId(), caret);
 			}
 
 			public void run(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
-				if(c == ';')
+				IType retType = block.getOwnerProcedure().getReturnType();
+				if(c == ';' || retType.isVoid())
 					block.addReturnAt(index);
 				else {
-					IType retType = block.getOwnerProcedure().getReturnType();
 					IExpression retExp = retType.getDefaultExpression();
 					block.addReturnAt(retExp, index);
 				}
@@ -199,7 +199,7 @@ abstract class BlockAction extends NewInsertWidget.Action {
 
 	
 	static BlockAction breakStatement(IBlock block) {
-		return new BlockAction(Keyword.BREAK, 'b', block, () -> UiMode.hasSyntax(UiMode.Syntax.WHILE_LOOP)) {
+		return new BlockAction(Keyword.BREAK, block, () -> UiMode.hasSyntax(UiMode.Syntax.WHILE_LOOP)) {
 			public boolean isEnabledInternal(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
 				return block.isInLoop() && id.isKeyword(Keyword.BREAK) && (c == ';' || c == SWT.SPACE) && atEnd(id.getId(), caret);
 			}
@@ -211,7 +211,7 @@ abstract class BlockAction extends NewInsertWidget.Action {
 	}
 	
 	static BlockAction continueStatement(IBlock block) {
-		return new BlockAction(Keyword.CONTINUE, 'c', block, () -> UiMode.hasSyntax(UiMode.Syntax.WHILE_LOOP)) {
+		return new BlockAction(Keyword.CONTINUE, block, () -> UiMode.hasSyntax(UiMode.Syntax.WHILE_LOOP)) {
 			public boolean isEnabledInternal(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
 				return block.isInLoop() && id.isKeyword(Keyword.CONTINUE) && (c == ';' || c == SWT.SPACE) && atEnd(id.getId(), caret);
 			}
@@ -223,7 +223,7 @@ abstract class BlockAction extends NewInsertWidget.Action {
 	}
 	
 	static BlockAction incrementStatement(IBlock block) {
-		return new BlockAction("incrementation", '+', block, () -> UiMode.hasSyntax(UiMode.Syntax.ASSIGN_SIMPLIFICATION)) {
+		return new BlockAction("incrementation", block, () -> UiMode.hasSyntax(UiMode.Syntax.ASSIGN_SIMPLIFICATION)) {
 			public boolean isEnabledInternal(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
 				return !id.isKeyword() && c == '+' && atEnd(id.getId(), caret);
 			}

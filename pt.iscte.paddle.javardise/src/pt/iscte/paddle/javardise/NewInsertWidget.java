@@ -15,26 +15,29 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 
 import pt.iscte.paddle.javardise.Constants.GridDatas;
+import pt.iscte.paddle.javardise.service.ICodeElement;
 
-public class NewInsertWidget extends Composite implements TextWidget {
+public class NewInsertWidget extends Composite implements TextWidget, ICodeElement {
 
 	private final ComplexId complexId;
 	private final boolean permanent;
+	private final boolean type;
 	private List<Action> actions;
 	private final Predicate<String> tokenAccept;
 
-	public NewInsertWidget(Composite parent, boolean permanent, Predicate<String> tokenAccept) {
+	public NewInsertWidget(Composite parent, boolean permanent, boolean type, Predicate<String> tokenAccept) {
 		super(parent, SWT.NONE);
-		setLayout(Constants.ROW_LAYOUT_H_ZERO);
+		setLayout(Constants.ROW_LAYOUT_H);
 		setBackground(Constants.COLOR_BACKGROUND);
 		this.permanent = permanent;
-		this.complexId = createInsertWidget();
+		this.type = type;
+		this.complexId = createInsertWidget(type);
 		this.tokenAccept = tokenAccept;
 		this.actions = new ArrayList<>();
 	}
 
-	private ComplexId createInsertWidget() {
-		ComplexId complexId = new ComplexId(this, "", false);
+	private ComplexId createInsertWidget(boolean type) {
+		ComplexId complexId = new ComplexId(this, "", type);
 		complexId.addKeyListener(new KeyAdapter() {
 			public void keyPressed(KeyEvent e) {
 				String last = complexId.getText();
@@ -90,7 +93,7 @@ public class NewInsertWidget extends Composite implements TextWidget {
 	}
 
 	public NewInsertWidget copyTo(Composite parent) {
-		NewInsertWidget w = new NewInsertWidget(parent, false, tokenAccept);
+		NewInsertWidget w = new NewInsertWidget(parent, permanent, type, tokenAccept);
 		w.actions = actions;
 		return w;
 	}
@@ -113,8 +116,10 @@ public class NewInsertWidget extends Composite implements TextWidget {
 					
 			}
 		});
-
+		setLayoutData(getParent().getLayout() instanceof GridLayout ? GridDatas.HIDE_GRID : GridDatas.HIDE_ROW);
+		requestLayout();
 	}
+	
 	private void clearTokens() {
 		if(!isDisposed()) {
 			Control[] children = getChildren();
@@ -126,10 +131,9 @@ public class NewInsertWidget extends Composite implements TextWidget {
 
 	public static abstract class Action {
 		final CharSequence text;
-		final char accelerator;
-		public Action(CharSequence text, char accelerator) {
+		
+		public Action(CharSequence text) {
 			this.text = text;
-			this.accelerator = accelerator;
 		}
 		public boolean isEnabled(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
 			return true;
@@ -155,5 +159,16 @@ public class NewInsertWidget extends Composite implements TextWidget {
 	@Override
 	public Text getWidget() {
 		return complexId.getWidget();
+	}
+	
+	@Override
+	public void toCode(StringBuffer buffer) {
+		if(complexId.isComment())
+			buffer.append(complexId.getText());
+	}
+
+	@Override
+	public Control getControl() {
+		return complexId;
 	}
 }
