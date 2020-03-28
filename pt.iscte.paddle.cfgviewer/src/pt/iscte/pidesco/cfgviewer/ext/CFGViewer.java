@@ -21,32 +21,21 @@ import org.eclipse.zest.core.widgets.ZestStyles;
 import org.eclipse.zest.layouts.LayoutStyles;
 
 import pt.iscte.paddle.model.cfg.IBranchNode;
+import pt.iscte.paddle.model.cfg.IControlFlowGraph;
 import pt.iscte.paddle.model.cfg.INode;
 import pt.iscte.paddle.model.cfg.IStatementNode;
 import pt.iscte.pidesco.cfgviewer.internal.CFGBranchFigure;
 import pt.iscte.pidesco.cfgviewer.internal.CFGExitFigure;
 import pt.iscte.pidesco.cfgviewer.internal.CFGFigure;
 import pt.iscte.pidesco.cfgviewer.internal.CFGLayout;
-import pt.iscte.pidesco.cfgviewer.internal.ColorScheme;
 
 public class CFGViewer extends Composite {
-	
-	/*
-	 * Marcar caminho apenas
-	 * Marcar caminho e caixas
-	 * Marcar apenas caixas
-	 * 
-	 * Escrever texto na ligação entre 2 pares
-	 * 
-	 * Listener para cliques em certos nós
-	 * 
-	 * */
 	
 	private GraphViewer gv;
 	private IStyleProvider ics;
 	
 	public CFGViewer(Composite viewArea) {
-		this(viewArea, new ColorScheme());
+		this(viewArea, new StyleProvider());
 	}
 	
 	public CFGViewer(Composite viewArea, IStyleProvider ics) {
@@ -71,8 +60,8 @@ public class CFGViewer extends Composite {
 		gv.applyLayout();
 	}
 	
-	public void setInput(Object input) {
-		gv.setInput(input);
+	public void setInput(IControlFlowGraph icfg) {
+		gv.setInput(icfg.getNodes());
 	}
 	
 	private class GraphNodeContentProvider extends ArrayContentProvider implements IGraphEntityContentProvider {
@@ -96,7 +85,6 @@ public class CFGViewer extends Composite {
 	
 	private class GraphLabelContentProvider extends LabelProvider implements IFigureProvider, IEntityConnectionStyleProvider {
 		
-		/*fazer colorscheme para este caso (tipo de ligação tracejado, normal, etc)*/
 		@Override
 		public int getConnectionStyle(Object src, Object dest) {
 			if(src instanceof IBranchNode && ((IBranchNode)src).getAlternative().equals(dest)) {
@@ -130,10 +118,10 @@ public class CFGViewer extends Composite {
 		public IFigure getFigure(Object element) {
 			if (element instanceof IStatementNode) {
 				IStatementNode node = (IStatementNode) element;
-				return new CFGFigure(node.getElement().toString(), ics.getNodeColor(node), ics.getNodeBorderColor(node));
+				return new CFGFigure(node.getElement().toString(), ics.getNodeColor(node), ics.getNodeBorderColor(node), ics.getNodeTextColor());
 			} else if (element instanceof IBranchNode) {
 				IBranchNode node = (IBranchNode) element;
-				return new CFGBranchFigure(node.getElement().toString(), ics.getNodeColor(node), ics.getNodeBorderColor(node));
+				return new CFGBranchFigure(node.getElement().toString(), ics.getNodeColor(node), ics.getNodeBorderColor(node), ics.getNodeTextColor());
 			} else {
 				INode node = (INode) element;
 				if(node.isEntry()) 
@@ -153,4 +141,6 @@ public class CFGViewer extends Composite {
 			return "";
 		}
 	}
+	
+	private static class StyleProvider implements IStyleProvider {}
 }

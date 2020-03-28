@@ -2,21 +2,15 @@ package pt.iscte.pidesco.cfgviewer.internal;
 
 import org.eclipse.draw2d.BorderLayout;
 import org.eclipse.draw2d.Figure;
-import org.eclipse.draw2d.FigureListener;
-import org.eclipse.draw2d.FocusEvent;
-import org.eclipse.draw2d.FocusListener;
 import org.eclipse.draw2d.Graphics;
-import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Label;
 import org.eclipse.draw2d.LineBorder;
-import org.eclipse.draw2d.MouseEvent;
-import org.eclipse.draw2d.MouseListener;
 import org.eclipse.draw2d.PositionConstants;
 import org.eclipse.swt.graphics.Color;
 
 public class CFGFigure extends Figure {
 	
-	public CFGFigure(String text, Color backgroundColor, Color borderColor) {
+	public CFGFigure(String text, Color backgroundColor, Color borderColor, Color textColor) {
 		BorderLayout layout = new BorderLayout();
 		
 		setLayoutManager(layout);
@@ -30,10 +24,8 @@ public class CFGFigure extends Figure {
 		setSize(100, 25);
 		
 		Label l = new Label(text);
+		l.setForegroundColor(textColor);
 		l.setLabelAlignment(PositionConstants.CENTER);
 		add(l, BorderLayout.CENTER);
 	}
-	
-	
-	
 }

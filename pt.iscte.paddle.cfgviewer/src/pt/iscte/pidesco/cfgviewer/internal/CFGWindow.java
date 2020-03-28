@@ -20,11 +20,11 @@ import pt.iscte.paddle.model.IVariableAssignment;
 import pt.iscte.paddle.model.IVariableDeclaration;
 import pt.iscte.paddle.model.cfg.IControlFlowGraph;
 import pt.iscte.pidesco.cfgviewer.ext.CFGViewer;
-import pt.iscte.pidesco.cfgviewer.ext.IStyleProvider;
 
+//Test Class
 public class CFGWindow {
 	
-	public CFGWindow(IControlFlowGraph cfg, IStyleProvider ics) {
+	public CFGWindow(IControlFlowGraph cfg) {
 		Display display = new Display();
 		
 		Shell shell = new Shell(display);
@@ -33,8 +33,8 @@ public class CFGWindow {
 		
 		Composite viewArea = new Composite(shell, SWT.NONE);
 		viewArea.setLayout(new FillLayout());
-		CFGViewer view = new CFGViewer(viewArea, ics);
-		view.setInput(cfg.getNodes());
+		CFGViewer view = new CFGViewer(viewArea);
+		view.setInput(cfg);
 		
 		shell.open();
 		while(!shell.isDisposed()) {
@@ -63,8 +63,7 @@ public class CFGWindow {
 		
 		IControlFlowGraph cfg = max.getCFG();
 		
-		IStyleProvider ics = new ColorScheme();
-		new CFGWindow(cfg, ics);
+		new CFGWindow(cfg);
 	}
 
 }
