@@ -2,9 +2,9 @@ package pt.iscte.paddle.javardise;
 
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.widgets.Composite;
 
-import pt.iscte.paddle.javardise.Constants.DeleteListener;
 import pt.iscte.paddle.model.IBlock;
 import pt.iscte.paddle.model.IBlockElement;
 import pt.iscte.paddle.model.IControlStructure;
@@ -15,22 +15,25 @@ public class ControlWidget extends EditorWidget implements SequenceContainer {
 	 Token keyword;
 	private ExpressionWidget expression;
 	 SequenceWidget blockSeq;
-	private DeleteListener deleteListener;
 	private FixedToken openBracket;
 	private FixedToken closeBracket;
+	private Runnable delAction;
+	private KeyListener delListener;
 	
-	ControlWidget(Composite parent, Keyword keyword, IBlock block) {
-		this(parent, keyword, null, block);
-	}
+//	ControlWidget(Composite parent, Keyword keyword, IBlock block) {
+//		this(parent, keyword, null, block);
+//	}
 	
 	ControlWidget(Composite parent, Keyword keyword, IControlStructure structure) {
 		super(parent, structure);
+		delAction = () -> structure.remove();
 		create(keyword, structure.getGuard(), structure.getBlock());
 	}
 
-	ControlWidget(Composite parent, Keyword keyword, IExpression guard, IBlock block) {
+	// for else
+	ControlWidget(Composite parent, Keyword keyword, IBlock block) {
 		super(parent);
-		create(keyword, guard, block);
+		create(keyword, null, block);
 		
 //		blockSeq.addControlListener(new ControlAdapter() {
 //			public void controlResized(ControlEvent e) {
@@ -46,7 +49,6 @@ public class ControlWidget extends EditorWidget implements SequenceContainer {
 		Composite header = new Composite(this, SWT.NONE);
 		header.setLayout(Constants.ROW_LAYOUT_H_ZERO);
 		header.setBackground(Constants.COLOR_BACKGROUND);
-		deleteListener = new Constants.DeleteListener(this);
 		this.keyword = new Token(header, keyword);
 		
 		if(guard != null) {
@@ -55,14 +57,15 @@ public class ControlWidget extends EditorWidget implements SequenceContainer {
 			new FixedToken(header, ")");
 
 			Constants.addInsertLine(this.keyword);
-			this.keyword.addKeyListener(deleteListener);
+			if(delAction != null) {
+				delListener = this.keyword.addDeleteListener(delAction);
+			}
 		}
 
 		openBracket = new FixedToken(header, "{");
 		blockSeq = new SequenceWidget(this, Constants.TAB);
 		blockSeq.addActions(BlockAction.all(block));
 		blockSeq.addBlockListener(block);
-		blockSeq.setDeleteAction(index -> block.removeElement(index));
 		closeBracket = new FixedToken(this, "}");
 		
 		int i = 0;
@@ -71,12 +74,9 @@ public class ControlWidget extends EditorWidget implements SequenceContainer {
 	}
 
 	void fillHeader(IExpression expression, Composite header) {
-//		Markable<CodeElement> markable = new Markable<CodeElement>(header, p -> new ExpressionWidget(p, Expression.match(expression), expression), expression);
-		
-//		this.expression = new ExpressionWidget(header, Expression.match(expression), expression);
-//		this.expression = (ExpressionWidget) markable.target;
 		this.expression = new ExpressionWidget(header, Expression.match(expression), expression);
-		this.expression.addKeyListener(deleteListener);
+		if(delListener != null)
+			this.expression.addKeyListener(delListener);
 	}
 
 	@Override

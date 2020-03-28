@@ -33,6 +33,7 @@ import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.core.dom.ThisExpression;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
@@ -189,7 +190,10 @@ class ParserVisitor extends DefaultASTVisitor {
 	}
 
 	IVariableDeclaration varLookup(Name name) {
-		String id = name.toString();
+		return varLookup(name.toString());
+	}
+
+	IVariableDeclaration varLookup(String id) {
 		for (IVariableDeclaration v : currentProcedure.getVariables())
 			if(v.getId().equals(id))
 				return v;
@@ -197,6 +201,7 @@ class ParserVisitor extends DefaultASTVisitor {
 		return new IVariableDeclaration.UnboundVariable(id);
 	}
 
+	
 	@Override
 	public boolean visit(Assignment node) {
 		assert node.getOperator() == Assignment.Operator.ASSIGN;
@@ -293,10 +298,15 @@ class ParserVisitor extends DefaultASTVisitor {
 		}
 
 		else if(e instanceof QualifiedName) {
-			QualifiedName qn = (QualifiedName) e;
-			IVariableDeclaration var = varLookup(qn.getQualifier());
-			if(var.getType() instanceof IReferenceType && ((IReferenceType) var.getType()).getTarget() instanceof IArrayType)
+			String target = ((QualifiedName) e).getQualifier().toString(); // TODO parts
+			String field =  ((QualifiedName) e).getName().toString();
+			IVariableDeclaration var = varLookup(target);
+			if(var.getType() instanceof IReferenceType && 
+					((IReferenceType) var.getType()).getTarget() instanceof IArrayType &&
+					field.equals("length"))
 				return var.length(); // TODO indexes
+			else
+				return var.field(field);
 		}
 		else if(e instanceof FieldAccess) {
 			FieldAccess fa = (FieldAccess) e;
@@ -332,6 +342,12 @@ class ParserVisitor extends DefaultASTVisitor {
 			return ((IArrayType) t).heapAllocation(matchExpressions(ac.dimensions()));
 		}
 
+		
+		else if(e instanceof ThisExpression) {
+			// TODO
+		}
+		
+		// TODO qualified name
 		assert false : e.toString() + " (" + e.getClass() + ")"; 
 
 		return null;

@@ -42,7 +42,7 @@ import pt.iscte.paddle.javardise.ClassWidget;
 import pt.iscte.paddle.javardise.ComplexId;
 import pt.iscte.paddle.javardise.Constants;
 import pt.iscte.paddle.javardise.Keyword;
-import pt.iscte.paddle.javardise.NewInsertWidget;
+import pt.iscte.paddle.javardise.InsertWidget;
 import pt.iscte.paddle.javardise.SequenceWidget;
 import pt.iscte.paddle.javardise.UiMode;
 import pt.iscte.paddle.javardise.UiMode.Syntax;
@@ -120,7 +120,7 @@ public class StandaloneEditor {
 		});		
 
 		SequenceWidget seq = new SequenceWidget(area, 0, Constants.METHOD_SPACING, token -> Keyword.isClassModifier(token));
-		seq.addAction(new NewInsertWidget.Action("class") {
+		seq.addAction(new InsertWidget.Action("class") {
 			public boolean isEnabled(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
 				return seq.getChildren().length == 1 && c == SWT.SPACE && id.isKeyword(Keyword.CLASS);
 			}
@@ -172,7 +172,7 @@ public class StandaloneEditor {
 		RECURSIVE("Recursion", true, SELECTION, CALLS),
 		LOOPS("Loops", true, WHILE_LOOP, ASSIGNMENT),
 		ARRAYS("Arrays", true, Syntax.ARRAYS),
-		OBJECTS("Objects", false), // TODO
+		OBJECTS("Objects", false, Syntax.RECORDS),
 		ENCAPSULATION("Encapsulation", false, Syntax.ENCAPSULATION);
 
 		String uiText;

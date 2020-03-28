@@ -24,6 +24,7 @@ import pt.iscte.paddle.model.IProcedure;
 import pt.iscte.paddle.model.IRecordType;
 import pt.iscte.paddle.model.IType;
 import pt.iscte.paddle.model.IVariableDeclaration;
+import pt.iscte.paddle.model.IRecordType.IListener;
 
 public class ClassWidget extends ModiferWidget implements SequenceContainer, IClassWidget {
 
@@ -64,13 +65,7 @@ public class ClassWidget extends ModiferWidget implements SequenceContainer, ICl
 
 		Predicate<String> tokenAccept = token -> acceptModifier(token) || Constants.isType(token) || IType.VOID.getId().equals(token);
 		methods = new SequenceWidget(this, margin, 5, tokenAccept);
-
-		methods.setDeleteAction(index -> {
-			IProcedure p = module.getProcedures().get(index);
-			module.removeProcedure(p);
-		});
-
-		methods.addAction(new NewInsertWidget.Action("field") {
+		methods.addAction(new InsertWidget.Action("field") {
 			public boolean isEnabled(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
 				if(tokens.size() < 1)
 					return false;
@@ -89,18 +84,18 @@ public class ClassWidget extends ModiferWidget implements SequenceContainer, ICl
 			}
 		});
 
-		methods.addAction(new NewInsertWidget.Action("constructor") {
+		methods.addAction(new InsertWidget.Action("constructor") {
 			public boolean isEnabled(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
 				return c == '(' && id.getText().equals(module.getId());
 			}
 
 			public void run(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
-				int i = module.getConstants().size() + getMainType().getFields().size();
-				module.addProcedureAt(id.getId(), IType.VOID, i, "CONSTRUCTOR");
+//				int i = module.getConstants().size() + getMainType().getFields().size();
+				module.addProcedure(id.getId(), IType.VOID, Flag.CONSTRUCTOR.name());
 			}
 		});
 
-		methods.addAction(new NewInsertWidget.Action("method") {
+		methods.addAction(new InsertWidget.Action("method") {
 			public boolean isEnabled(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
 				if(tokens.size() < 1)
 					return false;
@@ -127,16 +122,19 @@ public class ClassWidget extends ModiferWidget implements SequenceContainer, ICl
 					FieldWidget f = methods.addElement(p -> new FieldWidget(p, field), t.getFields().size()-1);
 					f.setFocus();
 				}
+				public void fieldRemoved(IVariableDeclaration field) {
+					methods.removeElement(field);
+				}
 			});
 		}
 
 		module.getProcedures().stream()
 		.filter(p -> Flag.CONSTRUCTOR.is(p))
-		.forEach(c -> methods.addElement(comp -> new MethodWidget(comp, c)));
+		.forEach(c -> methods.addLineAndElement(comp -> new MethodWidget(comp, c)));
 		
 		module.getProcedures().stream()
 		.filter(p -> Flag.CONSTRUCTOR.isNot(p))
-		.forEach(c -> methods.addElement(comp -> new MethodWidget(comp, c)));
+		.forEach(c -> methods.addLineAndElement(comp -> new MethodWidget(comp, c)));
 		
 
 		if (UiMode.editorMode() == UiMode.Editor.REGULAR)
@@ -149,7 +147,7 @@ public class ClassWidget extends ModiferWidget implements SequenceContainer, ICl
 			}
 
 			public void constantRemoved(IConstantDeclaration constant) {
-				methods.delete(e -> e instanceof FieldWidget && ((FieldWidget) e).element == constant);
+				methods.removeElement(constant);
 			}
 
 			public void procedureAdded(IProcedure procedure) {
@@ -177,7 +175,7 @@ public class ClassWidget extends ModiferWidget implements SequenceContainer, ICl
 			}
 			
 			public void procedureRemoved(IProcedure procedure) {
-				methods.delete(e -> e instanceof MethodWidget && ((MethodWidget) e).getProcedure() == procedure);
+				methods.removeElement(procedure);
 			}
 
 			//			@Override

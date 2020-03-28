@@ -2,19 +2,16 @@ package pt.iscte.paddle.javardise;
 
 import static java.lang.System.lineSeparator;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.layout.RowData;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
-import pt.iscte.paddle.javardise.Constants.DeleteListener;
 import pt.iscte.paddle.javardise.service.IDeclarationWidget;
 import pt.iscte.paddle.javardise.service.IMethodWidget;
 import pt.iscte.paddle.javardise.service.IWidget;
@@ -31,6 +28,7 @@ public class MethodWidget extends ModiferWidget implements SequenceContainer, IM
 	private SequenceWidget body;
 	private ParamList params;
 	private Composite header;
+	private final boolean isConstructor;
 
 	@Override
 	Composite getHeader() {
@@ -39,27 +37,27 @@ public class MethodWidget extends ModiferWidget implements SequenceContainer, IM
 	
 	@Override
 	Function<List<Keyword>, List<Keyword>> getModifierProvider() {
-		return list -> Keyword.methodModifiers();
+		return list -> isConstructor ? Keyword.constructorModifiers() : Keyword.methodModifiers();
 	}
 	
 	public MethodWidget(Composite parent, IProcedure procedure) {
 		super(parent, procedure);
 		this.procedure = procedure;
-		final boolean isConstructor = Flag.CONSTRUCTOR.is(procedure);
-		RowLayout layout = new RowLayout(SWT.VERTICAL);
-		layout.marginTop = Constants.METHOD_SPACING;
-		setLayout(layout);
-		// setLayout(Constants.ROW_LAYOUT_V_ZERO);
+		isConstructor = Flag.CONSTRUCTOR.is(procedure);
+//		RowLayout layout = new RowLayout(SWT.VERTICAL);
+//		layout.marginTop = Constants.METHOD_SPACING;
+//		setLayout(layout);
+		 setLayout(Constants.ROW_LAYOUT_V_ZERO);
 		header = Constants.createHeader(this);
 		for (Keyword mod : Keyword.methodModifiers())
 			if (procedure.is(mod.toString()))
 				addModifier(mod);
 
-		DeleteListener deleteListener = new Constants.DeleteListener(this);
 
+		Runnable delAction = () -> procedure.getModule().removeProcedure(procedure);
 		if (!isConstructor) {
-			retType = new ComplexId(header, procedure.getReturnType());
-			retType.addKeyListener(deleteListener);
+			retType = ComplexId.matchType(header, procedure.getReturnType());
+			retType.addDeleteListener(delAction);
 			addModifierKey(retType);
 			Constants.addInsertLine(retType);
 		}
@@ -71,12 +69,13 @@ public class MethodWidget extends ModiferWidget implements SequenceContainer, IM
 			name = "";
 
 		id = new Id(header, name);
-		if (isConstructor)
+		if (isConstructor) {
 			id.setReadOnly();
-		id.addKeyListener(deleteListener);
-		if (isConstructor)
+			id.addDeleteListener(delAction);
+			addModifierKey(id);
 			Constants.addInsertLine(id);
-
+		}
+		
 		new FixedToken(header, "(");
 		params = new ParamList(header);
 		new FixedToken(header, ")");
@@ -90,7 +89,6 @@ public class MethodWidget extends ModiferWidget implements SequenceContainer, IM
 		body = new SequenceWidget(this, Constants.TAB);
 		body.addBlockListener(procedure.getBody());
 		body.addActions(BlockAction.all(procedure.getBody()));
-		body.setDeleteAction(i -> procedure.getBody().removeElement(i));
 		new FixedToken(this, "}");
 
 		int i = 0;
@@ -128,23 +126,32 @@ public class MethodWidget extends ModiferWidget implements SequenceContainer, IM
 
 			Param(IVariableDeclaration v, boolean comma) {
 				super(ParamList.this, v);
-				init(v.getType().getId(), Constants.variableId(v), comma);
+				init(v.getType(), Constants.variableId(v), comma);
 			}
 
 			Param(String type, String id, boolean comma) {
 				super(ParamList.this);
-				init(type, id, comma);
+				init(null, id, comma);
 			}
 
-			private void init(String type, String id, boolean comma) {
+			private void init(IType type, String id, boolean comma) {
 				setLayout(Constants.ROW_LAYOUT_H);
 				if (comma)
 					this.comma = new FixedToken(this, ",");
-
-				this.type = new ComplexId(this, type, true);
+				
+				this.type = type == null ? 
+						new ComplexId(this, "", true) :
+							ComplexId.matchType(this, type);
+				this.type.addKeyListener(new KeyAdapter() {
+					@Override
+					public void keyPressed(KeyEvent e) {
+						if(e.character == SWT.SPACE && Param.this.type.isAtEnd())
+							Param.this.id.setFocus();
+					}
+				});
 				this.id = new Id(this, id);
 
-				if (type.isEmpty())
+				if (type == null)
 					this.type.setAllowEmpty(() -> this.id.isEmpty());
 
 				if (id.isEmpty()) {
@@ -156,21 +163,21 @@ public class MethodWidget extends ModiferWidget implements SequenceContainer, IM
 					public void keyPressed(KeyEvent e) {
 						if (e.character == ',')
 							addParam(new IVariableDeclaration.UnboundVariable(IType.INT, "parameter"), true);
-						else if (e.keyCode == Constants.DEL_KEY && Param.this.id.isAtBeginning()) {
-							dispose();
-							Control[] children = ParamList.this.getChildren();
-							// if(children.length == 0) {
-							// createInsert();
-							// }
-							// else {
-							if (children.length == 1 && ((Param) children[0]).comma != null)
-								((Param) children[0]).comma.dispose();
-
-							// FIXME
-							((Param) children[children.length - 1]).focusVariable();
-							// }
-							ParamList.this.requestLayout();
-						}
+//						else if (e.keyCode == Constants.DEL_KEY && Param.this.id.isAtBeginning()) {
+//							dispose();
+//							Control[] children = ParamList.this.getChildren();
+//							// if(children.length == 0) {
+//							// createInsert();
+//							// }
+//							// else {
+//							if (children.length == 1 && ((Param) children[0]).comma != null)
+//								((Param) children[0]).comma.dispose();
+//
+//							// FIXME
+//							((Param) children[children.length - 1]).focusVariable();
+//							// }
+//							ParamList.this.requestLayout();
+//						}
 					}
 				});
 			}
@@ -184,6 +191,8 @@ public class MethodWidget extends ModiferWidget implements SequenceContainer, IM
 			}
 
 			public void toCode(StringBuffer buffer) {
+				if(comma != null)
+					buffer.append(", ");
 				type.toCode(buffer);
 				buffer.append(' ');
 				id.toCode(buffer);

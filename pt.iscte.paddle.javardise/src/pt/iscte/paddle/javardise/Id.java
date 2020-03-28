@@ -13,7 +13,7 @@ import pt.iscte.paddle.javardise.service.ICodeElement;
 
 public class Id extends EditorWidget implements TextWidget {
 
-	private boolean menuMode = false;
+	private boolean readOnly;
 	private final Text text;
 	private Runnable editAction = () -> {};
 	private Supplier<Boolean> allowEmpty = () -> false;
@@ -22,12 +22,13 @@ public class Id extends EditorWidget implements TextWidget {
 		super(parent);
 		setLayout(Constants.ROW_LAYOUT_H_ZERO);
 		setBackground(Constants.COLOR_BACKGROUND);
+		readOnly = false;
 		text = Constants.createText(this, id);
 		if(id.isBlank() && !allowEmpty.get())
 			text.setBackground(Constants.COLOR_ERROR);
-		text.addVerifyListener(e -> e.doit = menuMode ||
-				isValidCharacter(e.character) || e.character == Constants.DEL_KEY || e.character == SWT.CR);
-
+		text.addVerifyListener(e -> e.doit =
+				!readOnly && (isValidCharacter(e.character) || e.character == Constants.DEL_KEY || e.character == SWT.CR));	
+	
 		text.addFocusListener(new FocusListener() {
 			public void focusGained(FocusEvent e) {
 				text.setBackground(Constants.COLOR_BACKGROUND);
@@ -43,6 +44,7 @@ public class Id extends EditorWidget implements TextWidget {
 		text.addModifyListener(Constants.MODIFY_PACK);
 		text.setMenu(new Menu(text)); // prevent system menu
 		Constants.addArrowKeys(text, this);
+		setBackgroundError();
 	}
 	
 	private void setBackgroundError() {
@@ -58,7 +60,8 @@ public class Id extends EditorWidget implements TextWidget {
 	}
 	
 	void setReadOnly() {
-		text.setEditable(false);
+//		text.setEditable(false);
+		readOnly = true;
 	}
 	
 	public void setEditAction(Runnable editAction) {

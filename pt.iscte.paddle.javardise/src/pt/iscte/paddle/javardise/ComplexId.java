@@ -21,8 +21,11 @@ import org.eclipse.swt.widgets.Text;
 import pt.iscte.paddle.javardise.service.ICodeElement;
 import pt.iscte.paddle.model.IArrayElement;
 import pt.iscte.paddle.model.IArrayLength;
+import pt.iscte.paddle.model.IArrayType;
 import pt.iscte.paddle.model.IExpression;
 import pt.iscte.paddle.model.IProcedureCall;
+import pt.iscte.paddle.model.IRecordFieldExpression;
+import pt.iscte.paddle.model.IReferenceType;
 import pt.iscte.paddle.model.IType;
 import pt.iscte.paddle.model.IVariableExpression;
 
@@ -32,13 +35,25 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 	private final boolean type;
 	private final List<CodeElementControl> elements;
 	private final VerifyListener verifyListener;
+
+	private Supplier<Boolean> allowEmpty = () -> false;
+
+	static ComplexId matchType(Composite parent, IType t) {
+		ComplexId id = null;
+		if(t.isReference())
+			t = ((IReferenceType) t).getTarget();
 		
-	private Supplier<Boolean> allowEmpty = () -> true;
-	
-	ComplexId(Composite parent, IType t) {
-		this(parent, t.getId(), true);
+		if(t instanceof IArrayType) {
+			IArrayType at = (IArrayType) t;
+			id = new ComplexId(parent, at.getRootComponentType().getId(), true);
+			for(int i = at.getDimensions(); i > 0; i--)
+				id.addDimension();
+		}
+		else
+			id = new ComplexId(parent, t.getId(), true);
+		return id;
 	}
-	
+
 	// TODO fix for expression resolve
 	ComplexId(Composite parent, IArrayElement e) {
 		this(parent, Constants.variableId(((IVariableExpression) e.getTarget()).getVariable()), false);
@@ -51,18 +66,25 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 		this(p, ((IVariableExpression) e.getTarget()).getVariable().getId(), false);
 		addField("length");
 	}
+
 	
+	// TODO fix for expression resolve
+		ComplexId(Composite p, IRecordFieldExpression e) {
+			this(p, ((IVariableExpression) e.getTarget()).getVariable().getId(), false);
+			addField(e.getField().getId());
+		}
+		
 	ComplexId(Composite p, IProcedureCall c) {
 		this(p, c.getId() != null ? c.getId() : 
-				c.getProcedure() != null ? c.getProcedure().getId() : 
+			c.getProcedure() != null ? c.getProcedure().getId() : 
 				"procedure", false);
 	}
-	
+
 	ComplexId(Composite parent, String id, boolean type) {
 		super(parent);
 		this.type = type;
 		this.elements = new ArrayList<>();
-		setLayout(Constants.ROW_LAYOUT_H_ZERO);
+		setLayout(Constants.ROW_LAYOUT_H_SHRINK);
 		text = Constants.createText(this, id);
 		verifyListener = e -> e.doit = 
 				isValidCharacter(e.character) || 
@@ -87,28 +109,31 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 		text.setMenu(new Menu(text)); // prevent system menu
 		Constants.addArrowKeys(text, this);
 		Constants.addInsertLine(this);
+		setBackgroundColor();
 	}
-	
+
 	private void setBackgroundColor() {
-		if(isComment()) {
-			text.setForeground(Constants.COLOR_COMMENT);
-			text.setBackground(Constants.COLOR_BACKGROUND);
-		}
-		else if(!text.getText().isBlank() && ComplexId.this.getParent() instanceof NewInsertWidget){
-			text.setForeground(Constants.COLOR_ERROR);
-			text.setBackground(Constants.COLOR_HIGHLIGHT);
-		}
-		else if(Keyword.is(text.getText())) {
-			text.setForeground(Constants.COLOR_KEYWORD);
-			text.setBackground(Constants.COLOR_BACKGROUND);
-		}
-		else if(text.getText().isBlank() && !allowEmpty.get()) {
-			text.setForeground(Constants.COLOR_FONT);
-			text.setBackground(Constants.COLOR_ERROR);
-		}
-		else {
-			text.setForeground(Constants.COLOR_FONT);
-			text.setBackground(Constants.COLOR_BACKGROUND);
+		for(Control c : getChildren()) {
+			if(isComment()) {
+				c.setForeground(Constants.COLOR_COMMENT);
+				c.setBackground(Constants.COLOR_BACKGROUND);
+			}
+			else if(!text.getText().isBlank() && ComplexId.this.getParent() instanceof InsertWidget){
+				c.setForeground(Constants.COLOR_BACKGROUND);
+				c.setBackground(Constants.COLOR_ERROR);
+			}
+			else if(c instanceof Text && Keyword.is(((Text)c).getText())) {
+				c.setForeground(Constants.COLOR_KEYWORD);
+				c.setBackground(Constants.COLOR_BACKGROUND);
+			}
+			else if(text.getText().isBlank() && !allowEmpty.get()) {
+				c.setForeground(Constants.COLOR_FONT);
+				c.setBackground(Constants.COLOR_ERROR);
+			}
+			else {
+				c.setForeground(Constants.COLOR_FONT);
+				c.setBackground(Constants.COLOR_BACKGROUND);
+			}
 		}
 	}
 
@@ -116,12 +141,12 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 		this.allowEmpty = allowEmpty;
 		setBackgroundColor();
 	}
-	
+
 	public boolean isComment() {
 		return text.getText().startsWith("//");
 	}
 
-	
+
 	void setReadOnly() {
 		text.setEditable(false);
 	}
@@ -140,7 +165,7 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 				return true;
 		return false;
 	}
-	
+
 	public boolean isKeyword(Keyword keyword) {
 		return isSingleId() && keyword.isEqual(text);
 	}
@@ -177,65 +202,91 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 		Dimension dimension = new Dimension(this, f);
 		dimension.setFocus();
 	}
-	
+
 	private void addDimension(Control left) {
-		if(type) {
-			Token t = new Token(this, "[]");
-			t.addKeyListener(new KeyAdapter() {
-				@Override
-				public void keyPressed(KeyEvent e) {
-					if(e.keyCode == Constants.DEL_KEY)
-						removeDimension((Control) e.widget);
-					else if(e.character == '[')
-						addDimension(null);
-				}
-			});
-			t.setFocus();
-		}
-		else {
-			Dimension dimension = new Dimension(this, null);
-//			if(left != null)
-//				dimension.expression.moveBelow(left);
-			dimension.setFocus();
-		}
-		requestLayout();
+		CodeElementControl e = type ? new EmptyDimension(this) : new Dimension(this, null);
+		e.setFocus();
+		e.getControl().requestLayout();
 	}
 
 	private interface CodeElementControl extends ICodeElement {
 		void dispose();
+		boolean setFocus();
 	}
 	
+	private class EmptyDimension implements CodeElementControl {
+		Token token;
+		
+		public EmptyDimension(Composite parent) {
+			elements.add(this);
+			token = new Token(parent, "[]");
+			token.addKeyListener(new KeyAdapter() {
+				public void keyPressed(KeyEvent e) {
+					if(e.keyCode == Constants.DEL_KEY) {
+						dispose();
+						requestLayout();
+						focusLastElement();
+					}
+					else if(e.character == '[')
+						addDimension(null);
+				}
+			});
+		}
+		@Override
+		public Control getControl() {
+			return token.getControl();
+		}
+
+		@Override
+		public void dispose() {
+			elements.remove(this);
+			token.dispose();
+		}
+
+		@Override
+		public boolean setFocus() {
+			return token.setFocus();
+		}
+		
+		@Override
+		public void toCode(StringBuffer buffer) {
+			token.toCode(buffer);
+		}
+		
+	}
+
 	private class Dimension implements CodeElementControl {
 		private FixedToken left;
 		private ExpressionWidget expression;
 		private Token right;
-		
+
 		public Dimension(Composite parent, Expression.Creator f) {
 			elements.add(this);
 			if(f == null)
 				f = p -> new SimpleExpressionWidget(p, "expression");
-			left = new FixedToken(parent, "[");
-			expression = new ExpressionWidget(parent, f, null);
-			right = new Token(parent, "]");
-			right.addKeyListener(new KeyAdapter() {
-				public void keyPressed(KeyEvent e) {
-					if(e.character == '[') {
-						addDimension(Dimension.this.expression);
+				left = new FixedToken(parent, "[");
+				expression = new ExpressionWidget(parent, f, null);
+				right = new Token(parent, "]");
+				right.addKeyListener(new KeyAdapter() {
+					public void keyPressed(KeyEvent e) {
+						if(e.character == '[') {
+							addDimension(Dimension.this.expression);
+						}
+						else if(e.character == Constants.DEL_KEY) {
+							elements.remove(Dimension.this);
+							dispose();
+							ComplexId.this.requestLayout();
+							ComplexId.this.focusLastElement();
+						}
+						else {
+							Event ev = new Event();
+							ev.type = SWT.KeyDown;
+							ev.character = e.character;
+							ev.keyCode = e.keyCode;
+							text.notifyListeners(SWT.KeyDown, ev);
+						}
 					}
-					else if(e.character == Constants.DEL_KEY) {
-						dispose();
-						ComplexId.this.requestLayout();
-						ComplexId.this.setFocus();
-					}
-					else {
-						Event ev = new Event();
-						ev.type = SWT.KeyDown;
-						ev.character = e.character;
-						ev.keyCode = e.keyCode;
-						text.notifyListeners(SWT.KeyDown, ev);
-					}
-				}
-			});
+				});
 
 		}
 
@@ -275,6 +326,26 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 			Constants.addArrowKeys(field, TextWidget.create(field));
 			Constants.addFocusSelectAll(field);
 			field.addKeyListener(insertListener);
+			field.addKeyListener(new KeyAdapter() {
+				public void keyPressed(KeyEvent e) {
+					if(e.character == Constants.DEL_KEY && field.getCaretPosition() == 0) {
+						elements.remove(Field.this);
+						dispose();
+						ComplexId.this.requestLayout();
+						ComplexId.this.focusLastElement();
+					}
+					else if(e.character == '.') {
+						
+					}
+					else {
+						Event ev = new Event();
+						ev.type = SWT.KeyDown;
+						ev.character = e.character;
+						ev.keyCode = e.keyCode;
+						text.notifyListeners(SWT.KeyDown, ev);
+					}
+				}
+			});
 		}
 
 		public boolean setFocus() {
@@ -294,29 +365,21 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 			dot.dispose();
 			field.dispose();
 		}
-		
+
 		@Override
 		public Control getControl() {
 			return field;
 		}
 	}
 
-	private void removeDimension(Control control) {
-		Control[] children = getChildren();
-		for(int i = 1; i < children.length; i++)
-			if(children[i] == control) {
-				children[i].dispose();
-				children[i-1].setFocus();
-			}
-		requestLayout();
+	public void focusLastElement() {
+		if(elements.isEmpty())
+			text.setFocus();
+		else
+			elements.get(elements.size()-1).setFocus();
 	}
 
-	public void focusLastDimension() {
-		Control[] children = getChildren();
-		children[children.length-1].setFocus();
-	}
 
-	
 
 	@Override
 	public boolean setFocus() {
@@ -357,12 +420,12 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 	public void addFocusListener(FocusListener listener) {
 		text.addFocusListener(listener);
 	}
-	
+
 	public void clean() {
 		text.removeVerifyListener(verifyListener);
 		text.setText("");
 		text.addVerifyListener(verifyListener);
-		for(CodeElementControl e : elements)
+		for(CodeElementControl e : new ArrayList<CodeElementControl>(elements))
 			e.dispose();
 		elements.clear();
 		setBackgroundColor();
@@ -376,8 +439,8 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 	public boolean isArrayAccess() {
 		return elements.get(elements.size()-1) instanceof Dimension;
 	}
-	
-	
+
+
 	public List<IExpression> getArrayModelExpressions() {
 		assert isArrayAccess();
 		List<IExpression> list = new ArrayList<>();
@@ -385,7 +448,7 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 			list.add(0, ((Dimension) elements.get(i)).expression.toModel());
 		return list;
 	}
-	
+
 
 	public boolean isFieldAccess() {
 		return elements.get(elements.size()-1) instanceof Field;
@@ -408,7 +471,7 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 	@Override
 	public void substitute(Expression current, Expression newExpression) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override

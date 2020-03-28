@@ -1,8 +1,8 @@
 package pt.iscte.paddle.javardise;
 
+import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.widgets.Composite;
 
-import pt.iscte.paddle.javardise.Constants.DeleteListener;
 import pt.iscte.paddle.model.IArrayElementAssignment;
 import pt.iscte.paddle.model.IExpression;
 import pt.iscte.paddle.model.IStatement;
@@ -32,17 +32,14 @@ public class AssignmentWidget extends EditorWidget {
 		setLayout(Constants.ROW_LAYOUT_H);
 		
 		this.id = new ComplexId(this, Constants.variableId(var), false);
-		
-		DeleteListener deleteListener = new Constants.DeleteListener(this);
-		this.id.addKeyListener(deleteListener);
+		KeyListener delListener = this.id.addDeleteListener(() -> statement.remove());
 		
 		new FixedToken(this, "=");
-		
 		Expression.Creator f = exp == null ?
 				p -> new SimpleExpressionWidget(p, "expression") : Expression.match(exp);
 				
 		this.expression = new ExpressionWidget(this, f, exp);
-		this.expression.addKeyListener(deleteListener);
+		this.expression.addKeyListener(delListener);
 		new FixedToken(this, ";");
 	}
 	

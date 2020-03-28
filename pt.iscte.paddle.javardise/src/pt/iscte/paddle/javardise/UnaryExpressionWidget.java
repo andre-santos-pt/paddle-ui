@@ -19,6 +19,11 @@ public class UnaryExpressionWidget extends EditorWidget implements Expression {
 		super(parent);
 		setLayout(Constants.ROW_LAYOUT_H_ZERO);
 		op = new Token(this, operator, Constants.UNARY_OPERATORS);
+		op.addDeleteListener(() -> {
+			Expression e = this.expression.copyTo(getParent());
+			((Expression) getParent()).substitute(this, e);
+			e.setFocus();
+		});
 		this.expression = f.apply(this);
 
 		Menu menu = op.getMenu();

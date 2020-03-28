@@ -17,7 +17,7 @@ import org.eclipse.swt.widgets.Text;
 import pt.iscte.paddle.javardise.Constants.GridDatas;
 import pt.iscte.paddle.javardise.service.ICodeElement;
 
-public class NewInsertWidget extends Composite implements TextWidget, ICodeElement {
+public class InsertWidget extends Composite implements TextWidget, ICodeElement {
 
 	private final ComplexId complexId;
 	private final boolean permanent;
@@ -25,7 +25,7 @@ public class NewInsertWidget extends Composite implements TextWidget, ICodeEleme
 	private List<Action> actions;
 	private final Predicate<String> tokenAccept;
 
-	public NewInsertWidget(Composite parent, boolean permanent, boolean type, Predicate<String> tokenAccept) {
+	public InsertWidget(Composite parent, boolean permanent, boolean type, Predicate<String> tokenAccept) {
 		super(parent, SWT.NONE);
 		setLayout(Constants.ROW_LAYOUT_H);
 		setBackground(Constants.COLOR_BACKGROUND);
@@ -42,7 +42,7 @@ public class NewInsertWidget extends Composite implements TextWidget, ICodeEleme
 			public void keyPressed(KeyEvent e) {
 				String last = complexId.getText();
 				if(e.character == SWT.SPACE && tokenAccept.test(last)) {
-					Token token = new Token(NewInsertWidget.this, last);
+					Token token = new Token(InsertWidget.this, last);
 					token.moveAbove(complexId);
 					token.addKeyListener(new KeyAdapter() {
 						public void keyPressed(KeyEvent e) {
@@ -66,7 +66,7 @@ public class NewInsertWidget extends Composite implements TextWidget, ICodeEleme
 				}
 
 				// TODO FIX?
-				int index = getParent() instanceof SequenceWidget ? ((SequenceWidget) getParent()).findModelIndex(NewInsertWidget.this) : 0; 
+				int index = getParent() instanceof SequenceWidget ? ((SequenceWidget) getParent()).findModelIndex(InsertWidget.this) : 0; 
 				List<String> tokens = getTokens();
 				for(Action a : actions) {
 					if(a.isEnabled(e.character, complexId, index, complexId.getCaretPosition(), complexId.getSelectionCount(), tokens)) {
@@ -81,6 +81,7 @@ public class NewInsertWidget extends Composite implements TextWidget, ICodeEleme
 			}
 			
 		});
+		complexId.setAllowEmpty(() -> true);
 		
 //		complexId.addFocusListener(new FocusAdapter() {
 //			public void focusLost(FocusEvent e) {
@@ -92,8 +93,12 @@ public class NewInsertWidget extends Composite implements TextWidget, ICodeEleme
 		return complexId;
 	}
 
-	public NewInsertWidget copyTo(Composite parent) {
-		NewInsertWidget w = new NewInsertWidget(parent, permanent, type, tokenAccept);
+	public boolean hasTokens() {
+		return getChildren()[0] != complexId;
+	}
+	
+	public InsertWidget copyTo(Composite parent) {
+		InsertWidget w = new InsertWidget(parent, false, type, tokenAccept);
 		w.actions = actions;
 		return w;
 	}
@@ -105,15 +110,12 @@ public class NewInsertWidget extends Composite implements TextWidget, ICodeEleme
 				requestLayout();
 			}
 			public void focusLost(FocusEvent e) {
-				if(complexId.isEmpty()) {
+				if(complexId.isEmpty() && !hasTokens()) {
 					setLayoutData(getParent().getLayout() instanceof GridLayout ? GridDatas.HIDE_GRID : GridDatas.HIDE_ROW);
 					requestLayout();
-//					complexId.text.setBackground(Constants.COLOR_BACKGROUND);
 				}
-				else {
-//					complexId.text.setBackground(Constants.COLOR_HIGHLIGHT);
-				}
-					
+				else
+					;// TODO mark tokens
 			}
 		});
 		setLayoutData(getParent().getLayout() instanceof GridLayout ? GridDatas.HIDE_GRID : GridDatas.HIDE_ROW);

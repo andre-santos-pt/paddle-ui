@@ -7,6 +7,7 @@ import java.util.function.Supplier;
 
 import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
+import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.widgets.Composite;
 
 import pt.iscte.paddle.model.IConstantDeclaration;
@@ -32,8 +33,9 @@ public class FieldWidget extends ModiferWidget {
 	
 	private FieldWidget(Composite parent, IProgramElement e, Supplier<IType> ts) {
 		super(parent, e);
+		setLayout(Constants.ROW_LAYOUT_H);
 		addModifiers(e);
-		this.type = new ComplexId(this, ts.get());
+		this.type = ComplexId.matchType(this, ts.get());
 		addModifierKey(type);
 		String id = e.getId();
 		if(id == null)
@@ -46,6 +48,8 @@ public class FieldWidget extends ModiferWidget {
 	public FieldWidget(Composite parent, IVariableDeclaration var) {
 		this(parent, var, () -> var.getType());
 		new FixedToken(this, ";");
+		KeyListener delListener = this.type.addDeleteListener(() -> var.remove());
+		this.id.addKeyListener(delListener);
 	}
 	
 	public FieldWidget(Composite parent, IConstantDeclaration constant) {
@@ -53,6 +57,7 @@ public class FieldWidget extends ModiferWidget {
 		new FixedToken(this, "=");
 		this.expression = new SimpleExpressionWidget(this, constant.getValue().getStringValue());
 		
+		// TODO remove constan
 		new FixedToken(this, ";");
 		
 		expression.addFocusListener(new FocusAdapter() {

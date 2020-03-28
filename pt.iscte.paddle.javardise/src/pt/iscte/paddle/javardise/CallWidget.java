@@ -19,10 +19,10 @@ public class CallWidget extends EditorWidget implements Expression {
 	private Composite args;
 	private boolean statement;
 
-	public CallWidget(Composite parent, IProcedureCall procedure, boolean statement, Expression.Creator ... f) {
-		super(parent, procedure);
+	public CallWidget(Composite parent, IProcedureCall call, boolean statement, Expression.Creator ... f) {
+		super(parent, call);
 		setLayout(Constants.ROW_LAYOUT_H_ZERO);
-		this.id = new ComplexId(this, procedure);
+		this.id = new ComplexId(this, call);
 		this.statement = statement;
 		new FixedToken(this, "(");
 		args = new Composite(this, SWT.NONE);
@@ -34,7 +34,7 @@ public class CallWidget extends EditorWidget implements Expression {
 		new FixedToken(this, ")");
 		if(statement) {
 			new FixedToken(this, ";");
-			this.id.addKeyListener(new Constants.DeleteListener(this));
+			this.id.addDeleteListener(() -> call.remove());
 		}
 		
 		if(f.length == 0)

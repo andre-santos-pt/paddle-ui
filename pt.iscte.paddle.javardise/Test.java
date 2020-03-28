@@ -1,6 +1,0 @@
-class Test {
-	int x;
-	
-}
-
-

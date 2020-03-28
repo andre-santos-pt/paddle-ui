@@ -1,10 +1,9 @@
 package pt.iscte.paddle.javardise;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
-import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
 
 import pt.iscte.paddle.javardise.UiMode.Syntax;
@@ -110,6 +109,14 @@ public enum Keyword implements CharSequence {
 			return METHOD_MODIFIERS;
 		else
 			return Arrays.asList(STATIC, ABSTRACT, FINAL);
+	}
+	
+	
+	public static List<Keyword> constructorModifiers() {
+		if(UiMode.hasSyntax(Syntax.ENCAPSULATION))
+			return ACCESS_MODIFIERS;
+		else
+			return Collections.emptyList();
 	}
 	
 	private static boolean isModifier(List<Keyword> list, String keyword) {

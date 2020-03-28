@@ -16,6 +16,7 @@ import pt.iscte.paddle.model.IConstantExpression;
 import pt.iscte.paddle.model.IExpression;
 import pt.iscte.paddle.model.ILiteral;
 import pt.iscte.paddle.model.IProcedureCall;
+import pt.iscte.paddle.model.IRecordFieldExpression;
 import pt.iscte.paddle.model.IReferenceType;
 import pt.iscte.paddle.model.IType;
 import pt.iscte.paddle.model.IUnaryExpression;
@@ -78,12 +79,13 @@ public interface Expression extends ICodeElement {
 			return p -> new AllocationExpression(p, t, f);
 		}
 		else if(e instanceof IArrayElement) {
-			IArrayElement a = (IArrayElement) e;
-			
-			return p -> new ComplexId(p, a);
+			return p -> new ComplexId(p, (IArrayElement) e);
 		}
 		else if(e instanceof IArrayLength) {
 			return p -> new ComplexId(p, (IArrayLength) e);
+		}
+		else if(e instanceof IRecordFieldExpression) {
+			return p -> new ComplexId(p, (IRecordFieldExpression) e);
 		}
 		else if(e instanceof IProcedureCall) {
 			IProcedureCall proc = (IProcedureCall) e;

@@ -30,13 +30,11 @@ public class IfElseWidget extends ControlWidget {
 				requestLayout();
 			}
 		});
-		
-		
 	}
 
 
 	private void createElseBlock(ISelection selection) {
-		elseBlock = new ControlWidget(this, Keyword.ELSE, null, selection.getAlternativeBlock());
+		elseBlock = new ControlWidget(this, Keyword.ELSE, selection.getAlternativeBlock());
 		elseBlock.keyword.getWidget().addKeyListener(new KeyAdapter() {
 			public void keyPressed(KeyEvent e) {
 				if(e.keyCode == Constants.DEL_KEY)

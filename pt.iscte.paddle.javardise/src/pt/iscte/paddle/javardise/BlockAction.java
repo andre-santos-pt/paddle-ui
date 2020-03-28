@@ -22,7 +22,7 @@ import pt.iscte.paddle.model.IType;
 import pt.iscte.paddle.model.IVariableDeclaration;
 import pt.iscte.paddle.model.IVariableExpression;
 
-abstract class BlockAction extends NewInsertWidget.Action {
+abstract class BlockAction extends InsertWidget.Action {
 
 	final IBlock block;
 	final Supplier<Boolean> enabled;

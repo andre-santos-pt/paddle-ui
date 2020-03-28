@@ -1,9 +1,9 @@
 package pt.iscte.paddle.javardise;
 
+import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
 
-import pt.iscte.paddle.javardise.Constants.DeleteListener;
 import pt.iscte.paddle.model.IExpression;
 import pt.iscte.paddle.model.IStatement;
 
@@ -11,21 +11,19 @@ public class InstructionWidget extends EditorWidget implements TextWidget {
 	private final Keyword keyword;
 	private final Token keywordToken;
 	private ExpressionWidget expressionWidget;
-	private DeleteListener deleteListener;
 	private FixedToken semiColon;
-
+	private KeyListener delListener;
+			
 	InstructionWidget(Composite parent, Keyword keyword, IStatement statement) {
 		this(parent, keyword, statement, null);
 	}
 
 	InstructionWidget(Composite parent, Keyword keyword, IStatement statement, IExpression expression) {
 		super(parent, statement);
-		
 		this.keyword = keyword;
 		setLayout(Constants.ROW_LAYOUT_H);
-		deleteListener = new Constants.DeleteListener(this);
 		keywordToken = new Token(this, keyword);
-		keywordToken.addKeyListener(deleteListener);
+		delListener = keywordToken.addDeleteListener(() -> statement.remove());
 		Constants.addInsertLine(keywordToken);
 
 		if(expression != null)
@@ -38,7 +36,7 @@ public class InstructionWidget extends EditorWidget implements TextWidget {
 		expressionWidget = new ExpressionWidget(this, Expression.match(expression), expression);
 		if(semiColon != null)
 			expressionWidget.moveAbove(semiColon.getControl());
-		expressionWidget.addKeyListener(deleteListener);
+		expressionWidget.addKeyListener(delListener);
 		expressionWidget.requestLayout();
 	}
 

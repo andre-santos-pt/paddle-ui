@@ -36,11 +36,11 @@ public interface Constants {
 
 	Color COLOR_FONT = Display.getDefault().getSystemColor(SWT.COLOR_BLACK);
 	Color COLOR_KEYWORD = Display.getDefault().getSystemColor(SWT.COLOR_DARK_MAGENTA);
-	Color COLOR_ERROR = Display.getDefault().getSystemColor(SWT.COLOR_RED);
+	Color COLOR_ERROR = new Color(Display.getDefault(), 200, 200, 200);
 	Color COLOR_BACKGROUND = Display.getDefault().getSystemColor(SWT.COLOR_WHITE);
 	Color COLOR_COMMENT = Display.getDefault().getSystemColor(SWT.COLOR_DARK_GREEN);
 	Color COLOR_LITERAL = Display.getDefault().getSystemColor(SWT.COLOR_BLUE);
-	Color COLOR_HIGHLIGHT = new Color(Display.getDefault(), 0, 200, 200);
+//	Color COLOR_HIGHLIGHT = new Color(Display.getDefault(), 0, 200, 200);
 
 
 	List<String> BINARY_OPERATORS = 		Arrays.asList("+", "-", "*", "/", "%", "==", "!=", "<", "<=", ">", ">=", "&&", "||", "^");
@@ -222,28 +222,6 @@ public interface Constants {
 
 	String EMPTY_EXPRESSION_SERIALIZE = "$EMPTY$";
 
-
-	class DeleteListener extends KeyAdapter { 
-		final EditorWidget target;
-
-		DeleteListener(EditorWidget target) {
-			this.target = target;
-		}
-
-		public void keyPressed(KeyEvent e) {
-			if(e.keyCode == Constants.DEL_KEY) {
-				if(e.widget.isDisposed())
-					return;
-				Composite p = ((Control) e.widget).getParent();
-				if(!(p instanceof TextWidget) || !((TextWidget)p).isModifiable() || ((TextWidget)p).isAtBeginning()) {
-					SequenceWidget parent = target.getOwnerSequence();
-					parent = target.getOwnerSequence();
-					int index = parent.findModelIndex(target);
-					parent.deleteAction(index);
-				}
-			}
-		}
-	};
 
 	static void moveCursorUp(TextWidget widget) {
 		Control statement = widget.getStatement();

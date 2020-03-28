@@ -52,9 +52,9 @@ public class SimpleExpressionWidget extends EditorWidget implements TextWidget, 
 		text = Constants.createText(this, string);
 		text.addVerifyListener(e -> e.doit = 
 				validCharacter(e.character) || 
-				e.character == '.' && text.getText().indexOf('.') == -1 || 
-				e.character == '-' && text.getText().indexOf('-') == -1 ||
-				e.character == SWT.BS);
+				e.character == '.' && text.getText().indexOf('.') == -1 && (text.getText().isEmpty() || Constants.isNumber(text.getText())) || 
+//				e.character == '-' && text.getText().indexOf('-') == -1 ||
+				e.character == Constants.DEL_KEY);
 
 		text.addFocusListener(new FocusAdapter() {
 			public void focusGained(FocusEvent e) {
@@ -112,7 +112,13 @@ public class SimpleExpressionWidget extends EditorWidget implements TextWidget, 
 				else if(e.character == '[' && Id.isValid(text.getText()) && text.getCaretPosition() == text.getText().length() && text.getSelectionCount() == 0) {
 					ComplexId id = new ComplexId((EditorWidget) getParent(), text.getText(), false);
 					id.addDimension();
-					id.focusLastDimension();
+					id.focusLastElement();
+					w = id;
+				}
+				else if(e.character == '.' && Id.isValid(text.getText()) && text.getCaretPosition() == text.getText().length() && text.getSelectionCount() == 0) {
+					ComplexId id = new ComplexId((EditorWidget) getParent(), text.getText(), false);
+					id.addField("field");
+					id.focusLastElement();
 					w = id;
 				}
 				else if(e.character == SWT.CR) {

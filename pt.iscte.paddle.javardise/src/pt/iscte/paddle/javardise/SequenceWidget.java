@@ -5,27 +5,18 @@ import static pt.iscte.paddle.javardise.Keyword.CONTINUE;
 import static pt.iscte.paddle.javardise.Keyword.RETURN;
 import static pt.iscte.paddle.javardise.Keyword.WHILE;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.MenuItem;
 
 import pt.iscte.paddle.javardise.service.ICodeElement;
 import pt.iscte.paddle.model.IArrayElementAssignment;
@@ -43,9 +34,7 @@ import pt.iscte.paddle.model.IVariableDeclaration;
 
 public class SequenceWidget extends Composite {
 
-	private final NewInsertWidget insertWidget;
-
-	private Consumer<Integer> deleteAction = index -> {};
+	private final InsertWidget insertWidget;
 
 	public SequenceWidget(Composite parent, int margin) {
 		this(parent, margin, 3, token -> false);
@@ -60,8 +49,8 @@ public class SequenceWidget extends Composite {
 		setBackground(Constants.COLOR_BACKGROUND);
 		setLayout(layout);
 
-		insertWidget = new NewInsertWidget(this, true, getParent() instanceof ClassWidget, tokenAccept);
-//		insertWidget.setHideMode();
+		insertWidget = new InsertWidget(this, true, getParent() instanceof ClassWidget, tokenAccept);
+		insertWidget.setHideMode();
 		addMouseListener(new MouseAdapter() {
 			public void mouseDown(MouseEvent e) {
 				insertWidget.setFocus();
@@ -106,19 +95,19 @@ public class SequenceWidget extends Composite {
 //		void run();
 //	}
 
-	void setDeleteAction(Consumer<Integer> action) {
-		deleteAction = action;
-	}
+//	void setDeleteAction(Consumer<Integer> action) {
+//		deleteAction = action;
+//	}
 
 	void insertLineAt(Control location) {
-		NewInsertWidget insert = insertWidget.copyTo(this);
+		InsertWidget insert = insertWidget.copyTo(this);
 		insert.moveAbove(location);
 		requestLayout();
 		insert.setFocus();
 	}
 	
 	void insertLineAfter(Control location) {
-		NewInsertWidget insert = insertWidget.copyTo(this);
+		InsertWidget insert = insertWidget.copyTo(this);
 		insert.moveBelow(location);
 		requestLayout();
 		insert.setFocus();
@@ -127,13 +116,10 @@ public class SequenceWidget extends Composite {
 	int findModelIndex(Control location) {
 		int i = 0;
 		for (Control c : getChildren()) {
-//			if(c instanceof Markable)
-//				c = ((Markable)c).target.getControl();
-
 			if (c == location)
 				return i;
 
-			if(!isElse(c) && !(c instanceof NewInsertWidget))
+			if(!isElse(c) && !(c instanceof InsertWidget))
 				i++;
 		}
 		assert false;
@@ -145,16 +131,13 @@ public class SequenceWidget extends Composite {
 		int elsesAndInserts = 0;
 		Control[] children = getChildren();
 		for(int i = 0; i <= modelIndex; i++)
-			if(isElse(children[i]) || children[i] instanceof NewInsertWidget)
+			if(isElse(children[i]) || children[i] instanceof InsertWidget)
 				elsesAndInserts++;
 		
 		return modelIndex + elsesAndInserts;
 	}
 
 	private static boolean isElse(Control c) {
-//		if(c instanceof Markable)
-//			c = ((Markable) c).target.getControl();
-		
 		return c instanceof ControlWidget && ((ControlWidget) c).is(Keyword.ELSE);
 	}
 
@@ -162,19 +145,19 @@ public class SequenceWidget extends Composite {
 		Control[] children = getChildren();
 		int elsesAndInserts = 0;
 		for (Control c : children)
-			if(isElse(c) || c instanceof NewInsertWidget)
+			if(isElse(c) || c instanceof InsertWidget)
 				elsesAndInserts++;
 
 		return children.length - elsesAndInserts;
 	}
 
 
-	public void addAction(NewInsertWidget.Action a) {
+	public void addAction(InsertWidget.Action a) {
 		insertWidget.addAction(a);
 	}
 
-	public void addActions(List<? extends NewInsertWidget.Action> actions) {
-		for(NewInsertWidget.Action a : actions)
+	public void addActions(List<? extends InsertWidget.Action> actions) {
+		for(InsertWidget.Action a : actions)
 			insertWidget.addAction(a);
 	}
 
@@ -185,19 +168,18 @@ public class SequenceWidget extends Composite {
 				addModelElement(element, index);
 			}
 
-			@Override
 			public void elementRemoved(IProgramElement element, int index) {
-				int i = toViewIndex(index);
-				Control[] children = getChildren();
-				Control c = children[i];
-				c.dispose();
-				if(i+1 < children.length && children[i+1] instanceof ControlWidget && ((ControlWidget) children[i+1]).is(Keyword.ELSE))
-					children[i+1].dispose();
-				requestLayout();
+				removeElement(element);
 			}
 		});
 	}
 
+	public <T extends EditorWidget> T addLineAndElement(Function<Composite, T> f) {
+		T e = addElement(f, totalElements());
+		insertLineAt(e);
+		return e;
+	}
+	
 	public <T extends EditorWidget> T addElement(Function<Composite, T> f) {
 		return addElement(f, totalElements());
 	}
@@ -217,7 +199,7 @@ public class SequenceWidget extends Composite {
 		int elsesAndInserts = 0;
 		Control[] children = getChildren();
 		for(int i = 0, m = 0; m <= modelIndex && i < children.length; i++)
-			if(isElse(children[i]) || children[i] instanceof NewInsertWidget)
+			if(isElse(children[i]) || children[i] instanceof InsertWidget)
 				elsesAndInserts++;
 			else
 				m++;
@@ -226,12 +208,12 @@ public class SequenceWidget extends Composite {
 		return v < children.length ? children[v] : insertWidget;
 	}
 
-	// TODO to remove
-	void delete(Predicate<Control> pred) {
+	void removeElement(IProgramElement e) {
 		Control[] children = getChildren();
 		for (int i = 0; i < children.length-1; i++) {
-			if (pred.test(children[i])) {
+			if (children[i] instanceof EditorWidget && ((EditorWidget) children[i]).element == e) {
 				children[i].dispose();
+				children[i+1].setFocus();
 				break;
 			}
 		}
@@ -251,7 +233,6 @@ public class SequenceWidget extends Composite {
 		else {
 			for (int i = 1; i < children.length; i++) {
 				if(children[i] == statement) {
-//					if(children[i-1] instanceof Markable && ((Markable<?>) children[i-1]).isSequenceContainer())
 					if(children[i-1] instanceof SequenceContainer)
 						((SequenceContainer) children[i-1]).getBody().focusLast();
 					else
@@ -264,8 +245,6 @@ public class SequenceWidget extends Composite {
 
 	void focusNextStatement(TextWidget widget) {
 		Control c = widget.getStatement();
-
-//		if(c instanceof Markable && ((Markable<?>) c).isSequenceContainer()) {
 		if(c instanceof SequenceContainer) {
 			((SequenceContainer) c).getBody().focusFirst();
 		}
@@ -311,11 +290,6 @@ public class SequenceWidget extends Composite {
 		return insertWidget.getTokens();
 	}
 
-	public void deleteAction(int index) {
-		System.out.println("delete " + index);
-		deleteAction.accept(index);
-		getChildren()[index].setFocus();
-	}
 
 	void addModelElement(IProgramElement element, int index) {
 		if (element instanceof IVariableDeclaration && Flag.FOR.isNot(element)) {

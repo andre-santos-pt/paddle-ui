@@ -1,6 +1,7 @@
 package pt.iscte.paddle.javardise;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.layout.RowData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
@@ -14,9 +15,6 @@ public class BinaryExpressionWidget extends EditorWidget implements Expression {
 	private Expression left;
 	private Expression right;
 	private Token op;
-	private boolean brackets;
-	
-	private RowData data = new RowData();
 	
 	public BinaryExpressionWidget(Composite parent, String operator) {
 		this(parent, 
@@ -34,42 +32,27 @@ public class BinaryExpressionWidget extends EditorWidget implements Expression {
 	
 	public BinaryExpressionWidget(Composite parent, Expression.Creator left, Expression.Creator right, String operator) {
 		super(parent);
-		brackets = false;
 		setLayout(Constants.ROW_LAYOUT_H_ZERO);
-		data.exclude = !brackets;
-		
-		FixedToken lBracket = new FixedToken(this, "(");
-		lBracket.setLayoutData(data);
 	
 		this.left = new ExpressionWidget(this, left, null);
 		this.op = new Token(this, operator, Constants.ARITHMETIC_OPERATORS, Constants.RELATIONAL_OPERATORS, Constants.LOGICAL_OPERATORS);
 		this.right = new ExpressionWidget(this, right, null);
 		
-		Token rBracket = new Token(this, ")");
-		rBracket.setLayoutData(data);
+		
+		KeyListener delListener = op.addDeleteListener(() -> {
+			Expression e = this.left.copyTo(getParent());
+			((Expression) getParent()).substitute(this, e);
+			e.setFocus();
+		});
+		this.right.addKeyListener(delListener);
 		
 		Menu menu = op.getMenu();
 		new MenuItem(menu, SWT.SEPARATOR);
-		
-//		MenuItem brack = new MenuItem(menu, SWT.NONE);
-//		brack.setText("( ... )");
-//		brack.setAccelerator('(');
-//		brack.addSelectionListener(new SelectionAdapter() {
-//			public void widgetSelected(SelectionEvent e) {
-//				data.exclude = brackets;
-//				brackets = !brackets;
-//				lBracket.setVisible(brackets);
-//				rBracket.setVisible(brackets);
-//				BinaryExpressionWidget.this.requestLayout();
-//			}
-//		});
-		
 	}
 	
 	@Override
 	public boolean setFocus() {
-		left.setFocus();
-		return true;
+		return left.setFocus();
 	}
 
 	public void focusRight() {
@@ -78,13 +61,11 @@ public class BinaryExpressionWidget extends EditorWidget implements Expression {
 
 	@Override
 	public void toCode(StringBuffer buffer) {
-		if(brackets) buffer.append('(');
 		left.toCode(buffer);
 		buffer.append(' ');
 		op.toCode(buffer);
 		buffer.append(' ');
 		right.toCode(buffer);
-		if(brackets) buffer.append(')');
 	}
 
 	@Override
@@ -92,17 +73,13 @@ public class BinaryExpressionWidget extends EditorWidget implements Expression {
 		// TODO match operator
 		return IBinaryExpression.create(IBinaryOperator.ADD, left.toModel(), right.toModel());
 	}
+
+	@Override
+	public void setData(Object data) {
+		left.setData(data);
+		right.setData(data);
+	}
 	
-//	private void deleteOperator() {
-//		ExpressionWidget parent = (ExpressionWidget) getParent();
-//		if(left.expression instanceof SimpleExpressionWidget)
-//			parent.expression = new SimpleExpressionWidget(parent, left.expression.toString(), false); // TODO propagate
-//		else if(left.expression instanceof BinaryExpressionWidget)
-//			parent.expression = new BinaryExpressionWidget(parent, ((BinaryExpressionWidget) left.expression).op.toString());
-//		dispose();
-//		parent.expression.requestLayout();
-//		parent.expression.setFocus();
-//	}
 
 	@Override
 	public Expression copyTo(Composite parent) {
