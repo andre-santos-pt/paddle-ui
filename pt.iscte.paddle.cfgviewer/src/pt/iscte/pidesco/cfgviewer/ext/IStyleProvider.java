@@ -12,7 +12,7 @@ public interface IStyleProvider {
 	
 	/**
 	 * 
-	 * @param Node Node to be colored
+	 * @param node Node to be colored
 	 * @return Returns the color to be used as the given node's background
 	 */
 	default Color getNodeColor(INode node) {
@@ -21,11 +21,29 @@ public interface IStyleProvider {
 	
 	/**
 	 * 
-	 * @param Node Node to be colored
+	 * @param node Node to be colored
+	 * @return Returns the color to be used as the given node's background when highlighted
+	 */
+	default Color getHighlightedNodeColor(INode node) {
+		return new Color(null, 192, 192, 170);
+	}
+	
+	/**
+	 * 
+	 * @param node Node to be colored
 	 * @return	Returns the color to be used as the given node's border color
 	 */
 	default Color getNodeBorderColor(INode node) {
 		return ColorConstants.black;
+	}
+	
+	/**
+	 * 
+	 * @param node Node to be colored
+	 * @return Returns the color to be used as the given node's border color when highlighted
+	 */
+	default Color getHighlightedNodeBorderColor(INode node) {
+		return ColorConstants.darkBlue;
 	}
 	
 	/**
@@ -94,7 +112,7 @@ public interface IStyleProvider {
 	 * 
 	 * @param source Node where the connection starts
 	 * @param destination Node where the connection ends
-	 * @return Returns the color when the connection the two nodes is highlighted
+	 * @return Returns the color when the connection between two nodes is highlighted
 	 */
 	default Color getHighlightColor(INode source, INode destination) {
 		return ColorConstants.blue;

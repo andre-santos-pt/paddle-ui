@@ -1,9 +1,12 @@
 package pt.iscte.pidesco.cfgviewer.ext;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.draw2d.IFigure;
+import org.eclipse.draw2d.LineBorder;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.LabelProvider;
@@ -34,6 +37,8 @@ public class CFGViewer extends Composite {
 	private GraphViewer gv;
 	private IStyleProvider ics;
 	
+	private Map<INode, CFGFigure> figures = new HashMap<>();
+	
 	public CFGViewer(Composite viewArea) {
 		this(viewArea, new StyleProvider());
 	}
@@ -48,12 +53,32 @@ public class CFGViewer extends Composite {
 		gv.setLabelProvider(new GraphLabelContentProvider());
 		gv.addSelectionChangedListener(new ISelectionChangedListener() {
 			
+			private Map<INode, CFGFigure> highlights = new HashMap<>();		//Currently highlighted nodes
+			
 			@Override
 			public void selectionChanged(SelectionChangedEvent event) {
-				// TODO propagate
-				// TODO highlight nodes
-				System.out.println(event.getStructuredSelection().getFirstElement());
-			}
+				if(!highlights.isEmpty()) {
+					highlights.forEach((node, figure) -> {					//Reset colors from previous highlights 
+						figure.setBackgroundColor(ics.getNodeColor(node));
+						LineBorder border = (LineBorder) figure.getBorder();
+						border.setColor(ics.getNodeBorderColor(node));
+					});
+					highlights.clear();
+				}
+				
+				for(Object obj : event.getStructuredSelection().toList()) {	//List of nodes to highlight
+					if(!(obj instanceof INode)) continue;					//Only nodes require highlight
+					INode node = (INode) obj;
+					CFGFigure figure = figures.get(node);
+					if(figure != null) {									//Entry and Exit Nodes are null
+						figure.setBackgroundColor(ics.getHighlightedNodeColor(node));
+						LineBorder border = (LineBorder) figure.getBorder();
+						border.setColor(ics.getHighlightedNodeBorderColor(node));
+						highlights.put(node, figure);
+					}
+				}
+			}		
+			
 		});
 				
 		gv.setLayoutAlgorithm(new CFGLayout(LayoutStyles.NO_LAYOUT_NODE_RESIZING));
@@ -118,10 +143,14 @@ public class CFGViewer extends Composite {
 		public IFigure getFigure(Object element) {
 			if (element instanceof IStatementNode) {
 				IStatementNode node = (IStatementNode) element;
-				return new CFGFigure(node.getElement().toString(), ics.getNodeColor(node), ics.getNodeBorderColor(node), ics.getNodeTextColor());
+				CFGFigure figure = new CFGFigure(node.getElement().toString(), ics.getNodeColor(node), ics.getNodeBorderColor(node), ics.getNodeTextColor());
+				figures.put(node, figure);
+				return figure;
 			} else if (element instanceof IBranchNode) {
 				IBranchNode node = (IBranchNode) element;
-				return new CFGBranchFigure(node.getElement().toString(), ics.getNodeColor(node), ics.getNodeBorderColor(node), ics.getNodeTextColor());
+				CFGBranchFigure figure = new CFGBranchFigure(node.getElement().toString(), ics.getNodeColor(node), ics.getNodeBorderColor(node), ics.getNodeTextColor());
+				figures.put(node, figure);
+				return figure;
 			} else {
 				INode node = (INode) element;
 				if(node.isEntry()) 
@@ -142,5 +171,5 @@ public class CFGViewer extends Composite {
 		}
 	}
 	
-	private static class StyleProvider implements IStyleProvider {}
+	private static class StyleProvider implements IStyleProvider {}		//Empty class to use IStyleProvider default values
 }
