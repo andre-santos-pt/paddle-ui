@@ -57,6 +57,8 @@ public class CFGViewer extends Composite {
 			
 			@Override
 			public void selectionChanged(SelectionChangedEvent event) {
+				System.out.println(event.getStructuredSelection().getFirstElement());
+				
 				if(!highlights.isEmpty()) {
 					highlights.forEach((node, figure) -> {					//Reset colors from previous highlights 
 						figure.setBackgroundColor(ics.getNodeColor(node));
@@ -77,10 +79,9 @@ public class CFGViewer extends Composite {
 						highlights.put(node, figure);
 					}
 				}
-			}		
-			
+			}	
 		});
-				
+		
 		gv.setLayoutAlgorithm(new CFGLayout(LayoutStyles.NO_LAYOUT_NODE_RESIZING));
 		gv.applyLayout();
 	}
@@ -88,6 +89,18 @@ public class CFGViewer extends Composite {
 	public void setInput(IControlFlowGraph icfg) {
 		gv.setInput(icfg.getNodes());
 	}
+	
+	//TODO Completar
+//	public void selectNodes(Iterable<INode> it) {
+////		System.out.println(it);
+//		System.out.println(gv.findGraphItem(it.iterator().next()));
+//		
+////		List<GraphItem> nodes = new ArrayList<>();
+////		it.forEach(node -> nodes.add(gv.findGraphItem(node)));
+//		StructuredSelection selection = new StructuredSelection(it);
+////		gv.setSelection(selection, true);											//Não ativa o selectionChangedListener?
+//		gv.getGraphControl().setSelection(new GraphItem[] {gv.findGraphItem(it.iterator().next())});
+//	}
 	
 	private class GraphNodeContentProvider extends ArrayContentProvider implements IGraphEntityContentProvider {
 
@@ -157,7 +170,6 @@ public class CFGViewer extends Composite {
 					return new CFGExitFigure(ics.getStartNodeColor());
 				else 
 					return new CFGExitFigure(ics.getEndNodeColor());
-				
 			}
 		}
 		
