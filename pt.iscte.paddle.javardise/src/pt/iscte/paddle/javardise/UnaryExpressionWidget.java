@@ -1,6 +1,7 @@
 package pt.iscte.paddle.javardise;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
@@ -16,16 +17,23 @@ public class UnaryExpressionWidget extends EditorWidget implements Expression {
 	private Expression expression;
 
 	public UnaryExpressionWidget(Composite parent, String operator, Expression.Creator f) {
-		super(parent);
+		this(parent, null);
+	}
+
+	public UnaryExpressionWidget(Composite parent, IUnaryExpression ue) {
+		super(parent, ue);
 		setLayout(Constants.ROW_LAYOUT_H_ZERO);
-		op = new Token(this, operator, Constants.UNARY_OPERATORS);
-		op.addDeleteListener(() -> {
+		op = new Token(this, ue.getOperator().getSymbol(), Constants.UNARY_OPERATORS);
+		KeyListener delListener = op.addDeleteListener(() -> {
 			Expression e = this.expression.copyTo(getParent());
 			((Expression) getParent()).substitute(this, e);
 			e.setFocus();
 		});
-		this.expression = f.apply(this);
-
+		this.expression = Expression.match(ue.getOperand()).apply(this);
+		
+		// TODO
+		//this.expression.addKeyListener(delListener);
+		
 		Menu menu = op.getMenu();
 		new MenuItem(menu, SWT.SEPARATOR);
 		MenuItem simple = new MenuItem(menu, SWT.NONE);
@@ -36,7 +44,7 @@ public class UnaryExpressionWidget extends EditorWidget implements Expression {
 			}
 		});
 	}
-
+	
 	@Override
 	public void toCode(StringBuffer buffer) {
 		buffer.append(op);

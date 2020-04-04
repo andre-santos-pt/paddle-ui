@@ -15,41 +15,57 @@ public class BinaryExpressionWidget extends EditorWidget implements Expression {
 	private Expression left;
 	private Expression right;
 	private Token op;
-	
-	public BinaryExpressionWidget(Composite parent, String operator) {
-		this(parent, 
-				e -> new SimpleExpressionWidget(e, "left"),
-				e -> new SimpleExpressionWidget(e, "right"),
-				operator);
-	}
-	
+
+	//	public BinaryExpressionWidget(Composite parent, String operator) {
+	//		this(parent, 
+	//				e -> new SimpleExpressionWidget(e, "left"),
+	//				e -> new SimpleExpressionWidget(e, "right"),
+	//				operator);
+	//	}
+
 	public BinaryExpressionWidget(Composite parent, Expression.Creator left, String operator) {
 		this(parent, 
 				left,
 				e -> new SimpleExpressionWidget(e, ""),
 				operator);
 	}
-	
-	public BinaryExpressionWidget(Composite parent, Expression.Creator left, Expression.Creator right, String operator) {
+
+	private BinaryExpressionWidget(Composite parent, Expression.Creator left, Expression.Creator right, String operator) {
 		super(parent);
-		setLayout(Constants.ROW_LAYOUT_H_ZERO);
-	
+
 		this.left = new ExpressionWidget(this, left, null);
 		this.op = new Token(this, operator, Constants.ARITHMETIC_OPERATORS, Constants.RELATIONAL_OPERATORS, Constants.LOGICAL_OPERATORS);
 		this.right = new ExpressionWidget(this, right, null);
-		
-		
+
+
+		setup();
+	}
+
+	public BinaryExpressionWidget(Composite parent, IBinaryExpression e) {
+		super(parent, e);
+
+		this.left = new ExpressionWidget(this, Expression.match(e.getLeftOperand()), null);
+		this.op = new Token(this, e.getOperator().getSymbol(), Constants.ARITHMETIC_OPERATORS, Constants.RELATIONAL_OPERATORS, Constants.LOGICAL_OPERATORS);
+		this.right = new ExpressionWidget(this, Expression.match(e.getRightOperand()), null);
+
+		setup();
+	}
+
+	private void setup() {
+		setLayout(Constants.ROW_LAYOUT_H_ZERO);
 		KeyListener delListener = op.addDeleteListener(() -> {
 			Expression e = this.left.copyTo(getParent());
 			((Expression) getParent()).substitute(this, e);
 			e.setFocus();
 		});
 		this.right.addKeyListener(delListener);
-		
+
 		Menu menu = op.getMenu();
 		new MenuItem(menu, SWT.SEPARATOR);
 	}
-	
+
+
+
 	@Override
 	public boolean setFocus() {
 		return left.setFocus();
@@ -71,7 +87,7 @@ public class BinaryExpressionWidget extends EditorWidget implements Expression {
 	@Override
 	public IExpression toModel() {
 		// TODO match operator
-		return IBinaryExpression.create(IBinaryOperator.ADD, left.toModel(), right.toModel());
+		return IBinaryOperator.ADD.on(left.toModel(), right.toModel());
 	}
 
 	@Override
@@ -79,7 +95,7 @@ public class BinaryExpressionWidget extends EditorWidget implements Expression {
 		left.setData(data);
 		right.setData(data);
 	}
-	
+
 
 	@Override
 	public Expression copyTo(Composite parent) {

@@ -63,11 +63,11 @@ public interface Expression extends ICodeElement {
 		}
 		else if(e instanceof IUnaryExpression) {
 			IUnaryExpression u = (IUnaryExpression) e;
-			return p -> new UnaryExpressionWidget(p, u.getOperator().getSymbol(), match(u.getOperand()));
+			return p -> new UnaryExpressionWidget(p, u);
 		}
 		else if(e instanceof IBinaryExpression) {
 			IBinaryExpression be = (IBinaryExpression) e;
-			return p -> new BinaryExpressionWidget(p, match(be.getLeftOperand()), match(be.getRightOperand()), be.getOperator().getSymbol());
+			return p -> new BinaryExpressionWidget(p, be);
 		}
 		else if(e instanceof IArrayAllocation) {
 			IType type = ((IArrayAllocation) e).getType();
