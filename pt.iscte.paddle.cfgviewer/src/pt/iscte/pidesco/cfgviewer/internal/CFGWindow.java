@@ -61,7 +61,7 @@ public class CFGWindow {
 		IVariableAssignment iInc = loop.addIncrement(i);
 		IReturn ret = body.addReturn(m);
 		
-		IControlFlowGraph cfg = max.getCFG();
+		IControlFlowGraph cfg = max.generateCFG();
 		
 		new CFGWindow(cfg);
 	}
