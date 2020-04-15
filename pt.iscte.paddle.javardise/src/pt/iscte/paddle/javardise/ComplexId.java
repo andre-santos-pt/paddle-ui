@@ -24,6 +24,7 @@ import pt.iscte.paddle.model.IArrayLength;
 import pt.iscte.paddle.model.IArrayType;
 import pt.iscte.paddle.model.IExpression;
 import pt.iscte.paddle.model.IProcedureCall;
+import pt.iscte.paddle.model.IProgramElement;
 import pt.iscte.paddle.model.IRecordFieldExpression;
 import pt.iscte.paddle.model.IReferenceType;
 import pt.iscte.paddle.model.IType;
@@ -31,10 +32,10 @@ import pt.iscte.paddle.model.IVariableExpression;
 
 public class ComplexId extends EditorWidget implements TextWidget, Expression {
 
-	private final Text text;
-	private final boolean type;
-	private final List<CodeElementControl> elements;
-	private final VerifyListener verifyListener;
+	private Text text;
+	private boolean type;
+	private List<CodeElementControl> elements;
+	private VerifyListener verifyListener;
 
 	private Supplier<Boolean> allowEmpty = () -> false;
 
@@ -42,7 +43,7 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 		ComplexId id = null;
 		if(t.isReference())
 			t = ((IReferenceType) t).getTarget();
-		
+
 		if(t instanceof IArrayType) {
 			IArrayType at = (IArrayType) t;
 			id = new ComplexId(parent, at.getRootComponentType().getId(), true);
@@ -56,33 +57,45 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 
 	// TODO fix for expression resolve
 	ComplexId(Composite parent, IArrayElement e) {
-		this(parent, Constants.variableId(((IVariableExpression) e.getTarget()).getVariable()), false);
+		this(parent, e, Constants.variableId(((IVariableExpression) e.getTarget()).getVariable()));
 		for(IExpression exp : e.getIndexes())
 			new Dimension(this, Expression.match(exp));
 	}
 
 	// TODO fix for expression resolve
 	ComplexId(Composite p, IArrayLength e) {
-		this(p, ((IVariableExpression) e.getTarget()).getVariable().getId(), false);
+		this(p, e, ((IVariableExpression) e.getTarget()).getVariable().getId());
 		addField("length");
 	}
 
-	
+
 	// TODO fix for expression resolve
-		ComplexId(Composite p, IRecordFieldExpression e) {
-			this(p, ((IVariableExpression) e.getTarget()).getVariable().getId(), false);
-			addField(e.getField().getId());
-		}
-		
+	ComplexId(Composite p, IRecordFieldExpression e) {
+		this(p, ((IVariableExpression) e.getTarget()).getVariable().getId(), false);
+		addField(e.getField().getId());
+	}
+
 	ComplexId(Composite p, IProcedureCall c) {
 		this(p, c.getId() != null ? c.getId() : 
 			c.getProcedure() != null ? c.getProcedure().getId() : 
 				"procedure", false);
 	}
 
+	
+	
 	ComplexId(Composite parent, String id, boolean type) {
 		super(parent);
 		this.type = type;
+		init(id);
+	}
+
+	ComplexId(Composite parent, IProgramElement e, String id) {
+		super(parent, e);
+		this.type = false;
+		init(id);
+	}
+	
+	private void init(String id) {
 		this.elements = new ArrayList<>();
 		setLayout(Constants.ROW_LAYOUT_H_SHRINK);
 		text = Constants.createText(this, id);
@@ -111,7 +124,7 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 		Constants.addInsertLine(this);
 		setBackgroundColor();
 	}
-
+	
 	private void setBackgroundColor() {
 		for(Control c : getChildren()) {
 			if(isComment()) {
@@ -189,7 +202,9 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 	};
 
 	void addField(String id) {
-		Field field = new Field(ComplexId.this, id);
+		//		ComplexId cid = new ComplexId(this, id, false);
+		//		cid.setFocus();
+		Field2 field = new Field2(ComplexId.this, id);
 		field.setFocus();
 		requestLayout();
 	}
@@ -213,10 +228,10 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 		void dispose();
 		boolean setFocus();
 	}
-	
+
 	private class EmptyDimension implements CodeElementControl {
 		Token token;
-		
+
 		public EmptyDimension(Composite parent) {
 			elements.add(this);
 			token = new Token(parent, "[]");
@@ -247,12 +262,12 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 		public boolean setFocus() {
 			return token.setFocus();
 		}
-		
+
 		@Override
 		public void toCode(StringBuffer buffer) {
 			token.toCode(buffer);
 		}
-		
+
 	}
 
 	private class Dimension implements CodeElementControl {
@@ -313,6 +328,58 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 		}
 	}
 
+	private class Field2 implements CodeElementControl {
+		FixedToken dot;
+		ComplexId field;
+		public Field2(Composite parent, String id) {
+			elements.add(this);
+			dot = new FixedToken(parent, ".");
+			field = new ComplexId(parent, id, false);
+			//			field.addKeyListener(insertListener);
+			field.addKeyListener(new KeyAdapter() {
+				public void keyPressed(KeyEvent e) {
+					if(e.character == Constants.DEL_KEY && field.getCaretPosition() == 0) {
+						elements.remove(Field2.this);
+						dispose();
+						ComplexId.this.requestLayout();
+						ComplexId.this.focusLastElement();
+					}
+					//					else {
+					//						Event ev = new Event();
+					//						ev.type = SWT.KeyDown;
+					//						ev.character = e.character;
+					//						ev.keyCode = e.keyCode;
+					//						text.notifyListeners(SWT.KeyDown, ev);
+					//					}
+				}
+			});
+		}
+
+		public boolean setFocus() {
+			return field.setFocus();
+		}
+
+		public void toCode(StringBuffer buffer) {
+			buffer.append('.');
+			field.toCode(buffer);
+			//			if(field.getText().isBlank())
+			//				buffer.append(Constants.EMPTY_EXPRESSION_SERIALIZE);
+			//			else
+			//				buffer.append(field.getText());
+		}
+
+		@Override
+		public void dispose() {
+			dot.dispose();
+			field.dispose();
+		}
+
+		@Override
+		public Control getControl() {
+			return field;
+		}
+	}
+
 	private class Field implements CodeElementControl {
 		FixedToken dot;
 		Text field;
@@ -335,7 +402,7 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 						ComplexId.this.focusLastElement();
 					}
 					else if(e.character == '.') {
-						
+
 					}
 					else {
 						Event ev = new Event();
