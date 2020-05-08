@@ -17,23 +17,20 @@ import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Link;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
-
 import pt.iscte.paddle.model.IProgramElement;
 
 public class HyperlinkedText {
 
 	private StringBuffer buffer;
 	private Map<Integer, Runnable> actionMap;
-	private Multimap<Integer, IProgramElement> elementMap;
+	private MultiMapList<Integer, IProgramElement> elementMap;
 	private int linkCount;
 	private Consumer<Iterable<IProgramElement>> consumer;
 
 	public HyperlinkedText(Consumer<Iterable<IProgramElement>> consumer) {
 		buffer = new StringBuffer();
 		actionMap = new HashMap<>();
-		elementMap = ArrayListMultimap.create();
+		elementMap = new MultiMapList<>();
 		linkCount = 0;
 		this.consumer = consumer;
 	}

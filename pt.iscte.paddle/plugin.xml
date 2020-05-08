@@ -4,6 +4,7 @@
 
    <extension
          id="application"
+         name="Paddle"
          point="org.eclipse.core.runtime.applications">
       <application
             icon="icons/eclipse32.png">
@@ -25,10 +26,10 @@
          point="org.eclipse.core.runtime.products">
       <product
             application="pt.iscte.paddle.application"
-            name="PADDLE IDE">
+            name="PAD">
          <property
                name="appName"
-               value="PADDLE IDE">
+               value="PAD">
          </property>
       </product>
    </extension>

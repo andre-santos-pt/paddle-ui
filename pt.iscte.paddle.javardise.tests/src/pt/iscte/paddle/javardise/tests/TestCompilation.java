@@ -11,6 +11,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
+import java.util.ServiceLoader;
 
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
@@ -23,10 +25,10 @@ import javax.tools.ToolProvider;
 import org.eclipse.swt.widgets.Shell;
 import org.junit.Test;
 
-import pt.iscte.paddle.javardise.parser.JavaParser;
 import pt.iscte.paddle.javardise.service.IClassWidget;
 import pt.iscte.paddle.javardise.service.IJavardiseService;
 import pt.iscte.paddle.model.IModule;
+import pt.iscte.paddle.model.java.JavaParser;
 import pt.iscte.paddle.model.tests.BaseTest;
 import pt.iscte.paddle.model.tests.TestArrayCount;
 import pt.iscte.paddle.model.tests.TestArrayFind;
@@ -75,7 +77,15 @@ public class TestCompilation {
 			test.setupProcedures();
 			IModule mod = test.getModule();
 			Shell shell = new Shell();
-			IClassWidget w = IJavardiseService.createClassWidget(shell, mod);
+			
+			ServiceLoader<IJavardiseService> service = ServiceLoader.load(IJavardiseService.class);
+			Optional<IJavardiseService> serv = service.findFirst();
+			if(!serv.isPresent())
+				System.err.println("could not access Javardise service");
+			
+			IJavardiseService javarService = serv.get();
+			
+			IClassWidget w = javarService.createClassWidget(shell, mod);
 			boolean compile = compile(mod.getId(), w.getCode());
 				
 			assertTrue("Errors on " + mod.getId(), compile);

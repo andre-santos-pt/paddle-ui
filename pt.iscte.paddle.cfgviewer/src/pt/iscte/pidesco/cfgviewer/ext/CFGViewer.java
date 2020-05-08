@@ -43,6 +43,7 @@ public class CFGViewer extends Composite {
 		this(viewArea, new StyleProvider());
 	}
 	
+	
 	public CFGViewer(Composite viewArea, IStyleProvider ics) {
 		super(viewArea, SWT.NONE);
 		setLayout(new FillLayout());

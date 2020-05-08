@@ -3,16 +3,14 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Java Syntax-Directed Editor
 Bundle-SymbolicName: pt.iscte.paddle.javardise;singleton:=true
 Bundle-Version: 0.4
-Automatic-Module-Name: SDEditor
+Automatic-Module-Name: pt.iscte.paddle.javardise
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Require-Bundle: org.eclipse.swt;bundle-version="3.111.0";visibility:=reexport,
  org.eclipse.core.runtime;bundle-version="3.15.300",
- org.eclipse.ui;bundle-version="3.113.0",
  org.eclipse.jface.text,
- org.eclipse.ui.editors,
  pt.iscte.paddle.model;bundle-version="0.4.0",
  org.eclipse.jdt.core;bundle-version="3.18.0",
- org.eclipse.core.resources;bundle-version="3.13.400"
-Export-Package: pt.iscte.paddle.javardise.parser,
- pt.iscte.paddle.javardise.service,
+ pt.iscte.paddle.javardise,
+ org.eclipse.ui;bundle-version="3.113.0"
+Export-Package: pt.iscte.paddle.javardise.service,
  pt.iscte.paddle.javardise.util

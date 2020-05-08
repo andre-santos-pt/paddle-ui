@@ -46,9 +46,9 @@ import pt.iscte.paddle.javardise.InsertWidget;
 import pt.iscte.paddle.javardise.SequenceWidget;
 import pt.iscte.paddle.javardise.UiMode;
 import pt.iscte.paddle.javardise.UiMode.Syntax;
-import pt.iscte.paddle.javardise.parser.JavaParser;
 import pt.iscte.paddle.model.IModule;
 import pt.iscte.paddle.model.commands.ICommand;
+import pt.iscte.paddle.model.java.JavaParser;
 
 public class StandaloneEditor {
 	private IModule module;

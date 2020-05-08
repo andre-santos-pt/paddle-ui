@@ -9,5 +9,7 @@ public interface IClassWidget extends IWidget, ICodeElement {
 	IMethodWidget getProcedure(IProcedure procedure);
 
 	void toCode(StringBuffer buffer);
+	
+	
 
 }

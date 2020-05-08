@@ -4,14 +4,8 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.editors.text.TextEditor;
 
 import pt.iscte.paddle.interpreter.ExecutionError;
-import pt.iscte.paddle.interpreter.IExecutable;
-import pt.iscte.paddle.javali.translator.ElementLocation;
-import pt.iscte.paddle.javali.translator.ISourceLocation;
-import pt.iscte.paddle.model.IProgramElement;
 
 public class StepInAction extends Action {
 	RunAction runAction;
@@ -34,11 +28,11 @@ public class StepInAction extends Action {
 					MessageDialog.open(MessageDialog.INFORMATION, Display.getDefault().getActiveShell(), "Result", runAction.state.getExecutionData().getReturnValue().toString(), SWT.NONE);
 				}
 				else {
-					ISourceLocation loc = (ISourceLocation) runAction.state.getInstructionPointer().getProperty(ElementLocation.Part.WHOLE);
-					if(loc != null) {
-						TextEditor editor = (TextEditor) PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor();
-						editor.selectAndReveal(loc.getStartChar(), loc.getOffset());
-					}
+//					ISourceLocation loc = (ISourceLocation) runAction.state.getInstructionPointer().getProperty(ElementLocation.Part.WHOLE);
+//					if(loc != null) {
+//						TextEditor editor = (TextEditor) PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor();
+//						editor.selectAndReveal(loc.getStartChar(), loc.getOffset());
+//					}
 					System.out.println(runAction.state);
 				}
 				

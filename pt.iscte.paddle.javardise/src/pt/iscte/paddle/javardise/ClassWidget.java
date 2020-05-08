@@ -24,7 +24,6 @@ import pt.iscte.paddle.model.IProcedure;
 import pt.iscte.paddle.model.IRecordType;
 import pt.iscte.paddle.model.IType;
 import pt.iscte.paddle.model.IVariableDeclaration;
-import pt.iscte.paddle.model.IRecordType.IListener;
 
 public class ClassWidget extends ModiferWidget implements SequenceContainer, IClassWidget {
 

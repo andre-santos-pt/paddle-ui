@@ -2,6 +2,8 @@ package pt.iscte.paddle.javardise.tests;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.ServiceLoader;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -52,7 +54,14 @@ public class DebuggerTest {
 		layout.verticalSpacing = 20;
 		shell.setLayout(layout);
 
-		IClassWidget widget = IJavardiseService.createClassWidget(shell, module);
+		ServiceLoader<IJavardiseService> service = ServiceLoader.load(IJavardiseService.class);
+		Optional<IJavardiseService> serv = service.findFirst();
+		if(!serv.isPresent())
+			System.err.println("could not access Javardise service");
+		
+		IJavardiseService javarService = serv.get();
+		
+		IClassWidget widget = javarService.createClassWidget(shell, module);
 		widget.setReadOnly(true);
 
 		Map<IVariableDeclaration, ICodeDecoration<Text>> decMap = new HashMap<>();
@@ -91,7 +100,7 @@ public class DebuggerTest {
 		run.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
 				for (IVariableDeclaration var : proc.getVariables()) {
-					IWidget w = IJavardiseService.getWidget(var);
+					IWidget w = javarService.getWidget(var);
 					ICodeDecoration d = w.addNote("?", ICodeDecoration.Location.RIGHT);
 					if(d != null) {
 						d.show();
@@ -116,7 +125,7 @@ public class DebuggerTest {
 					System.out.println(ip);
 					if(m != null)
 						m.delete();
-					IWidget w = IJavardiseService.getWidget(ip);
+					IWidget w = javarService.getWidget(ip);
 					m = w.addMark(blue);
 					if(m != null)
 						m.show();

@@ -3,6 +3,8 @@ package pt.iscte.paddle.javardise.tests;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
+import java.util.ServiceLoader;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -10,7 +12,6 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Canvas;
@@ -39,13 +40,12 @@ import pt.iscte.paddle.model.IReturn;
 import pt.iscte.paddle.model.IType;
 import pt.iscte.paddle.model.IVariableAssignment;
 import pt.iscte.paddle.model.IVariableDeclaration;
-import pt.iscte.paddle.model.tests.TestInvert;
 import pt.iscte.paddle.model.tests.TestNaturals;
-import pt.iscte.pidesco.cfgviewer.ext.CFGViewer;
 
 public class DemoCodeDecorations {
 
 	private static Shell shell;
+	private static IJavardiseService javarService;
 
 	public static void main(String[] args) {
 
@@ -72,19 +72,34 @@ public class DemoCodeDecorations {
 		Composite codeAndCFG = new Composite(shell, SWT.NONE);
 		codeAndCFG.setLayout(new GridLayout(2, true));
 		
-		IClassWidget widget = IJavardiseService.createClassWidget(codeAndCFG, module);
+		ServiceLoader<IJavardiseService> service = ServiceLoader.load(IJavardiseService.class);
+		Optional<IJavardiseService> serv = service.findFirst();
+		if(!serv.isPresent())
+			System.err.println("could not access Javardise service");
+		
+		javarService = serv.get();
+		
+		IClassWidget widget = javarService.createClassWidget(codeAndCFG, module);
 		widget.setReadOnly(true);
 
-		CFGViewer cfg = new CFGViewer(codeAndCFG);
-		cfg.setInput(proc.getCFG().getNodes());
-		cfg.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+//		CFGViewer cfg = new CFGViewer(codeAndCFG);
+//		cfg.setInput(proc.getCFG());
+//		cfg.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		
+		IWidget widget2 = javarService.getWidget(main);
+		ICodeDecoration<Text> dec = widget2.addDecoration((parent, control) -> {
+			Text text = new Text(parent, SWT.BORDER);
+			text.setText("???");
+			return text;
+		}, ICodeDecoration.Location.RIGHT);
+		dec.show();
 		
 		createMarksGroup(proc, display, widget);
 		createOtherGroup(proc, display);
 
 		Color blue = Display.getDefault().getSystemColor(SWT.COLOR_BLUE);
 
-		Link text = new HyperlinkedText(e -> e.forEach(e2 -> IJavardiseService.getWidget(e2).addMark(blue).show()))
+		Link text = new HyperlinkedText(e -> e.forEach(e2 -> javarService.getWidget(e2).addMark(blue).show()))
 				.line("hi")
 				.newline()
 				.words("some words ").link("and some multi-link to mark variables", proc.getVariables())
@@ -169,7 +184,7 @@ public class DemoCodeDecorations {
 				if(decAssignments.isEmpty()) {
 					proc.accept(new IVisitor() {
 						public boolean visit(IVariableAssignment a) {
-							IWidget w = IJavardiseService.getWidget(a);
+							IWidget w = javarService.getWidget(a);
 							ICodeDecoration<Label> d = w.addImage(arrow, ICodeDecoration.Location.LEFT);
 							decAssignments.add(d);
 							return true;
@@ -201,7 +216,7 @@ public class DemoCodeDecorations {
 				if(returnMarks.isEmpty()) {
 					proc.accept(new IVisitor() {
 						public boolean visit(IReturn r) {
-							IWidget w = IJavardiseService.getWidget(r);
+							IWidget w = javarService.getWidget(r);
 							ICodeDecoration<Text> d = w.addNote("this is the end", ICodeDecoration.Location.RIGHT);
 							returnMarks.add(d);
 							return true;
@@ -240,7 +255,7 @@ public class DemoCodeDecorations {
 					mark.delete();
 
 				if(element != null) {
-					IWidget w = IJavardiseService.getWidget(element);
+					IWidget w = javarService.getWidget(element);
 					mark = w.addMark(red);
 					mark.show();
 				}
@@ -256,7 +271,7 @@ public class DemoCodeDecorations {
 			public void widgetSelected(SelectionEvent e) {
 				proc.accept(new IBlock.IVisitor() {
 					public void visitAny(IExpression exp) {
-						IWidget w = IJavardiseService.getWidget(exp);
+						IWidget w = javarService.getWidget(exp);
 						if(w != null)
 							w.addMark(exp.isSimple() ? green : blue).show();
 						else
@@ -271,9 +286,9 @@ public class DemoCodeDecorations {
 		regionMark.addSelectionListener(new SelectionAdapter() {
 			Color cyan = Display.getDefault().getSystemColor(SWT.COLOR_CYAN);
 			public void widgetSelected(SelectionEvent e) {
-				IDeclarationWidget a = IJavardiseService.getDeclarationWidget(proc.getVariables().get(1));
-				IWidget w1 = IJavardiseService.getWidget(proc.getBody().getChildren().get(1));
-				IWidget w2 = IJavardiseService.getWidget(proc.getBody().getChildren().get(2));
+				IDeclarationWidget a = javarService.getDeclarationWidget(proc.getVariables().get(1));
+				IWidget w1 = javarService.getWidget(proc.getBody().getChildren().get(1));
+				IWidget w2 = javarService.getWidget(proc.getBody().getChildren().get(2));
 				a.addRegionMark(cyan, w1, w2).show();
 			}
 		});
@@ -288,7 +303,7 @@ public class DemoCodeDecorations {
 				dec.show();
 				widget.getProcedure(proc).getReturnType().addMark(cyan).show();
 				widget.getProcedure(proc).getMethodName().addMark(magenta).show();
-				IDeclarationWidget decDec = IJavardiseService.getDeclarationWidget(proc.getParameters().get(0));
+				IDeclarationWidget decDec = javarService.getDeclarationWidget(proc.getParameters().get(0));
 				decDec.getVariableType().addMark(cyan).show();
 				decDec.getVariableName().addMark(magenta).show();
 			}

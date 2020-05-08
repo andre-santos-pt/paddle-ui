@@ -1,7 +1,7 @@
 package pt.iscte.paddle.javardise;
 
 
-import org.eclipse.swt.widgets.Composite
+import org.eclipse.swt.widgets.Composite;
 
 
 import pt.iscte.paddle.javardise.Constants.DeleteListener;

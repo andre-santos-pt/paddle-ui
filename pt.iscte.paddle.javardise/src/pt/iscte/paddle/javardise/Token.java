@@ -16,15 +16,13 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Text;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
-
 import pt.iscte.paddle.javardise.service.ICodeElement;
+import pt.iscte.paddle.javardise.util.MultiMapList;
 
 
 public class Token implements TextWidget, ICodeElement {
 	private final Text text;
-	private Multimap<Character, String> map;
+	private MultiMapList<Character, String> map;
 
 	private static final List<String>[] EMPTY_ARRAY  = new List[0];
 
@@ -54,7 +52,7 @@ public class Token implements TextWidget, ICodeElement {
 			text.setFont(token.equals(".") ? Constants.FONT_DOT : Constants.FONT);
 			text.setForeground(Constants.COLOR_FONT);
 		}
-		map = ArrayListMultimap.create();
+		map = new MultiMapList<>();
 
 		Menu menu = new Menu(text);
 		for(List<String> set : alternatives) {

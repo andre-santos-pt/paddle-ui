@@ -14,14 +14,10 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.editors.text.TextEditor;
 
 import pt.iscte.paddle.interpreter.ExecutionError;
 import pt.iscte.paddle.interpreter.IExecutionData;
 import pt.iscte.paddle.interpreter.IProgramState;
-import pt.iscte.paddle.javali.translator.ElementLocation;
-import pt.iscte.paddle.javali.translator.ISourceLocation;
 import pt.iscte.paddle.model.IProcedure;
 import pt.iscte.paddle.model.IVariableDeclaration;
 
@@ -75,11 +71,11 @@ public class InvokeDialog extends Dialog {
 		try {
 			if(debug) {
 				state.setupExecution(procedure, args);
-				ISourceLocation loc = (ISourceLocation) state.getInstructionPointer().getProperty(ElementLocation.Part.WHOLE);
-				if(loc != null) {
-					TextEditor editor = (TextEditor) PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor();
-					editor.selectAndReveal(loc.getStartChar(), loc.getOffset());
-				}
+//				ISourceLocation loc = (ISourceLocation) state.getInstructionPointer().getProperty(ElementLocation.Part.WHOLE);
+//				if(loc != null) {
+//					TextEditor editor = (TextEditor) PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor();
+//					editor.selectAndReveal(loc.getStartChar(), loc.getOffset());
+//				}
 				System.out.println(state.getInstructionPointer());
 			}
 			else {

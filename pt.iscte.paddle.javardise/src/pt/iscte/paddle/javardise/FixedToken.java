@@ -28,9 +28,9 @@ public class FixedToken {
 		return label.getText();
 	}
 	
-	public void setLayoutData(RowData data) {
-		label.setLayoutData(data);
-	}
+//	public void setLayoutData(RowData data) {
+//		label.setLayoutData(data);
+//	}
 
 	public void addKeyListener(KeyListener keyListener) {
 		label.addKeyListener(keyListener);

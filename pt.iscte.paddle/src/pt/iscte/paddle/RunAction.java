@@ -20,9 +20,6 @@ import org.eclipse.ui.texteditor.ITextEditor;
 
 import pt.iscte.paddle.interpreter.IMachine;
 import pt.iscte.paddle.interpreter.IProgramState;
-import pt.iscte.paddle.javali.translator.ElementLocation;
-import pt.iscte.paddle.javali.translator.ISourceLocation;
-import pt.iscte.paddle.javali.translator.Translator;
 import pt.iscte.paddle.model.IModel2CodeTranslator;
 import pt.iscte.paddle.model.IModule;
 import pt.iscte.paddle.model.IProcedure;
@@ -34,10 +31,10 @@ public class RunAction extends Action {
 	
 	private static IProcedure findProcedure(IModule module, int offset) {
 		for (IProcedure p : module.getProcedures()) {
-			ISourceLocation loc = (ISourceLocation) p.getProperty(ElementLocation.Part.WHOLE);
-			System.out.println(loc);
-			if(loc.contains(offset))
-				return p;
+//			ISourceLocation loc = (ISourceLocation) p.getProperty(ElementLocation.Part.WHOLE);
+//			System.out.println(loc);
+//			if(loc.contains(offset))
+//				return p;
 		}
 		return null;
 	}
@@ -75,8 +72,8 @@ public class RunAction extends Action {
 //		editor.showHighlightRangeOnly(false);
 		
 		
-		Translator trans = new Translator(editorInput.getFile());
-		IModule program = trans.createProgram();
+//		Translator trans = new Translator(editorInput.getFile());
+		IModule program = IModule.create("Test");
 		System.out.println(program.translate(new IModel2CodeTranslator.Java()));
 
 		try {

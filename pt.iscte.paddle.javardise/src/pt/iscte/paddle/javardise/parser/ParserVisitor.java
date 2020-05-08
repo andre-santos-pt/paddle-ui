@@ -2,6 +2,7 @@ package pt.iscte.paddle.javardise.parser;
 
 import java.util.ArrayDeque;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -40,8 +41,6 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import org.eclipse.jdt.core.dom.WhileStatement;
 
-import com.google.common.collect.ImmutableMap;
-
 import pt.iscte.paddle.javardise.Flag;
 import pt.iscte.paddle.javardise.Keyword;
 import pt.iscte.paddle.model.IArrayType;
@@ -67,6 +66,10 @@ class ParserVisitor extends DefaultASTVisitor {
 	IProcedure currentProcedure;
 	ArrayDeque<IBlock> blockStack = new ArrayDeque<>();
 
+	public ParserVisitor(String filename) {
+		module = IModule.create(filename);
+	}
+
 	@Override
 	public boolean visit(CompilationUnit node) {
 		return true;
@@ -74,7 +77,7 @@ class ParserVisitor extends DefaultASTVisitor {
 
 	@Override
 	public boolean visit(TypeDeclaration node) {
-		module = IModule.create(node.getName().toString());
+//		module.setId(node.getName().toString());
 		classType = module.addRecordType();
 		module.setProperty(IRecordType.class, classType);
 		node.accept(new ASTVisitor() {
@@ -292,25 +295,31 @@ class ParserVisitor extends DefaultASTVisitor {
 		else if(e instanceof ArrayAccess) {
 			IExpression match = match(((ArrayAccess) e).getArray());
 			Expression index = ((ArrayAccess) e).getIndex();
-			if(match instanceof IVariableExpression)
+			if(match instanceof IVariableExpression) // TODO others
 				return ((IVariableExpression) match).element(match(index));
 			return match;
 		}
 
 		else if(e instanceof QualifiedName) {
-			String target = ((QualifiedName) e).getQualifier().toString(); // TODO parts
+			String[] parts = ((QualifiedName) e).getQualifier().toString().split("\\.");
+			IExpression target = varLookup(parts[0]).expression();
+//			IRecordFieldExpression f = null;
+			for(int i = 1; i < parts.length; i++) {
+				target = target.field(parts[i]);
+			}
+//			IExpression target = f == null ? v : f;
 			String field =  ((QualifiedName) e).getName().toString();
-			IVariableDeclaration var = varLookup(target);
-			if(var.getType() instanceof IReferenceType && 
-					((IReferenceType) var.getType()).getTarget() instanceof IArrayType &&
+			if(target.getType() instanceof IReferenceType && 
+					((IReferenceType) target.getType()).getTarget() instanceof IArrayType &&
 					field.equals("length"))
-				return var.length(); // TODO indexes
+				return target.length(); // TODO indexes
 			else
-				return var.field(field);
+				return target.field(field);
 		}
 		else if(e instanceof FieldAccess) {
 			FieldAccess fa = (FieldAccess) e;
 			IExpression target = match(fa.getExpression());
+			return target.field(varLookup(fa.getName()));
 		}
 
 		else if(e instanceof PrefixExpression) {
@@ -365,28 +374,27 @@ class ParserVisitor extends DefaultASTVisitor {
 		return null;
 	}
 
-	private static final Map<InfixExpression.Operator, IBinaryOperator> binaryOperatorMap = 
-			ImmutableMap.<InfixExpression.Operator, IBinaryOperator>builder()
-			.put(InfixExpression.Operator.EQUALS, 			IBinaryOperator.EQUAL)
-			.put(InfixExpression.Operator.NOT_EQUALS, 		IBinaryOperator.DIFFERENT)
-			.put(InfixExpression.Operator.LESS, 			IBinaryOperator.SMALLER)
-			.put(InfixExpression.Operator.LESS_EQUALS, 		IBinaryOperator.SMALLER_EQ)
-			.put(InfixExpression.Operator.GREATER, 			IBinaryOperator.GREATER)
-			.put(InfixExpression.Operator.GREATER_EQUALS, 	IBinaryOperator.GREATER_EQ)
+	private static final Map<InfixExpression.Operator, IBinaryOperator> binaryOperatorMap = new HashMap<>();
+	static {
+		binaryOperatorMap.put(InfixExpression.Operator.EQUALS, 			IBinaryOperator.EQUAL);
+		binaryOperatorMap.put(InfixExpression.Operator.NOT_EQUALS, 		IBinaryOperator.DIFFERENT);
+		binaryOperatorMap.put(InfixExpression.Operator.LESS, 			IBinaryOperator.SMALLER);
+		binaryOperatorMap.put(InfixExpression.Operator.LESS_EQUALS, 		IBinaryOperator.SMALLER_EQ);
+		binaryOperatorMap.put(InfixExpression.Operator.GREATER, 			IBinaryOperator.GREATER);
+		binaryOperatorMap.put(InfixExpression.Operator.GREATER_EQUALS, 	IBinaryOperator.GREATER_EQ);
 
-			.put(InfixExpression.Operator.AND, 				IBinaryOperator.AND)
-			.put(InfixExpression.Operator.CONDITIONAL_AND, 	IBinaryOperator.AND)
-			.put(InfixExpression.Operator.OR, 				IBinaryOperator.OR)
-			.put(InfixExpression.Operator.CONDITIONAL_OR, 	IBinaryOperator.OR)
-			.put(InfixExpression.Operator.XOR, 				IBinaryOperator.XOR)					
+		binaryOperatorMap.put(InfixExpression.Operator.AND, 				IBinaryOperator.AND);
+		binaryOperatorMap.put(InfixExpression.Operator.CONDITIONAL_AND, 	IBinaryOperator.AND);
+		binaryOperatorMap.put(InfixExpression.Operator.OR, 				IBinaryOperator.OR);
+		binaryOperatorMap.put(InfixExpression.Operator.CONDITIONAL_OR, 	IBinaryOperator.OR);
+		binaryOperatorMap.put(InfixExpression.Operator.XOR, 				IBinaryOperator.XOR);					
 
-			.put(InfixExpression.Operator.PLUS, 			IBinaryOperator.ADD) 
-			.put(InfixExpression.Operator.MINUS, 			IBinaryOperator.SUB)
-			.put(InfixExpression.Operator.TIMES, 			IBinaryOperator.MUL) 
-			.put(InfixExpression.Operator.DIVIDE, 			IBinaryOperator.DIV)
-			.put(InfixExpression.Operator.REMAINDER, 		IBinaryOperator.MOD)
-
-			.build();
+		binaryOperatorMap.put(InfixExpression.Operator.PLUS, 			IBinaryOperator.ADD);
+		binaryOperatorMap.put(InfixExpression.Operator.MINUS, 			IBinaryOperator.SUB);
+		binaryOperatorMap.put(InfixExpression.Operator.TIMES, 			IBinaryOperator.MUL);
+		binaryOperatorMap.put(InfixExpression.Operator.DIVIDE, 			IBinaryOperator.DIV);
+		binaryOperatorMap.put(InfixExpression.Operator.REMAINDER, 		IBinaryOperator.MOD);
+	}
 
 	private static IBinaryOperator matchBinaryOperator(InfixExpression e, IExpression left, IExpression right) {
 		IBinaryOperator op = binaryOperatorMap.get(e.getOperator());

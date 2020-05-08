@@ -22,9 +22,6 @@ import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.ide.IDE;
 
-import pt.iscte.paddle.javali.translator.ElementLocation;
-import pt.iscte.paddle.javali.translator.ISourceLocation;
-import pt.iscte.paddle.javali.translator.Translator;
 import pt.iscte.paddle.model.IModule;
 import pt.iscte.paddle.model.IProgramElement;
 import pt.iscte.paddle.model.validation.ISemanticProblem;
@@ -88,36 +85,36 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 				} catch (CoreException e1) {
 					e1.printStackTrace();
 				}
-				Translator trans = new Translator(editorInput.getFile());
-				IModule program = trans.createProgram();
+//				Translator trans = new Translator(editorInput.getFile());
+				IModule program = IModule.create(editorInput.getFile().getName());
 				program.setId(editorInput.getFile().getName());
 				SemanticChecker checker = new SemanticChecker(new JavaSemanticChecker());
 				List<ISemanticProblem> problems = checker.check(program);
 				for(ISemanticProblem p : problems) {
 					IProgramElement e = p.getProgramElements().get(0);
-					ISourceLocation idProp = (ISourceLocation) e.getProperty(ElementLocation.Part.ID);
-					if(idProp != null) {
-						createMarker(idProp, resource, p);
-					}
-					else {
-						ElementLocation loc = e.getProperty(ElementLocation.class);
-						if(loc != null)
-							createMarker(loc, resource, p);
-					}
+//					ISourceLocation idProp = (ISourceLocation) e.getProperty(ElementLocation.Part.ID);
+//					if(idProp != null) {
+//						createMarker(idProp, resource, p);
+//					}
+//					else {
+//						ElementLocation loc = e.getProperty(ElementLocation.class);
+//						if(loc != null)
+//							createMarker(loc, resource, p);
+//					}
 				}
 			}
 		});
 
 	}
 	
-	static IMarker createMarker(ISourceLocation loc, IResource r, ISemanticProblem p) {
+	static IMarker createMarker(IResource r, ISemanticProblem p) {
 		try {
 			IMarker marker = r.createMarker(IMarker.PROBLEM);
 			marker.setAttribute(IMarker.MESSAGE, p.getMessage());
 			marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_ERROR);
 			//                 marker.setAttribute(IMarker.LINE_NUMBER, line);
-			marker.setAttribute(IMarker.CHAR_START, loc.getStartChar());
-			marker.setAttribute(IMarker.CHAR_END, loc.getEndChar());
+//			marker.setAttribute(IMarker.CHAR_START, loc.getStartChar());
+//			marker.setAttribute(IMarker.CHAR_END, loc.getEndChar());
 			return marker;
 		} catch (CoreException ex) {
 			ex.printStackTrace();

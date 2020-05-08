@@ -27,5 +27,6 @@ public class CFGFigure extends Figure {
 		l.setForegroundColor(textColor);
 		l.setLabelAlignment(PositionConstants.CENTER);
 		add(l, BorderLayout.CENTER);
+		
 	}
 }

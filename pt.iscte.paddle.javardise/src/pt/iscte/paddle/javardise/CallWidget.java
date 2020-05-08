@@ -76,7 +76,7 @@ public class CallWidget extends EditorWidget implements Expression {
 	}
 
 	public void focusArgument() {
-		getChildren()[0].setFocus();
+		args.setFocus();
 	}
 
 	@Override

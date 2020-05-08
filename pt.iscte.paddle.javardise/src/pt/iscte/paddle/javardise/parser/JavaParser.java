@@ -3,6 +3,7 @@ package pt.iscte.paddle.javardise.parser;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -21,20 +22,23 @@ import pt.iscte.paddle.model.IModule;
 
 public class JavaParser {
 	
+	private final String filename;
 	private final String source;
 	private ParserVisitor visitor;
 	private IProblem[] problems;
 	
 	public JavaParser(File file) {
 		source = readSource(file);
+		filename = file.getName().substring(0, file.getName().lastIndexOf('.'));
 	}
 	
 	public JavaParser(StringBuffer buffer) {
 		source = buffer.toString();
+		filename = "undefined";
 	}
 	
 	public IModule parse() {
-		visitor = new ParserVisitor();
+		visitor = new ParserVisitor(filename);
 		problems = parse(source);
 		return visitor.module;
 	}
