@@ -48,7 +48,6 @@ public class DemoCodeDecorations {
 	private static IJavardiseService javarService;
 
 	public static void main(String[] args) {
-
 		TestNaturals t = new TestNaturals();
 		t.setup();
 		IModule module = t.getModule();

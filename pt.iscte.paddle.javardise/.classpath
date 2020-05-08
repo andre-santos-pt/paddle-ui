@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry excluding="pt/iscte/paddle/javardise/editor/JavaStringObject.java|pt/iscte/paddle/javardise/Markable.java|pt/iscte/paddle/javardise/service/DecorationService.java|pt/iscte/paddle/javardise/Decorations.java|pt/iscte/paddle/javardise/IncrementationWidget.java|pt/iscte/paddle/javardise/ForWidget.java|pt/iscte/paddle/javardise/parser/" kind="src" path="src"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER">
-		<attributes>
-			<attribute name="module" value="true"/>
-		</attributes>
-	</classpathentry>
 	<classpathentry combineaccessrules="false" kind="src" path="/pt.iscte.paddle.model.java">
 		<attributes>
 			<attribute name="module" value="true"/>
@@ -21,5 +16,6 @@
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-11"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
