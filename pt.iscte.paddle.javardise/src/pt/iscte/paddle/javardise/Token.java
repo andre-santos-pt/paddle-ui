@@ -17,7 +17,7 @@ import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Text;
 
 import pt.iscte.paddle.javardise.service.ICodeElement;
-import pt.iscte.paddle.javardise.util.MultiMapList;
+import pt.iscte.paddle.util.MultiMapList;
 
 
 public class Token implements TextWidget, ICodeElement {

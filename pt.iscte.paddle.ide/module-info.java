@@ -1,15 +1,15 @@
-import pt.iscte.paddle.ide.PaddleIDE;
-import pt.iscte.paddle.ide.service.IPaddleService;
-
 module pt.iscte.paddle.ide {
-	requires transitive org.eclipse.swt.cocoa.macosx;
+	requires transitive org.eclipse.swt;
 	requires transitive pt.iscte.paddle.model;
+	requires transitive pt.iscte.paddle.model.javaparser;
 	requires transitive pt.iscte.paddle.javardise;
 	
 	exports pt.iscte.paddle.ide.service;
 	
 	uses pt.iscte.paddle.javardise.service.IJavardiseService;
-	uses pt.iscte.paddle.ide.service.View;
+	uses pt.iscte.paddle.ide.service.IPaddleView;
 	
-	provides IPaddleService with PaddleIDE;
+//	uses ToolGroup;
+//	provides ToolGroup with PaddleIDE;
+//	provides IPaddleService with PaddleIDE;
 }

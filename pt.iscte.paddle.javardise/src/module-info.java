@@ -5,8 +5,8 @@ import pt.iscte.paddle.javardise.service.IJavardiseService;
 module pt.iscte.paddle.javardise {
 	
 	requires transitive pt.iscte.paddle.model;
-	requires transitive pt.iscte.paddle.model.java;
-	requires transitive org.eclipse.swt.cocoa.macosx;
+	requires transitive pt.iscte.paddle.model.javaparser;
+	requires transitive org.eclipse.swt;
 	
 	// parser
 	//requires org.eclipse.core.runtime;

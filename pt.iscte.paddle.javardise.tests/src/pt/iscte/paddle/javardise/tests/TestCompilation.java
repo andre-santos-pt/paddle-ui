@@ -28,7 +28,7 @@ import org.junit.Test;
 import pt.iscte.paddle.javardise.service.IClassWidget;
 import pt.iscte.paddle.javardise.service.IJavardiseService;
 import pt.iscte.paddle.model.IModule;
-import pt.iscte.paddle.model.java.JavaParser;
+import pt.iscte.paddle.model.javaparser.Java2Paddle;
 import pt.iscte.paddle.model.tests.BaseTest;
 import pt.iscte.paddle.model.tests.TestArrayCount;
 import pt.iscte.paddle.model.tests.TestArrayFind;
@@ -91,7 +91,7 @@ public class TestCompilation {
 			assertTrue("Errors on " + mod.getId(), compile);
 			File file = new File("src-gen/" + mod.getId() + ".java");
 			saveToFile(w, file);
-			JavaParser parser = new JavaParser(file);
+			Java2Paddle parser = new Java2Paddle(file);
 			IModule m = parser.parse();
 			assertFalse(parser.hasParseProblems());
 			BaseTest retest = new BaseTest(m);

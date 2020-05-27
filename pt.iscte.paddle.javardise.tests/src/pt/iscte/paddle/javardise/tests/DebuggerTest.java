@@ -70,7 +70,6 @@ public class DebuggerTest {
 		IProgramState state = IMachine.create(module);
 		state.addListener(new IProgramState.IListener() {
 			public void step(IProgramElement ip) {
-				System.out.println(ip);
 				if(ip instanceof IVariableAssignment) {
 					IVariableDeclaration var = ((IVariableAssignment) ip).getTarget();
 					IReference store = state.getCallStack().getTopFrame().getVariableStore(var);

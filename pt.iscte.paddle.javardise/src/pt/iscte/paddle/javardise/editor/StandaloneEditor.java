@@ -41,14 +41,14 @@ import org.eclipse.swt.widgets.Shell;
 import pt.iscte.paddle.javardise.ClassWidget;
 import pt.iscte.paddle.javardise.ComplexId;
 import pt.iscte.paddle.javardise.Constants;
-import pt.iscte.paddle.javardise.Keyword;
 import pt.iscte.paddle.javardise.InsertWidget;
+import pt.iscte.paddle.javardise.Keyword;
 import pt.iscte.paddle.javardise.SequenceWidget;
 import pt.iscte.paddle.javardise.UiMode;
 import pt.iscte.paddle.javardise.UiMode.Syntax;
 import pt.iscte.paddle.model.IModule;
 import pt.iscte.paddle.model.commands.ICommand;
-import pt.iscte.paddle.model.java.JavaParser;
+import pt.iscte.paddle.model.javaparser.Java2Paddle;
 
 public class StandaloneEditor {
 	private IModule module;
@@ -63,8 +63,14 @@ public class StandaloneEditor {
 		String className = file.getName().substring(0, file.getName().indexOf('.'));
 
 		if(file.exists()) {
-			JavaParser parser = new JavaParser(file);
-			module = parser.parse();
+			Java2Paddle parser = new Java2Paddle(file);
+			try {
+				module = parser.parse();
+			} catch (IOException e) {
+				e.printStackTrace();
+				module = IModule.create();
+				module.setId(className);
+			}
 		}
 		else {
 			try {
@@ -249,9 +255,14 @@ public class StandaloneEditor {
 	//	}
 
 	public boolean compile(File f) {
-		JavaParser parser = new JavaParser(f);
-		parser.parse();
-		return parser.hasParseProblems();
+//		JavaParser parser = new JavaParser(f);
+//		try {
+//			parser.parse();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//		return parser.hasParseProblems();
+		return false;
 	}
 
 	public static void main(String[] args) {
@@ -273,7 +284,7 @@ public class StandaloneEditor {
 			if (!display.readAndDispatch()) {
 				display.sleep();
 			}
-		}
+		}	
 		display.dispose();
 	}
 

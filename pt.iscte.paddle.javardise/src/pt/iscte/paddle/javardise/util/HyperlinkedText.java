@@ -18,6 +18,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Link;
 
 import pt.iscte.paddle.model.IProgramElement;
+import pt.iscte.paddle.util.MultiMapList;
 
 public class HyperlinkedText {
 
