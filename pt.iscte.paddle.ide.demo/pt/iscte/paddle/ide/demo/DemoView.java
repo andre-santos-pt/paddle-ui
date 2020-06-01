@@ -9,8 +9,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
 
 import pt.iscte.paddle.ide.service.IPaddleService;
+import pt.iscte.paddle.ide.service.IPaddleTool;
 import pt.iscte.paddle.ide.service.IPaddleView;
-import pt.iscte.paddle.ide.service.Tool;
 import pt.iscte.paddle.interpreter.IExecutionData;
 import pt.iscte.paddle.interpreter.IMachine;
 import pt.iscte.paddle.interpreter.IProgramState;
@@ -42,17 +42,12 @@ public class DemoView implements IPaddleView {
 	}
 
 	@Override
-	public List<Tool> getTools() {
+	public List<IPaddleTool> getTools() {
 		return List.of(new RunTool());
 	}
 	
-//	public static class Tools implements ToolGroup {
-//		public List<Tool> getTools() {
-//			return List.of(new RunTool());
-//		}
-//	}
 	
-	class RunTool implements Tool {
+	class RunTool implements IPaddleTool {
 		@Override
 		public String getIcon() {
 			return "upload.png";
@@ -60,9 +55,8 @@ public class DemoView implements IPaddleView {
 
 		@Override
 		public void execute(boolean selected, IPaddleService service) {
-			IModule m = service.getVisibleModule();
-			IProgramState state = IMachine.create(m);
-			IExecutionData data = state.execute(m.getProcedures().get(0));
+			IProgramState state = IMachine.create(service.getModule());
+			IExecutionData data = state.execute(service.getModule().getProcedures().get(0));
 			IValue ret = data.getReturnValue();
 			System.out.println(ret);
 

@@ -15,7 +15,7 @@ public interface IPaddleView {
 	
 	void createContents(Composite parent, IPaddleService service);
 	
-	default List<Tool> getTools() {
+	default List<IPaddleTool> getTools() {
 		return List.of();
 	}
 }

@@ -173,7 +173,7 @@ abstract class BlockAction extends InsertWidget.Action {
 			public void run(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
 				IProcedure p = block.getOwnerProcedure().getModule().getProcedure(id.getId());
 				if(p == null)
-					p = new IProcedure.UnboundProcedure(id.getId());
+					p = IProcedure.createUnbound(id.getId(), null);
 				block.addCallAt(p, index);
 			}
 		};

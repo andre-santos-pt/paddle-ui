@@ -85,7 +85,7 @@ public class TestCompilation {
 			
 			IJavardiseService javarService = serv.get();
 			
-			IClassWidget w = javarService.createClassWidget(shell, mod);
+			IClassWidget w = javarService.createClassWidget(shell, mod, mod.getId());
 			boolean compile = compile(mod.getId(), w.getCode());
 				
 			assertTrue("Errors on " + mod.getId(), compile);

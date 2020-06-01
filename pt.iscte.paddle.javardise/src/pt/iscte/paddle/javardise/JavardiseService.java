@@ -13,8 +13,8 @@ import pt.iscte.paddle.model.IProgramElement;
 import pt.iscte.paddle.model.IVariableDeclaration;
 
 public class JavardiseService implements IJavardiseService {
-	public IClassWidget createClassWidget(Composite parent, IModule module) {
-		return new ClassWidget(parent, module);
+	public IClassWidget createClassWidget(Composite parent, IModule module, String namespace) {
+		return new ClassWidget(parent, module, namespace);
 	}
 	
 	public IMethodWidget createMethodWidget(Composite parent, IProcedure procedure) {

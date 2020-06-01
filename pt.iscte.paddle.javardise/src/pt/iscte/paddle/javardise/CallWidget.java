@@ -98,6 +98,6 @@ public class CallWidget extends EditorWidget implements Expression {
 			if(c instanceof ExpressionWidget)
 				list.add(((ExpressionWidget) c).toModel());
 
-		return new IProcedure.UnboundProcedure(id.getId()).expression(list);
+		return IProcedure.createUnbound(id.getId()).expression(list);
 	}
 }

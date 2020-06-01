@@ -1,8 +1,6 @@
 package pt.iscte.paddle.ide.service;
 
-import java.util.function.Consumer;
-
-public interface Tool {
+public interface IPaddleTool {
 	default String getText() {
 		return "";
 	}
@@ -25,7 +23,7 @@ public interface Tool {
 	// isEnabled?
 	void execute(boolean selected, IPaddleService service);
 	
-	abstract class AbstractTool implements Tool {
-		
-	}
+//	abstract class AbstractTool implements Tool {
+//		
+//	}
 }

@@ -14,11 +14,15 @@ import java.util.stream.Collectors;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
+import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.events.PaintEvent;
+import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -35,8 +39,8 @@ import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 
 import pt.iscte.paddle.ide.service.IPaddleService;
+import pt.iscte.paddle.ide.service.IPaddleTool;
 import pt.iscte.paddle.ide.service.IPaddleView;
-import pt.iscte.paddle.ide.service.Tool;
 import pt.iscte.paddle.interpreter.IExecutionData;
 import pt.iscte.paddle.interpreter.IMachine;
 import pt.iscte.paddle.interpreter.IProgramState;
@@ -56,8 +60,8 @@ public class PaddleIDE implements IPaddleService
 	private ToolBar toolBar;
 
 	private File root;
-	private List<IModule> modules;
-	private List<Consumer<IModule>> moduleChangeListeners;
+	private IModule module;
+	private List<Consumer<String>> moduleChangeListeners;
 
 
 	public static void main (String [] args) {
@@ -92,17 +96,12 @@ public class PaddleIDE implements IPaddleService
 			System.err.println("could not access Javardise service");
 		javarService = serv.get();
 		
-		modules = new ArrayList<>(); 
-		Java2Paddle p = new Java2Paddle(root, j -> j.getName().equals("ImageUtil.java"));
+		Java2Paddle p = new Java2Paddle(root);
 		try {
-			modules.add(p.parse());
+			module = p.parse();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-//		File[] files = root.listFiles((dir,name) -> name.endsWith(".java"));
-//		for(File f : files) {
-//			System.out.println("FILE: " + f.getAbsolutePath());
-//		}
 
 		moduleChangeListeners = new ArrayList<>();
 
@@ -128,19 +127,38 @@ public class PaddleIDE implements IPaddleService
 		modulesFolder.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		modulesFolder.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
-				IModule m = getVisibleModule();
-				moduleChangeListeners.forEach(c -> c.accept(m));
+				moduleChangeListeners.forEach(c -> c.accept((String) modulesFolder.getData()));
 			}
 		});
-		modules.forEach(m -> insertModule(m));
+		
+		module.getNamespaces().forEach(ns -> insertModule(ns));
 	}
 
-	private TabItem insertModule(IModule module) {
+	private TabItem insertModule(String namespace) {
 		TabItem tabItem = new TabItem(modulesFolder, SWT.NULL);
-		IClassWidget w = javarService.createClassWidget(modulesFolder, module);
-		tabItem.setControl(w.getControl());
-		tabItem.setText(module.getId());
-		tabItem.setData(module);
+		tabItem.setText(namespace);
+		tabItem.setData(namespace);
+
+		ScrolledComposite scroll = new ScrolledComposite(modulesFolder, SWT.H_SCROLL | SWT.V_SCROLL);
+		scroll.setLayout(new GridLayout(1, false));
+		scroll.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		tabItem.setControl(scroll);
+
+		IClassWidget w = javarService.createClassWidget(scroll, module, namespace);
+		
+		scroll.setContent(w.getControl());
+		scroll.setMinSize(100, 100);
+		scroll.setExpandHorizontal(true);
+		scroll.setExpandVertical(true);
+		w.getControl().addPaintListener(new PaintListener() {
+			public void paintControl(PaintEvent e) {
+				Point size = w.getControl().computeSize(SWT.DEFAULT, SWT.DEFAULT);
+				size.x += 100;
+				size.y += 100;
+				scroll.setMinSize(size);
+				scroll.requestLayout();
+			}
+		});
 		return tabItem;
 	}
 
@@ -163,7 +181,7 @@ public class PaddleIDE implements IPaddleService
 		
 	}
 
-	private void addTools(ToolBar toolBar, List<Tool> tools) {
+	private void addTools(ToolBar toolBar, List<IPaddleTool> tools) {
 		tools.forEach(t -> {
 			ToolItem item = new ToolItem(toolBar, t.isToggle() ? SWT.CHECK : SWT.PUSH);
 			item.setText(t.getText());
@@ -178,11 +196,11 @@ public class PaddleIDE implements IPaddleService
 		});
 	}
 	
-	public List<Tool> getTools() {
+	public List<IPaddleTool> getTools() {
 		return List.of(new NewFileTool());
 	}
 
-	class NewFileTool implements Tool {
+	class NewFileTool implements IPaddleTool {
 		@Override
 		public String getIcon() {
 			return "new.png";
@@ -212,8 +230,8 @@ public class PaddleIDE implements IPaddleService
 						File f = new File(service.getWorkspacePath(), text.getText() + ".java");
 						try {
 							if(f.createNewFile()) {
-								IModule m = IModule.create(text.getText());
-								TabItem tab = insertModule(m);
+								String ns = text.getText();
+								TabItem tab = insertModule(ns);
 								modulesFolder.setSelection(tab);
 							}
 							else
@@ -234,7 +252,7 @@ public class PaddleIDE implements IPaddleService
 		}
 	}
 
-	static class RunTool implements Tool {
+	class RunTool implements IPaddleTool {
 		@Override
 		public String getIcon() {
 			return "debug.png";
@@ -242,9 +260,8 @@ public class PaddleIDE implements IPaddleService
 
 		@Override
 		public void execute(boolean selected, IPaddleService service) {
-			IModule m = service.getVisibleModule();
-			IProgramState state = IMachine.create(m);
-			IExecutionData data = state.execute(m.getProcedures().get(0));
+			IProgramState state = IMachine.create(module);
+			IExecutionData data = state.execute(module.getProcedures().get(0));
 			IValue ret = data.getReturnValue();
 			System.out.println(ret);
 
@@ -281,21 +298,26 @@ public class PaddleIDE implements IPaddleService
 	public File getWorkspacePath() {
 		return root;
 	}
-
+	
 	@Override
-	public IModule getVisibleModule() {
-		TabItem[] selection = modulesFolder.getSelection();
-		return selection.length > 0 ? (IModule) selection[0].getData() : null;
+	public IModule getModule() {
+		return module;
 	}
 
 	@Override
-	public void addModuleSelectionListener(Consumer<IModule> c) {
+	public String getVisibleNamespace() {
+		TabItem[] selection = modulesFolder.getSelection();
+		return selection.length > 0 ? (String) selection[0].getData() : null;
+	}
+
+	@Override
+	public void addModuleSelectionListener(Consumer<String> c) {
 		assert c != null;
 		moduleChangeListeners.add(c);
 	}
 
 	@Override
-	public void removeModuleSelectionListener(Consumer<IModule> c) {
+	public void removeModuleSelectionListener(Consumer<String> c) {
 		assert c != null;
 		moduleChangeListeners.remove(c);
 	}

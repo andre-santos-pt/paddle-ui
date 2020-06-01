@@ -20,6 +20,7 @@ import pt.iscte.paddle.javardise.service.IMethodWidget;
 import pt.iscte.paddle.javardise.service.IWidget;
 import pt.iscte.paddle.model.IConstantDeclaration;
 import pt.iscte.paddle.model.IModule;
+import pt.iscte.paddle.model.IModuleView;
 import pt.iscte.paddle.model.IProcedure;
 import pt.iscte.paddle.model.IRecordType;
 import pt.iscte.paddle.model.IType;
@@ -42,7 +43,7 @@ public class ClassWidget extends ModiferWidget implements SequenceContainer, ICl
 		return list -> Keyword.classModifiers();
 	}
 	
-	public ClassWidget(Composite parent, IModule module, Keyword ... modifiers) {
+	public ClassWidget(Composite parent, IModule module, String namespace, Keyword ... modifiers) {
 		super(parent, module);
 		this.module = module;
 		GridLayout layout = new GridLayout(1, true);
@@ -127,11 +128,12 @@ public class ClassWidget extends ModiferWidget implements SequenceContainer, ICl
 			});
 		}
 
-		module.getProcedures().stream()
+		IModuleView view = module.createNamespaceView(namespace);
+		view.getProcedures().stream()
 		.filter(p -> Flag.CONSTRUCTOR.is(p))
 		.forEach(c -> methods.addLineAndElement(comp -> new MethodWidget(comp, c)));
 		
-		module.getProcedures().stream()
+		view.getProcedures().stream()
 		.filter(p -> Flag.CONSTRUCTOR.isNot(p))
 		.forEach(c -> methods.addLineAndElement(comp -> new MethodWidget(comp, c)));
 		

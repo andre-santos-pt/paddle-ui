@@ -78,7 +78,7 @@ public class DemoCodeDecorations {
 		
 		javarService = serv.get();
 		
-		IClassWidget widget = javarService.createClassWidget(codeAndCFG, module);
+		IClassWidget widget = javarService.createClassWidget(codeAndCFG, module, module.getId());
 		widget.setReadOnly(true);
 
 //		CFGViewer cfg = new CFGViewer(codeAndCFG);

@@ -61,7 +61,7 @@ public class DebuggerTest {
 		
 		IJavardiseService javarService = serv.get();
 		
-		IClassWidget widget = javarService.createClassWidget(shell, module);
+		IClassWidget widget = javarService.createClassWidget(shell, module, module.getId());
 		widget.setReadOnly(true);
 
 		Map<IVariableDeclaration, ICodeDecoration<Text>> decMap = new HashMap<>();

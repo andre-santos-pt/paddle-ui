@@ -80,8 +80,6 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 			c.getProcedure() != null ? c.getProcedure().getId() : 
 				"procedure", false);
 	}
-
-	
 	
 	ComplexId(Composite parent, String id, boolean type) {
 		super(parent);
