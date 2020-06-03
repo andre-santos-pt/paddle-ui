@@ -3,7 +3,7 @@ package pt.iscte.paddle.javardise;
 import pt.iscte.paddle.model.IProgramElement;
 
 public enum Flag {
-	CONSTRUCTOR, INSTANCE_METHOD, FOR, ELSE;
+	CONSTRUCTOR, INSTANCE, FOR, ELSE;
 
 	public void set(IProgramElement e) {
 		e.setProperty(name());

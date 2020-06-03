@@ -15,7 +15,7 @@ public class UiMode {
 	}
 	// font size
 	// tab space
-	private static Editor editor = Editor.STATIC;
+	private static Editor editor = Editor.REGULAR;
 
 	private static EnumSet<Syntax> syntax = EnumSet.allOf(Syntax.class);
 	

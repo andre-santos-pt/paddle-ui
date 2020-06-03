@@ -3,6 +3,7 @@ package pt.iscte.paddle.ide;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -48,6 +49,7 @@ import pt.iscte.paddle.interpreter.IValue;
 import pt.iscte.paddle.javardise.service.IClassWidget;
 import pt.iscte.paddle.javardise.service.IJavardiseService;
 import pt.iscte.paddle.model.IModule;
+import pt.iscte.paddle.model.IRecordType;
 import pt.iscte.paddle.model.javaparser.Java2Paddle;
 
 public class PaddleIDE implements IPaddleService
@@ -97,6 +99,7 @@ public class PaddleIDE implements IPaddleService
 		javarService = serv.get();
 		
 		Java2Paddle p = new Java2Paddle(root);
+//		addBuiltins(p);
 		try {
 			module = p.parse();
 		} catch (IOException e) {
@@ -120,6 +123,22 @@ public class PaddleIDE implements IPaddleService
 
 		insertModules(leftArea);
 		createViews(rightArea);
+	}
+	
+	static void addBuiltins(Java2Paddle j2p) {
+		j2p.loadBuiltInProcedures(Object.class);
+		j2p.loadBuiltInProcedures(String.class);
+		j2p.loadBuiltInProcedures(Math.class);
+//		j2p.loadBuiltInProcedures(ImageUtil.class);
+		j2p.loadBuiltInProcedures(IllegalArgumentException.class);
+		j2p.loadBuiltInProcedures(IllegalStateException.class);
+		j2p.loadBuiltInProcedures(NullPointerException.class);
+
+		j2p.loadBuiltInProcedures(PrintStream.class);
+		IRecordType system = j2p.addBuiltInRecordType("System");
+		IRecordType out = j2p.addBuiltInRecordType("PrintStream");
+		out.setNamespace("System");
+		system.addField(out, "out");
 	}
 
 	private void insertModules(Composite parent) {

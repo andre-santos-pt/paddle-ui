@@ -292,6 +292,9 @@ public class SequenceWidget extends Composite {
 
 
 	void addModelElement(IProgramElement element, int index) {
+		if(Flag.CONSTRUCTOR.is(element))
+			return;
+		
 		if (element instanceof IVariableDeclaration && Flag.FOR.isNot(element)) {
 			IVariableDeclaration v = (IVariableDeclaration) element;
 			DeclarationWidget w = addElement(p -> new DeclarationWidget(p, v, null), index);

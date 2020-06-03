@@ -91,9 +91,8 @@ public class TestCompilation {
 			assertTrue("Errors on " + mod.getId(), compile);
 			File file = new File("src-gen/" + mod.getId() + ".java");
 			saveToFile(w, file);
-			Java2Paddle parser = new Java2Paddle(file);
+			Java2Paddle parser = new Java2Paddle(file, mod.getId());
 			IModule m = parser.parse();
-			assertFalse(parser.hasParseProblems());
 			BaseTest retest = new BaseTest(m);
 			try {
 				retest.run();

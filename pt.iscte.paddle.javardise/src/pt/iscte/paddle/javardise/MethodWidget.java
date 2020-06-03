@@ -56,13 +56,16 @@ public class MethodWidget extends ModiferWidget implements SequenceContainer, IM
 
 		Runnable delAction = () -> procedure.getModule().removeProcedure(procedure);
 		if (!isConstructor) {
+			if(!Flag.INSTANCE.is(procedure)) {
+				Token classToken = new Token(header, Keyword.STATIC);
+			}
 			retType = ComplexId.matchType(header, procedure.getReturnType());
 			retType.addDeleteListener(delAction);
 			addModifierKey(retType);
 			Constants.addInsertLine(retType);
 		}
 
-		String name = isConstructor ? procedure.getModule().getId() : procedure.getId();
+		String name = procedure.getId();
 		if (name == null)
 			name = "procedure";
 		if (name.equals(Constants.EMPTY_EXPRESSION_SERIALIZE))
@@ -80,8 +83,10 @@ public class MethodWidget extends ModiferWidget implements SequenceContainer, IM
 		params = new ParamList(header);
 		new FixedToken(header, ")");
 
-		procedure.getParameters().forEach(p -> params.addParam(p, false));
-
+		procedure.getParameters().forEach(p -> {
+			if(!Flag.INSTANCE.is(p))
+				params.addParam(p, false);
+		});
 		if (procedure.getParameters().isEmpty())
 			params.addEmptyParam();
 

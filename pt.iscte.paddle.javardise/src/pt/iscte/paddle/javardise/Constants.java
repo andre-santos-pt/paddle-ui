@@ -32,7 +32,7 @@ public interface Constants {
 	int TAB = 25;
 	int METHOD_SPACING = 30;
 	
-	String FONT_FACE = "Monaco";
+	String FONT_FACE = "Monospace";
 
 	Color COLOR_FONT = Display.getDefault().getSystemColor(SWT.COLOR_BLACK);
 	Color COLOR_KEYWORD = Display.getDefault().getSystemColor(SWT.COLOR_DARK_MAGENTA);

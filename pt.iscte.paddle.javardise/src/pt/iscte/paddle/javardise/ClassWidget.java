@@ -56,7 +56,7 @@ public class ClassWidget extends ModiferWidget implements SequenceContainer, ICl
 
 			Token classToken = new Token(header, Keyword.CLASS);
 			addModifierKey(classToken);
-			id = new Id(header, module.getId());
+			id = new Id(header, namespace);
 			id.setReadOnly();
 			new FixedToken(header, "{");
 		}
@@ -112,7 +112,7 @@ public class ClassWidget extends ModiferWidget implements SequenceContainer, ICl
 
 
 
-		IRecordType mainType = module.getProperty(IRecordType.class);
+		IRecordType mainType = module.getRecordType(namespace);
 		if(mainType != null) {
 			for(IVariableDeclaration f : mainType)
 				methods.addElement(p -> new FieldWidget(p, f));
