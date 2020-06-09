@@ -53,7 +53,7 @@ public class DemoCodeDecorations {
 		IModule module = t.getModule();
 		IProcedure proc = module.getProcedure("naturals");
 
-		IProcedure main = module.addProcedure("main", IType.VOID);
+		IProcedure main = module.addProcedure(IType.VOID, p -> p.setId("main"));
 		IVariableDeclaration nats = main.getBody().addVariable(IType.INT.array().reference());
 		nats.setId("nats");
 		main.getBody().addAssignment(nats, proc.expression(IType.INT.literal(5)));

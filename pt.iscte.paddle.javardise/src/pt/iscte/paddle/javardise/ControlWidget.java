@@ -20,10 +20,6 @@ public class ControlWidget extends EditorWidget implements SequenceContainer {
 	private Runnable delAction;
 	private KeyListener delListener;
 	
-//	ControlWidget(Composite parent, Keyword keyword, IBlock block) {
-//		this(parent, keyword, null, block);
-//	}
-	
 	ControlWidget(Composite parent, Keyword keyword, IControlStructure structure) {
 		super(parent, structure);
 		delAction = () -> structure.remove();
@@ -34,14 +30,6 @@ public class ControlWidget extends EditorWidget implements SequenceContainer {
 	ControlWidget(Composite parent, Keyword keyword, IBlock block) {
 		super(parent);
 		create(keyword, null, block);
-		
-//		blockSeq.addControlListener(new ControlAdapter() {
-//			public void controlResized(ControlEvent e) {
-//				int t = blockSeq.totalElements();
-//				openBracket.setVisible(t != 1);
-//				closeBracket.setVisible(t != 1);
-//			}
-//		});
 	}
 
 	private void create(Keyword keyword, IExpression guard, IBlock block) {

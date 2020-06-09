@@ -11,9 +11,13 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
+import pt.iscte.paddle.model.IProgramElement;
+
 public interface IWidget {
 
 	Control getControl();
+	
+	IProgramElement getProgramElement();
 	
 	void setReadOnly(boolean readonly);
 	

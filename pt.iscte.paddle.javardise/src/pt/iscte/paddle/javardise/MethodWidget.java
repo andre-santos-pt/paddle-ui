@@ -53,12 +53,11 @@ public class MethodWidget extends ModiferWidget implements SequenceContainer, IM
 			if (procedure.is(mod.toString()))
 				addModifier(mod);
 
-
+		if(!isConstructor && !Flag.INSTANCE.is(procedure))
+			addModifier(Keyword.STATIC);
+		
 		Runnable delAction = () -> procedure.getModule().removeProcedure(procedure);
 		if (!isConstructor) {
-			if(!Flag.INSTANCE.is(procedure)) {
-				Token classToken = new Token(header, Keyword.STATIC);
-			}
 			retType = ComplexId.matchType(header, procedure.getReturnType());
 			retType.addDeleteListener(delAction);
 			addModifierKey(retType);

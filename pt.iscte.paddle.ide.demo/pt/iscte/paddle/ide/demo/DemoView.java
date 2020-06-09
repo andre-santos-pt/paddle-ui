@@ -6,6 +6,7 @@ import java.util.ServiceLoader;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
 import pt.iscte.paddle.ide.service.IPaddleService;
@@ -36,8 +37,11 @@ public class DemoView implements IPaddleView {
 	public void createContents(Composite parent, IPaddleService service) {
 		paddleService = service;
 		parent.setLayout(new FillLayout());
-		Text text = new Text(parent, SWT.BORDER);
+		Text text = new Text(parent, SWT.MULTI);
+		service.addElementSelectionListener(e -> text.setText(text.getText() + "\n" + e));
 		paddleService.addModuleSelectionListener(c -> System.out.println(c));
+		Label l = new Label(parent, SWT.BORDER);
+		l.setText(((char) 149) + "\t - topic");
 		
 	}
 

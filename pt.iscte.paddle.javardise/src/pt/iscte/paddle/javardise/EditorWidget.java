@@ -55,6 +55,11 @@ public class EditorWidget extends Composite implements ICodeElement, IWidget {
 	public Control getControl() {
 		return this;
 	}
+	
+	@Override
+	public IProgramElement getProgramElement() {
+		return element;
+	}
 
 	// fragile
 	MethodWidget getParentMethod() {
