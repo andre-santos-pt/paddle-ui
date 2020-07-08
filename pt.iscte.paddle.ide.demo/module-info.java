@@ -1,4 +1,5 @@
 import pt.iscte.paddle.ide.demo.DemoView;
+import pt.iscte.paddle.ide.demo.DemoView2;
 import pt.iscte.paddle.ide.service.IPaddleView;
 import pt.iscte.paddle.javardise.service.IJavardiseService;
 
@@ -7,7 +8,7 @@ module pt.iscte.paddle.ide.demo {
 	
 	uses IJavardiseService;
 	
-	provides IPaddleView with DemoView;
+	provides IPaddleView with DemoView, DemoView2;
 }
 
 
