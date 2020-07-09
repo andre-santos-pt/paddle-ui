@@ -51,7 +51,7 @@ public class ClassWidget extends ModiferWidget implements SequenceContainer, ICl
 		Lines(Composite parent, int n) {
 			super(parent, SWT.NONE);
 			GridLayout rowLayout = new GridLayout(1, false);
-			rowLayout.verticalSpacing = 3;
+			rowLayout.verticalSpacing = 4;
 			setLayout(rowLayout);
 //			GridData data = new GridData(SWT.END, SWT.CENTER, true, false);
 			Color c = new Color(Display.getDefault(), 230, 230, 230);

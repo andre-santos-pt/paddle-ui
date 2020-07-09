@@ -34,7 +34,7 @@ import pt.iscte.paddle.model.IVariableDeclaration;
 
 public class SequenceWidget extends Composite {
 
-	private final InsertWidget insertWidget;
+	private InsertWidget insertWidget;
 
 	public SequenceWidget(Composite parent, int margin) {
 		this(parent, margin, 3, token -> false);
@@ -49,13 +49,13 @@ public class SequenceWidget extends Composite {
 		setBackground(Constants.COLOR_BACKGROUND);
 		setLayout(layout);
 
-		insertWidget = new InsertWidget(this, true, getParent() instanceof ClassWidget, tokenAccept);
-		insertWidget.setHideMode();
-		addMouseListener(new MouseAdapter() {
-			public void mouseDown(MouseEvent e) {
-				insertWidget.setFocus();
-			}
-		});
+//		insertWidget = new InsertWidget(this, true, getParent() instanceof ClassWidget, tokenAccept);
+//		insertWidget.setHideMode();
+//		addMouseListener(new MouseAdapter() {
+//			public void mouseDown(MouseEvent e) {
+//				insertWidget.setFocus();
+//			}
+//		});
 //
 //		Supplier<List<Action>> sup = () -> {
 //			ArrayList<Action> list = new ArrayList<>();
@@ -100,10 +100,10 @@ public class SequenceWidget extends Composite {
 //	}
 
 	void insertLineAt(Control location) {
-		InsertWidget insert = insertWidget.copyTo(this);
-		insert.moveAbove(location);
-		requestLayout();
-		insert.setFocus();
+//		InsertWidget insert = insertWidget.copyTo(this);
+//		insert.moveAbove(location);
+//		requestLayout();
+//		insert.setFocus();
 	}
 	
 	void insertLineAfter(Control location) {
@@ -153,12 +153,12 @@ public class SequenceWidget extends Composite {
 
 
 	public void addAction(InsertWidget.Action a) {
-		insertWidget.addAction(a);
+//		insertWidget.addAction(a);
 	}
 
 	public void addActions(List<? extends InsertWidget.Action> actions) {
-		for(InsertWidget.Action a : actions)
-			insertWidget.addAction(a);
+//		for(InsertWidget.Action a : actions)
+//			insertWidget.addAction(a);
 	}
 
 
