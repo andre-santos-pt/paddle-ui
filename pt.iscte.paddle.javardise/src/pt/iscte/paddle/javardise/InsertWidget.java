@@ -27,7 +27,7 @@ public class InsertWidget extends Composite implements TextWidget, ICodeElement 
 
 	public InsertWidget(Composite parent, boolean permanent, boolean type, Predicate<String> tokenAccept) {
 		super(parent, SWT.NONE);
-		setLayout(Constants.ROW_LAYOUT_H);
+		setLayout(Constants.create(SWT.VERTICAL, 0));
 		setBackground(Constants.COLOR_BACKGROUND);
 		this.permanent = permanent;
 		this.type = type;

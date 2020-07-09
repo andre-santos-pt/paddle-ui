@@ -41,8 +41,8 @@ import org.eclipse.swt.widgets.Shell;
 import pt.iscte.paddle.javardise.ClassWidget;
 import pt.iscte.paddle.javardise.ComplexId;
 import pt.iscte.paddle.javardise.Constants;
-import pt.iscte.paddle.javardise.Keyword;
 import pt.iscte.paddle.javardise.InsertWidget;
+import pt.iscte.paddle.javardise.Keyword;
 import pt.iscte.paddle.javardise.SequenceWidget;
 import pt.iscte.paddle.javardise.UiMode;
 import pt.iscte.paddle.javardise.UiMode.Syntax;
@@ -126,7 +126,7 @@ public class StandaloneEditor {
 			}
 
 			public void run(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
-				classWidget = seq.addElement(p -> new ClassWidget(p, module, Keyword.match(seq.getInsertTokens())), 0);
+				classWidget = seq.addElement(p -> new ClassWidget(p, module, false, Keyword.match(seq.getInsertTokens())), 0);
 				//				classWidget = seq.addWidget(p -> new ClassWidget(p, module, Keyword.array(seq.getInsertTokens())));		
 				classWidget.setFocus();
 			}
@@ -161,7 +161,7 @@ public class StandaloneEditor {
 		});
 
 		shell.setText(module.getId() + ".java");
-		seq.addElement(p -> classWidget = new ClassWidget(p, module));
+		seq.addElement(p -> classWidget = new ClassWidget(p, module, true));
 		classWidget.setFocus();
 		shell.setSize(600, 800);
 		shell.open();

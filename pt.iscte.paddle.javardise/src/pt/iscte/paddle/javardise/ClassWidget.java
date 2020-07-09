@@ -7,11 +7,14 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 
 import pt.iscte.paddle.javardise.UiMode.Syntax;
@@ -43,14 +46,44 @@ public class ClassWidget extends ModiferWidget implements SequenceContainer, ICl
 		return list -> Keyword.classModifiers();
 	}
 	
-	public ClassWidget(Composite parent, IModule module, Keyword ... modifiers) {
+	private class Lines extends Composite {
+		Lines(Composite parent, int n) {
+			super(parent, SWT.NONE);
+			GridLayout rowLayout = new GridLayout(1, false);
+			rowLayout.verticalSpacing = 3;
+			setLayout(rowLayout);
+			GridData data = new GridData(SWT.END, SWT.CENTER, true, false);
+			setBackground(Display.getDefault().getSystemColor(SWT.COLOR_GRAY));
+			for(int i = 1; i <= n; i++) {
+				Label label = new Label(this, SWT.NONE);
+				label.setText(Integer.toString(i));
+				label.setLayoutData(data);
+				Constants.setFont(label, false);
+				label.setBackground(Display.getDefault().getSystemColor(SWT.COLOR_GRAY));
+				label.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_WHITE));
+			}
+		}
+	}
+	public ClassWidget(Composite parent, IModule module, boolean lines, Keyword ... modifiers) {
 		super(parent, module);
 		this.module = module;
-		GridLayout layout = new GridLayout(1, true);
-		layout.verticalSpacing = 10;
+		GridLayout layout = new GridLayout(lines ? 2 : 1, false);
+		layout.verticalSpacing = 0;
 		setLayout(layout);
+		Composite cArea = this;
+		if(lines) {
+			new Lines(this, 100);
+			cArea = new Composite(this, SWT.NONE);
+			GridLayout l = new GridLayout(1, false);
+			l.verticalSpacing = 0;
+			cArea.setLayout(l);
+			cArea.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, false, false));
+			cArea.setBackground(Constants.COLOR_BACKGROUND);
+			
+		}
+		
 		if (UiMode.editorMode() == UiMode.Editor.REGULAR) {
-			header = Constants.createHeader(this);
+			header = Constants.createHeader(cArea);
 			for(Keyword mod : modifiers)
 				addModifier(mod);
 
@@ -64,7 +97,7 @@ public class ClassWidget extends ModiferWidget implements SequenceContainer, ICl
 		int margin = UiMode.editorMode() == UiMode.Editor.STATIC ? 0 : Constants.TAB;
 
 		Predicate<String> tokenAccept = token -> acceptModifier(token) || Constants.isType(token) || IType.VOID.getId().equals(token);
-		methods = new SequenceWidget(this, margin, 5, tokenAccept);
+		methods = new SequenceWidget(cArea, margin, 0, tokenAccept);
 		methods.addAction(new InsertWidget.Action("field") {
 			public boolean isEnabled(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
 				if(tokens.size() < 1)
@@ -138,7 +171,7 @@ public class ClassWidget extends ModiferWidget implements SequenceContainer, ICl
 		
 
 		if (UiMode.editorMode() == UiMode.Editor.REGULAR)
-			new FixedToken(this, "}");
+			new FixedToken(cArea, "}");
 
 		module.addListener(new IModule.IListener() {
 			public void constantAdded(IConstantDeclaration constant) {

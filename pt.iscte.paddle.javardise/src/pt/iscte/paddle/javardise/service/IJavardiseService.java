@@ -12,8 +12,8 @@ import pt.iscte.paddle.model.IVariableDeclaration;
 
 public interface IJavardiseService {
 
-	static IClassWidget createClassWidget(Composite parent, IModule module) {
-		return new ClassWidget(parent, module);
+	static IClassWidget createClassWidget(Composite parent, IModule module, boolean lines) {
+		return new ClassWidget(parent, module, lines);
 	}
 	
 	static IMethodWidget createMethodWidget(Composite parent, IProcedure procedure) {

@@ -271,7 +271,7 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 	}
 
 	private class Dimension implements CodeElementControl {
-		private FixedToken left;
+		private Token left;
 		private ExpressionWidget expression;
 		private Token right;
 
@@ -279,7 +279,7 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 			elements.add(this);
 			if(f == null)
 				f = p -> new SimpleExpressionWidget(p, "expression");
-				left = new FixedToken(parent, "[");
+				left = new Token(parent, "[");
 				expression = new ExpressionWidget(parent, f, null);
 				right = new Token(parent, "]");
 				right.addKeyListener(new KeyAdapter() {

@@ -47,7 +47,7 @@ public class MethodWidget extends ModiferWidget implements SequenceContainer, IM
 //		RowLayout layout = new RowLayout(SWT.VERTICAL);
 //		layout.marginTop = Constants.METHOD_SPACING;
 //		setLayout(layout);
-		 setLayout(Constants.ROW_LAYOUT_V_ZERO);
+		 setLayout(Constants.create(SWT.VERTICAL, 0));
 		header = Constants.createHeader(this);
 		for (Keyword mod : Keyword.methodModifiers())
 			if (procedure.is(mod.toString()))
