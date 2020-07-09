@@ -7,6 +7,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
@@ -52,15 +53,19 @@ public class ClassWidget extends ModiferWidget implements SequenceContainer, ICl
 			GridLayout rowLayout = new GridLayout(1, false);
 			rowLayout.verticalSpacing = 3;
 			setLayout(rowLayout);
-			GridData data = new GridData(SWT.END, SWT.CENTER, true, false);
-			setBackground(Display.getDefault().getSystemColor(SWT.COLOR_GRAY));
+//			GridData data = new GridData(SWT.END, SWT.CENTER, true, false);
+			Color c = new Color(Display.getDefault(), 230, 230, 230);
+			setBackground(c);
 			for(int i = 1; i <= n; i++) {
 				Label label = new Label(this, SWT.NONE);
-				label.setText(Integer.toString(i));
-				label.setLayoutData(data);
+				String s = Integer.toString(i);
+				if(s.length() == 1)
+					s = "0" + s;
+				label.setText(s);
+//				label.setLayoutData(data);
 				Constants.setFont(label, false);
-				label.setBackground(Display.getDefault().getSystemColor(SWT.COLOR_GRAY));
-				label.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_WHITE));
+				label.setBackground(c);
+				label.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_GRAY));
 			}
 		}
 	}
@@ -72,7 +77,7 @@ public class ClassWidget extends ModiferWidget implements SequenceContainer, ICl
 		setLayout(layout);
 		Composite cArea = this;
 		if(lines) {
-			new Lines(this, 100);
+			new Lines(this, 99);
 			cArea = new Composite(this, SWT.NONE);
 			GridLayout l = new GridLayout(1, false);
 			l.verticalSpacing = 0;

@@ -69,7 +69,7 @@ public interface Constants {
 	Supplier<List<String>> PRIMITIVE_TYPES_VOID_SUPPLIER = () -> PRIMITIVE_TYPES_VOID;
 
 	RowLayout ROW_LAYOUT_H_SHRINK = create(SWT.HORIZONTAL, -3);
-	RowLayout ROW_LAYOUT_H_ZERO = create(SWT.HORIZONTAL, 0);
+	RowLayout ROW_LAYOUT_H_ZERO = create(SWT.HORIZONTAL, 2);
 	RowLayout ROW_LAYOUT_H = create(SWT.HORIZONTAL, 3);
 	RowLayout ROW_LAYOUT_H_DOT = create(SWT.HORIZONTAL, 0);
 	RowLayout ROW_LAYOUT_V_ZERO = create(SWT.VERTICAL, 2);
@@ -129,6 +129,7 @@ public interface Constants {
 			HIDE_ROW.exclude = true;
 			//			SHOW_ROW.width = SWT.DEFAULT;
 			//			HIDE_ROW.width = 0;
+			HIDE_ROW.height = 0;
 		}
 	}
 	//	FocusListener ADD_HIDE = new FocusListener() {
