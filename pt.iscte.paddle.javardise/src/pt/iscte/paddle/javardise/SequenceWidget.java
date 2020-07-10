@@ -187,10 +187,10 @@ public class SequenceWidget extends Composite {
 	public <T extends EditorWidget> T addElement(Function<Composite, T> f, int modelIndex) {
 		Control el = viewElement(modelIndex);
 		T w = f.apply(this);
-		if(isElse(w))
-			w.moveBelow(el);
-		else
-			w.moveAbove(el);
+//		if(isElse(w))
+//			w.moveBelow(el);
+//		else
+//			w.moveAbove(el);
 		return w;
 	}
 	
