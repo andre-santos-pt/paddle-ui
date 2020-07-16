@@ -36,6 +36,7 @@ public class ClassWidget extends ModiferWidget implements SequenceContainer, ICl
 	private Id id;
 	private SequenceWidget methods;
 	private Composite header;
+	private Token classToken;
 
 	@Override
 	Composite getHeader() {
@@ -92,7 +93,7 @@ public class ClassWidget extends ModiferWidget implements SequenceContainer, ICl
 			for(Keyword mod : modifiers)
 				addModifier(mod);
 
-			Token classToken = new Token(header, Keyword.CLASS);
+			classToken = new Token(header, Keyword.CLASS);
 			addModifierKey(classToken);
 			id = new Id(header, module.getId());
 			id.setReadOnly();
@@ -264,7 +265,7 @@ public class ClassWidget extends ModiferWidget implements SequenceContainer, ICl
 	}
 
 	public boolean setFocus() {
-		return id == null ? false : id.setFocus();
+		return classToken.setFocus();
 	}
 
 	public SequenceWidget getBody() {

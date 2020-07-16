@@ -82,7 +82,7 @@ public interface Expression extends ICodeElement {
 			return p -> new ComplexId(p, (IArrayElement) e);
 		}
 		else if(e instanceof IArrayLength) {
-			return p -> new ComplexId(p, (IArrayLength) e);
+			return p -> new ComplexId(p, (IArrayLength) e) ;
 		}
 		else if(e instanceof IRecordFieldExpression) {
 			return p -> new ComplexId(p, (IRecordFieldExpression) e);

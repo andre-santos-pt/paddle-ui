@@ -5,6 +5,8 @@ import java.util.function.BiFunction;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.PaintEvent;
+import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
@@ -33,6 +35,13 @@ class Decoration<T extends Control> implements ICodeDecoration<T> {
 					setLocation(target, loc, control);
 			}
 			public void controlResized(ControlEvent e) {
+				if(!shell.isDisposed())
+					setLocation(target, loc, control);
+			}
+		});
+		
+		target.addPaintListener(new PaintListener() {
+			public void paintControl(PaintEvent e) {
 				if(!shell.isDisposed())
 					setLocation(target, loc, control);
 			}

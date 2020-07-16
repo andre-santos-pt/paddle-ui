@@ -65,6 +65,8 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 	// TODO fix for expression resolve
 	ComplexId(Composite p, IArrayLength e) {
 		this(p, e, ((IVariableExpression) e.getTarget()).getVariable().getId());
+		for(IExpression exp : e.getIndexes())
+			new Dimension(this, Expression.match(exp));
 		addField("length");
 	}
 
@@ -81,8 +83,21 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 				"procedure", false);
 	}
 
-	
-	
+	static ComplexId createLength(Composite parent, IArrayLength e) {
+		IExpression target = e.getTarget();
+		ComplexId id = null;
+		if(target instanceof IArrayElement) {
+			id = new ComplexId(parent, e, ((IArrayElement) target).getId());
+			for(IExpression exp : ((IArrayElement) target).getIndexes())
+				id.new Dimension(id, Expression.match(exp));
+		}
+		else if(target instanceof IVariableExpression)
+			id = new ComplexId(parent, e, ((IVariableExpression) target).getId());
+		id.addField("length");
+		return id;
+	}
+
+
 	ComplexId(Composite parent, String id, boolean type) {
 		super(parent);
 		this.type = type;
@@ -94,7 +109,7 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 		this.type = false;
 		init(id);
 	}
-	
+
 	private void init(String id) {
 		this.elements = new ArrayList<>();
 		setLayout(Constants.ROW_LAYOUT_H_SHRINK);
@@ -124,7 +139,7 @@ public class ComplexId extends EditorWidget implements TextWidget, Expression {
 		Constants.addInsertLine(this);
 		setBackgroundColor();
 	}
-	
+
 	private void setBackgroundColor() {
 		for(Control c : getChildren()) {
 			if(isComment()) {
