@@ -17,15 +17,11 @@ import java.util.stream.Collectors;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
-import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.PaintEvent;
-import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -49,8 +45,8 @@ import pt.iscte.paddle.interpreter.IExecutionData;
 import pt.iscte.paddle.interpreter.IMachine;
 import pt.iscte.paddle.interpreter.IProgramState;
 import pt.iscte.paddle.interpreter.IValue;
-import pt.iscte.paddle.javardise.service.IClassWidget;
-import pt.iscte.paddle.javardise.service.IJavardiseService;
+import pt.iscte.paddle.javaeditor.api.IClassWidget;
+import pt.iscte.paddle.javaeditor.api.IJavardiseService;
 import pt.iscte.paddle.model.IModule;
 import pt.iscte.paddle.model.IProgramElement;
 import pt.iscte.paddle.model.IRecordType;
@@ -187,6 +183,7 @@ public class PaddleIDE implements IPaddleService
 		tabItem.setText(namespace);
 		tabItem.setData(namespace);
 		IClassWidget w = javarService.createClassWidgetScroll(modulesFolder, module, namespace, s -> tabItem.setControl(s));
+	
 		w.addSelectionListener(sel -> {
 			if(modulesFolder.getItem(modulesFolder.getSelectionIndex()).getData() == w)
 				listeners.forEach(e -> e.accept(sel.getProgramElement())); // TODO send only not null?

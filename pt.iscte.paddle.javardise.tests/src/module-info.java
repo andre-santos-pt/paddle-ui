@@ -1,4 +1,4 @@
-import pt.iscte.paddle.javardise.service.IJavardiseService;
+import pt.iscte.paddle.javaeditor.api.IJavardiseService;
 
 module pt.iscte.paddle.javardise.tests {
 	requires pt.iscte.paddle.javardise;
@@ -6,6 +6,7 @@ module pt.iscte.paddle.javardise.tests {
 	requires pt.iscte.paddle.model.tests;
 	requires java.compiler;
 	requires junit;
+	requires pt.iscte.paddle.javaeditor;
 	
 	exports pt.iscte.paddle.javardise.tests;
 

@@ -15,11 +15,11 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 
 import pt.iscte.paddle.javardise.Constants.GridDatas;
-import pt.iscte.paddle.javardise.service.ICodeElement;
+import pt.iscte.paddle.javardise.api.ICodeElement;
 
 public class InsertWidget extends Composite implements TextWidget, ICodeElement {
 
-	private final ComplexId complexId;
+	private final TextWidget complexId;
 	private final boolean permanent;
 	private final boolean type;
 	private List<Action> actions;
@@ -36,19 +36,19 @@ public class InsertWidget extends Composite implements TextWidget, ICodeElement 
 		this.actions = new ArrayList<>();
 	}
 
-	private ComplexId createInsertWidget(boolean type) {
-		ComplexId complexId = new ComplexId(this, "", type);
+	private TextWidget createInsertWidget(boolean type) {
+		TextWidget complexId = LanguageConfiguration.INSTANCE.createInsertWidget(this, true);//new ExpressionChain(this, "", type);
 		complexId.addKeyListener(new KeyAdapter() {
 			public void keyPressed(KeyEvent e) {
 				String last = complexId.getText();
 				if(e.character == SWT.SPACE && tokenAccept.test(last)) {
-					Token token = new Token(InsertWidget.this, last);
-					token.moveAbove(complexId);
+					TokenWidget token = new TokenWidget(InsertWidget.this, last);
+//					token.moveAbove(complexId);
 					token.addKeyListener(new KeyAdapter() {
 						public void keyPressed(KeyEvent e) {
 							if(e.keyCode == Constants.DEL_KEY) {
 								token.dispose();
-								complexId.setFocus();
+//								complexId.setFocus();
 								requestLayout();
 							}
 						}
@@ -81,7 +81,7 @@ public class InsertWidget extends Composite implements TextWidget, ICodeElement 
 			}
 			
 		});
-		complexId.setAllowEmpty(() -> true);
+//		complexId.setAllowEmpty(() -> true);
 		
 //		complexId.addFocusListener(new FocusAdapter() {
 //			public void focusLost(FocusEvent e) {
@@ -122,7 +122,7 @@ public class InsertWidget extends Composite implements TextWidget, ICodeElement 
 		requestLayout();
 	}
 	
-	private void clearTokens() {
+	public void clearTokens() {
 		if(!isDisposed()) {
 			Control[] children = getChildren();
 			for(int i = 0; i < children.length-1; i++)
@@ -132,15 +132,15 @@ public class InsertWidget extends Composite implements TextWidget, ICodeElement 
 	}
 
 	public static abstract class Action {
-		final CharSequence text;
+		protected final CharSequence text;
 		
 		public Action(CharSequence text) {
 			this.text = text;
 		}
-		public boolean isEnabled(char c, ComplexId id, int index, int caret, int selection, List<String> tokens) {
+		public boolean isEnabled(char c, TextWidget id, int index, int caret, int selection, List<String> tokens) {
 			return true;
 		}
-		public abstract void run(char c, ComplexId id, int index, int caret, int selection, List<String> tokens);
+		public abstract void run(char c, TextWidget id, int index, int caret, int selection, List<String> tokens);
 	}
 
 
@@ -154,7 +154,7 @@ public class InsertWidget extends Composite implements TextWidget, ICodeElement 
 		Control[] children = getChildren();
 		List<String> tokens = new ArrayList<>(children.length-1);
 		for(int i = 0; i < children.length-1; i++)
-			tokens.add(((Text) children[i]).getText()); // TODO Bug
+			tokens.add(((TextWidget) children[i]).getText()); // TODO Bug
 		return tokens;
 	}
 
@@ -165,12 +165,12 @@ public class InsertWidget extends Composite implements TextWidget, ICodeElement 
 	
 	@Override
 	public void toCode(StringBuffer buffer) {
-		if(complexId.isComment())
+//		if(complexId.isComment())
 			buffer.append(complexId.getText());
 	}
 
 	@Override
 	public Control getControl() {
-		return complexId;
+		return complexId.getWidget();
 	}
 }

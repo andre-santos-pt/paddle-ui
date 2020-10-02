@@ -9,7 +9,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Text;
 
-import pt.iscte.paddle.javardise.service.ICodeElement;
+import pt.iscte.paddle.javardise.api.ICodeElement;
 
 public class Id extends EditorWidget implements TextWidget {
 
@@ -18,7 +18,7 @@ public class Id extends EditorWidget implements TextWidget {
 	private Runnable editAction = () -> {};
 	private Supplier<Boolean> allowEmpty = () -> false;
 	
-	Id(Composite parent, String id) {
+	public Id(Composite parent, String id) {
 		super(parent);
 		setLayout(Constants.ROW_LAYOUT_H_ZERO);
 		setBackground(Constants.COLOR_BACKGROUND);
@@ -27,7 +27,7 @@ public class Id extends EditorWidget implements TextWidget {
 		if(id.isBlank() && !allowEmpty.get())
 			text.setBackground(Constants.COLOR_ERROR);
 		text.addVerifyListener(e -> e.doit =
-				!readOnly && (isValidCharacter(e.character) || e.character == Constants.DEL_KEY || e.character == SWT.CR));	
+				!readOnly && (LanguageConfiguration.INSTANCE.isValidIdCharacter(e.character) || e.character == Constants.DEL_KEY || e.character == SWT.CR));	
 	
 		text.addFocusListener(new FocusListener() {
 			public void focusGained(FocusEvent e) {
@@ -54,12 +54,12 @@ public class Id extends EditorWidget implements TextWidget {
 			text.setBackground(Constants.COLOR_BACKGROUND);
 	}	
 	
-	void setAllowEmpty(Supplier<Boolean> allowEmpty) {
+	public void setAllowEmpty(Supplier<Boolean> allowEmpty) {
 		this.allowEmpty = allowEmpty;
 		setBackgroundError();
 	}
 	
-	void setReadOnly() {
+	public void setReadOnly() {
 //		text.setEditable(false);
 		readOnly = true;
 	}
@@ -79,18 +79,9 @@ public class Id extends EditorWidget implements TextWidget {
 		return true;
 	}
 
-	public static boolean isValidCharacter(char c) {
-		return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
-	}
-
-	public static boolean isValid(String s) {
-		return s.matches("[a-zA-Z_]+") && !Keyword.is(s);
-	}
-
 	public void setMenu(Menu menu) {
 		text.setMenu(menu);
 	}
-
 	
 	@Override
 	public void toCode(StringBuffer buffer) {

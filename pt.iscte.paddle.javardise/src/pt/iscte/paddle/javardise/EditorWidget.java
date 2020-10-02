@@ -20,26 +20,27 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Text;
 
-import pt.iscte.paddle.javardise.service.ICodeDecoration;
-import pt.iscte.paddle.javardise.service.ICodeElement;
-import pt.iscte.paddle.javardise.service.IWidget;
-import pt.iscte.paddle.model.IProgramElement;
+import pt.iscte.paddle.javardise.api.ICodeDecoration;
+import pt.iscte.paddle.javardise.api.ICodeElement;
+import pt.iscte.paddle.javardise.api.IWidget;
 
-public class EditorWidget extends Composite implements ICodeElement, IWidget {
+public class EditorWidget<T> extends Composite implements ICodeElement, IWidget<T> {
 
-	public static final WeakHashMap<IProgramElement, EditorWidget> map = new WeakHashMap<>();
+	public static final WeakHashMap<Object, EditorWidget> map = new WeakHashMap<>();
 
-	IProgramElement element;
+	public final T element;
 
-	EditorWidget(Composite parent) {
+	protected EditorWidget(Composite parent) {
 		super(parent, SWT.NONE);
 		setLayout(Constants.ROW_LAYOUT_H_ZERO);
 		setBackground(Constants.COLOR_BACKGROUND);
 		element = null;
 	}
 
-	EditorWidget(Composite parent, IProgramElement element) {
-		this(parent);
+	protected EditorWidget(Composite parent, T element) {
+		super(parent, SWT.NONE);
+		setLayout(Constants.ROW_LAYOUT_H_ZERO);
+		setBackground(Constants.COLOR_BACKGROUND);
 		this.element = element;
 		if(element != null) 
 			map.put(element, this);
@@ -57,24 +58,15 @@ public class EditorWidget extends Composite implements ICodeElement, IWidget {
 	}
 	
 	@Override
-	public IProgramElement getProgramElement() {
+	public T getProgramElement() {
 		return element;
-	}
-
-	// fragile
-	MethodWidget getParentMethod() {
-		EditorWidget e = this;
-		while(!(e instanceof MethodWidget))
-			e = (EditorWidget)e.getParent();
-
-		return (MethodWidget) e;
 	}
 
 	void popup(Menu menu, Control control) {
 		menu.setLocation(control.toDisplay(0, 40));
 	}
 
-	void appendTabs(StringBuffer buffer, int n) {
+	protected void appendTabs(StringBuffer buffer, int n) {
 		while(n-- > 0)
 			buffer.append("\t");
 	}

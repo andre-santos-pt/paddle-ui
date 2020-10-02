@@ -1,46 +1,27 @@
 package pt.iscte.paddle.javardise;
 
-import static pt.iscte.paddle.javardise.Keyword.BREAK;
-import static pt.iscte.paddle.javardise.Keyword.CONTINUE;
-import static pt.iscte.paddle.javardise.Keyword.RETURN;
-import static pt.iscte.paddle.javardise.Keyword.WHILE;
-
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.KeyAdapter;
-import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
-import pt.iscte.paddle.javardise.service.ICodeElement;
-import pt.iscte.paddle.model.IArrayElementAssignment;
-import pt.iscte.paddle.model.IBlock;
-import pt.iscte.paddle.model.IBreak;
-import pt.iscte.paddle.model.IContinue;
-import pt.iscte.paddle.model.ILoop;
-import pt.iscte.paddle.model.IProcedureCall;
-import pt.iscte.paddle.model.IProgramElement;
-import pt.iscte.paddle.model.IReturn;
-import pt.iscte.paddle.model.ISelection;
-import pt.iscte.paddle.model.IType;
-import pt.iscte.paddle.model.IVariableAssignment;
-import pt.iscte.paddle.model.IVariableDeclaration;
+import pt.iscte.paddle.javardise.api.ICodeElement;
 
 public class SequenceWidget extends Composite {
 
 	private final InsertWidget insertWidget;
 
 	public SequenceWidget(Composite parent, int margin) {
-		this(parent, margin, 3, token -> false);
+		this(parent, margin, 3, false, token -> false);
 	}
 
-	public SequenceWidget(Composite parent, int marginLeft, int verticalSpacing, Predicate<String> tokenAccept) {
+	public SequenceWidget(Composite parent, int marginLeft, int verticalSpacing, boolean type, Predicate<String> tokenAccept) {
 		super(parent, SWT.NONE);
 		GridLayout layout = new GridLayout(1, true);
 		layout.marginLeft = marginLeft;
@@ -49,7 +30,7 @@ public class SequenceWidget extends Composite {
 		setBackground(Constants.COLOR_BACKGROUND);
 		setLayout(layout);
 
-		insertWidget = new InsertWidget(this, true, getParent() instanceof ClassWidget, tokenAccept);
+		insertWidget = new InsertWidget(this, true, type, tokenAccept);
 		insertWidget.setHideMode();
 		addMouseListener(new MouseAdapter() {
 			public void mouseDown(MouseEvent e) {
@@ -113,42 +94,28 @@ public class SequenceWidget extends Composite {
 		insert.setFocus();
 	}
 
-	int findModelIndex(Control location) {
+	public int findModelIndex(Control location) {
 		int i = 0;
 		for (Control c : getChildren()) {
 			if (c == location)
 				return i;
 
-			if(!isElse(c) && !(c instanceof InsertWidget))
+			if(!(c instanceof InsertWidget))
 				i++;
 		}
 		assert false;
 		return -1;
 	}
 
-	private int toViewIndex(int modelIndex) {
-		assert modelIndex < getChildren().length : modelIndex;
-		int elsesAndInserts = 0;
-		Control[] children = getChildren();
-		for(int i = 0; i <= modelIndex; i++)
-			if(isElse(children[i]) || children[i] instanceof InsertWidget)
-				elsesAndInserts++;
-		
-		return modelIndex + elsesAndInserts;
-	}
-
-	private static boolean isElse(Control c) {
-		return c instanceof ControlWidget && ((ControlWidget) c).is(Keyword.ELSE);
-	}
 
 	int totalElements() {
 		Control[] children = getChildren();
-		int elsesAndInserts = 0;
+		int inserts = 0;
 		for (Control c : children)
-			if(isElse(c) || c instanceof InsertWidget)
-				elsesAndInserts++;
+			if(c instanceof InsertWidget)
+				inserts++;
 
-		return children.length - elsesAndInserts;
+		return children.length - inserts;
 	}
 
 
@@ -161,18 +128,6 @@ public class SequenceWidget extends Composite {
 			insertWidget.addAction(a);
 	}
 
-
-	void addBlockListener(IBlock block) {
-		block.addListener(new IBlock.IListener() {
-			public void elementAdded(IProgramElement element, int index) {
-				addModelElement(element, index);
-			}
-
-			public void elementRemoved(IProgramElement element, int index) {
-				removeElement(element);
-			}
-		});
-	}
 
 	public <T extends EditorWidget> T addLineAndElement(Function<Composite, T> f) {
 		T e = addElement(f, totalElements());
@@ -187,28 +142,25 @@ public class SequenceWidget extends Composite {
 	public <T extends EditorWidget> T addElement(Function<Composite, T> f, int modelIndex) {
 		Control el = viewElement(modelIndex);
 		T w = f.apply(this);
-		if(isElse(w))
-			w.moveBelow(el);
-		else
-			w.moveAbove(el);
+		w.moveAbove(el);
 		return w;
 	}
 	
 	private Control viewElement(int modelIndex) {
 		assert modelIndex < getChildren().length : modelIndex;
-		int elsesAndInserts = 0;
+		int inserts = 0;
 		Control[] children = getChildren();
 		for(int i = 0, m = 0; m <= modelIndex && i < children.length; i++)
-			if(isElse(children[i]) || children[i] instanceof InsertWidget)
-				elsesAndInserts++;
+			if(children[i] instanceof InsertWidget)
+				inserts++;
 			else
 				m++;
 		
-		int v = modelIndex + elsesAndInserts;
+		int v = modelIndex + inserts;
 		return v < children.length ? children[v] : insertWidget;
 	}
 
-	void removeElement(IProgramElement e) {
+	public void removeElement(Object e) {
 		Control[] children = getChildren();
 		for (int i = 0; i < children.length-1; i++) {
 			if (children[i] instanceof EditorWidget && ((EditorWidget) children[i]).element == e) {
@@ -270,7 +222,7 @@ public class SequenceWidget extends Composite {
 
 	}
 
-	void focusLast() {
+	public void focusLast() {
 		Control[] children = getChildren();
 		children[children.length - 1].setFocus();
 	}
@@ -289,79 +241,4 @@ public class SequenceWidget extends Composite {
 	public List<String> getInsertTokens() {
 		return insertWidget.getTokens();
 	}
-
-
-	void addModelElement(IProgramElement element, int index) {
-		if(Flag.CONSTRUCTOR.is(element))
-			return;
-		
-		if (element instanceof IVariableDeclaration && Flag.FOR.isNot(element)) {
-			IVariableDeclaration v = (IVariableDeclaration) element;
-			DeclarationWidget w = addElement(p -> new DeclarationWidget(p, v, null), index);
-			w.focusId();
-		} 
-
-		else if (element instanceof IVariableAssignment && Flag.FOR.isNot(element)) {
-			IVariableAssignment a = (IVariableAssignment) element;
-			AssignmentWidget w = addElement(p -> new AssignmentWidget(p, a), index);
-			w.focusExpression();
-		} 
-
-		else if (element instanceof IArrayElementAssignment) {
-			IArrayElementAssignment a = (IArrayElementAssignment) element;
-			AssignmentWidget w = addElement(p -> new AssignmentWidget(p, a), index);
-			w.focusExpression();
-		} 
-
-		else if (element instanceof ISelection) {
-			ISelection s = (ISelection) element;
-			IfElseWidget w = addElement(p -> new IfElseWidget(p, s), index);
-			w.focusIn();
-		} 
-		
-		else if (element instanceof ILoop && Flag.FOR.isNot(element)) {
-			ILoop l = (ILoop) element;
-			ControlWidget w =  addElement(p -> new ControlWidget(p, WHILE, l), index);
-			w.focusIn();
-		} 
-
-		//		else if (element instanceof IBlock && element.is(Constants.FOR_FLAG)) { 
-		//			ForWidget w = new ForWidget(SequenceWidget.this, null, (IBlock) element);   // TODO guard
-		//			addElement(w, index);
-		//			w.focusDeclaration();
-		//		} 
-
-		else if (element instanceof IBreak) {
-			addElement(p -> new InstructionWidget(p, BREAK, (IBreak) element), index);
-
-		} 
-		else if (element instanceof IContinue) {
-			addElement(p -> new InstructionWidget(p, CONTINUE, (IContinue) element), index);
-		} 
-
-		else if (element instanceof IProcedureCall) {
-			IProcedureCall call = (IProcedureCall) element;
-			CallWidget w = addElement(p -> new CallWidget(p, call, true, Expression.creators(call.getArguments())), index);
-			w.focusArgument();
-		} 
-
-		else if (element instanceof IReturn) {
-			IReturn ret = (IReturn) element;
-			InstructionWidget w = addElement(p -> new InstructionWidget(p, RETURN, ret, ret.getExpression()), index);
-			w.focusExpression();
-			w.getWidget().addKeyListener(new KeyAdapter() {
-				public void keyPressed(KeyEvent e) {
-					if(e.keyCode == SWT.SPACE) {
-						IType retType = ret.getOwnerProcedure().getReturnType();
-						w.addExpression(retType.getDefaultExpression());
-						w.focusExpression();
-					}
-				}
-			});
-		} else {
-			System.err.println("unhandled: " + element);
-			assert false;
-		}
-	}
-
 }

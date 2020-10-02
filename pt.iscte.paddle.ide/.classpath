@@ -6,12 +6,7 @@
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry combineaccessrules="false" kind="src" path="/pt.iscte.paddle.model">
-		<attributes>
-			<attribute name="module" value="true"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry combineaccessrules="false" kind="src" path="/pt.iscte.paddle.javardise">
+	<classpathentry combineaccessrules="false" kind="src" path="/pt.iscte.paddle.model.javaparser">
 		<attributes>
 			<attribute name="module" value="true"/>
 		</attributes>
@@ -21,7 +16,17 @@
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry combineaccessrules="false" kind="src" path="/pt.iscte.paddle.model.javaparser">
+	<classpathentry combineaccessrules="false" kind="src" path="/pt.iscte.paddle.javardise">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry combineaccessrules="false" kind="src" path="/pt.iscte.paddle.model">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry combineaccessrules="false" kind="src" path="/pt.iscte.paddle.javaeditor">
 		<attributes>
 			<attribute name="module" value="true"/>
 		</attributes>

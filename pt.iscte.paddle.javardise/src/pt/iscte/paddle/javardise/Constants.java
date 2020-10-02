@@ -1,9 +1,5 @@
 package pt.iscte.paddle.javardise;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.function.Supplier;
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
@@ -24,9 +20,6 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
-import pt.iscte.paddle.model.IType;
-import pt.iscte.paddle.model.IVariableDeclaration;
-
 public interface Constants {
 
 	int TAB = 25;
@@ -43,13 +36,6 @@ public interface Constants {
 //	Color COLOR_HIGHLIGHT = new Color(Display.getDefault(), 0, 200, 200);
 
 
-	List<String> BINARY_OPERATORS = 		Arrays.asList("+", "-", "*", "/", "%", "==", "!=", "<", "<=", ">", ">=", "&&", "||", "^");
-	List<String> ARITHMETIC_OPERATORS = 	Arrays.asList("+", "-", "*", "/", "%");
-	List<String> RELATIONAL_OPERATORS = 	Arrays.asList("==", "!=", "<", "<=", ">", ">=");
-	List<String> LOGICAL_OPERATORS = 		Arrays.asList("&&", "||", "^");
-
-	List<String> UNARY_OPERATORS = Arrays.asList("!", "-", "+");  //"(int)", "(double)");
-	
 	int FONT_SIZE = 16;
 	int MENU_KEY = SWT.SPACE;
 	int DEL_KEY = SWT.BS;
@@ -59,14 +45,6 @@ public interface Constants {
 	Font FONT_KEYWORD = new Font(null, FONT_FACE, FONT_SIZE, SWT.BOLD);
 	Font FONT_PH = new Font(null, FONT_FACE, FONT_SIZE, SWT.NONE);
 
-
-
-	List<String> PRIMITIVE_TYPES = Arrays.asList("boolean", "int", "char", "double");
-
-	Supplier<List<String>> PRIMITIVE_TYPES_SUPPLIER = () -> PRIMITIVE_TYPES;
-	List<String> PRIMITIVE_TYPES_VOID = Arrays.asList("void", "boolean", "int", "char","double");
-
-	Supplier<List<String>> PRIMITIVE_TYPES_VOID_SUPPLIER = () -> PRIMITIVE_TYPES_VOID;
 
 	RowLayout ROW_LAYOUT_H_SHRINK = create(SWT.HORIZONTAL, -3);
 	RowLayout ROW_LAYOUT_H_ZERO = create(SWT.HORIZONTAL, 0);
@@ -104,7 +82,7 @@ public interface Constants {
 	static void setFont(Control control, boolean init) {
 		assert control instanceof Text || control instanceof Label;
 		String text = control instanceof Text ? ((Text) control).getText() : ((Label) control).getText();
-		if (Keyword.is(text)) {
+		if (LanguageConfiguration.INSTANCE.isKeyword(text)) {
 			control.setFont(FONT_KEYWORD);
 			control.setForeground(COLOR_KEYWORD);
 
@@ -187,7 +165,7 @@ public interface Constants {
 				TextWidget w = (TextWidget) e.widget.getData();
 				Control statement = w.getStatement();
 				SequenceWidget seq = (SequenceWidget) statement.getParent();
-				if(w instanceof Token || (w.isAtBeginning() && !w.isAtEnd())) 
+				if(w instanceof TokenWidget || (w.isAtBeginning() && !w.isAtEnd())) 
 					seq.insertLineAt(statement);
 				else
 					seq.insertLineAfter(statement);
@@ -220,9 +198,6 @@ public interface Constants {
 		}
 	};
 
-	String EMPTY_EXPRESSION_SERIALIZE = "$EMPTY$";
-
-
 	static void moveCursorUp(TextWidget widget) {
 		Control statement = widget.getStatement();
 		if(statement != null) {
@@ -246,22 +221,6 @@ public interface Constants {
 		return c;
 	}
 
-	static String variableId(IVariableDeclaration var) {
-		return var.getId() == null ? "var$" + var.procedureIndex() :  var.getId();
-	}
-
-	static String matchBinaryOperator(char character) {
-		for(String o : BINARY_OPERATORS)
-			if(o.charAt(0) == character)
-				return o;
-		return null;
-	}
-
-	// TODO other types
-	static boolean isType(String text) {
-		return  IType.match(text) != null;
-	}
-
 	static boolean isNumber(String text) {
 		try {
 			Integer.parseInt(text);
@@ -278,6 +237,12 @@ public interface Constants {
 		}
 	}
 
+	
+	
+//	static String variableId(IVariableDeclaration var) {
+//		return var.getId() == null ? "var$" + var.procedureIndex() :  var.getId();
+//	}
 
-
+	
+	String EMPTY_EXPRESSION_SERIALIZE = "$EMPTY$";
 }

@@ -24,18 +24,19 @@ import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
-import pt.iscte.paddle.javardise.service.IClassWidget;
-import pt.iscte.paddle.javardise.service.ICodeDecoration;
-import pt.iscte.paddle.javardise.service.IDeclarationWidget;
-import pt.iscte.paddle.javardise.service.IJavardiseService;
-import pt.iscte.paddle.javardise.service.IWidget;
-import pt.iscte.paddle.javardise.util.HyperlinkedText;
+import pt.iscte.paddle.javaeditor.api.HyperlinkedText;
+import pt.iscte.paddle.javaeditor.api.IClassWidget;
+import pt.iscte.paddle.javaeditor.api.IDeclarationWidget;
+import pt.iscte.paddle.javaeditor.api.IJavardiseService;
+import pt.iscte.paddle.javardise.api.ICodeDecoration;
+import pt.iscte.paddle.javardise.api.IWidget;
 import pt.iscte.paddle.model.IBlock;
 import pt.iscte.paddle.model.IBlock.IVisitor;
 import pt.iscte.paddle.model.IBlockElement;
 import pt.iscte.paddle.model.IExpression;
 import pt.iscte.paddle.model.IModule;
 import pt.iscte.paddle.model.IProcedure;
+import pt.iscte.paddle.model.IRecordType;
 import pt.iscte.paddle.model.IReturn;
 import pt.iscte.paddle.model.IType;
 import pt.iscte.paddle.model.IVariableAssignment;
@@ -51,6 +52,8 @@ public class DemoCodeDecorations {
 		TestNaturals t = new TestNaturals();
 		t.setup();
 		IModule module = t.getModule();
+		IRecordType mainType = module.addRecordType(module.getId());
+		
 		IProcedure proc = module.getProcedure("naturals");
 
 		IProcedure main = module.addProcedure(IType.VOID, p -> p.setId("main"));
@@ -85,7 +88,7 @@ public class DemoCodeDecorations {
 //		cfg.setInput(proc.getCFG());
 //		cfg.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		
-		IWidget widget2 = javarService.getWidget(main);
+		IWidget<IRecordType> widget2 = javarService.getWidget(mainType);
 		ICodeDecoration<Text> dec = widget2.addDecoration((parent, control) -> {
 			Text text = new Text(parent, SWT.BORDER);
 			text.setText("???");

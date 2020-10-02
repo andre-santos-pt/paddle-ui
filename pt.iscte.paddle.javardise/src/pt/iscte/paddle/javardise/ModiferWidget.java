@@ -10,25 +10,23 @@ import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.widgets.Composite;
 
-import pt.iscte.paddle.model.IProgramElement;
+public abstract class ModiferWidget<T> extends EditorWidget<T> {
+	private List<TokenWidget> modifiers;
 
-abstract class ModiferWidget extends EditorWidget {
-	private List<Token> modifiers;
-
-	public ModiferWidget(Composite parent, IProgramElement e) {
+	public ModiferWidget(Composite parent, T e) {
 		super(parent, e);
 		modifiers = new ArrayList<>();
 	}
 
-	abstract Composite getHeader();
+	protected abstract Composite getHeader();
 	
-	abstract Function<List<Keyword>, List<Keyword>> getModifierProvider();
+	protected abstract Function<List<String>, List<String>> getModifierProvider();
 	
-	void addModifierKey(TextWidget control) {
+	protected void addModifierKey(TextWidget control) {
 		control.addKeyListener(new KeyAdapter() {
 			public void keyPressed(KeyEvent e) {
 				if (e.keyCode == SWT.SPACE && (!control.isModifiable() || control.isAtBeginning())) {
-					Keyword k = inexistentKeyword();
+					String k = inexistentKeyword();
 					if (k != null) {
 						addModifier(k);
 						e.doit = false;
@@ -36,17 +34,17 @@ abstract class ModiferWidget extends EditorWidget {
 				}
 			}
 
-			private Keyword inexistentKeyword() {
-				for (Keyword k : getModifierProvider().apply(getModifiers()))
-					if (!modifiers.stream().anyMatch(t -> t.getText().equals(k.keyword())))
+			private String inexistentKeyword() {
+				for (String k : getModifierProvider().apply(getModifiers()))
+					if (!modifiers.stream().anyMatch(t -> t.getText().equals(k)))
 						return k;
 				return null;
 			}
 		});
 	}
 	
-	public void addModifier(Keyword mod) {
-		Token modifier = new Token(getHeader(), mod, getModifierProvider().apply(getModifiers()));
+	public void addModifier(String mod) {
+		TokenWidget modifier = new TokenWidget(getHeader(), mod, getModifierProvider().apply(getModifiers()));
 		modifier.addKeyListener(new KeyAdapter() {
 			public void keyPressed(KeyEvent e) {
 				if (e.keyCode == Constants.DEL_KEY) {
@@ -75,13 +73,13 @@ abstract class ModiferWidget extends EditorWidget {
 	
 	@Override
 	public void toCode(StringBuffer buffer) {
-		for (Token k : modifiers)
+		for (TokenWidget k : modifiers)
 			buffer.append(k.getText()).append(' ');
 	}
 	
-	List<Keyword> getModifiers() {
+	List<String> getModifiers() {
 		return modifiers.stream()
-				.map(t -> Keyword.match(t.getText()))
+				.map(t -> t.getText())
 				.collect(Collectors.toList());
 	}
 }

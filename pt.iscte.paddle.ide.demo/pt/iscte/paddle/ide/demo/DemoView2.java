@@ -16,8 +16,7 @@ import pt.iscte.paddle.interpreter.IExecutionData;
 import pt.iscte.paddle.interpreter.IMachine;
 import pt.iscte.paddle.interpreter.IProgramState;
 import pt.iscte.paddle.interpreter.IValue;
-import pt.iscte.paddle.javardise.service.IJavardiseService;
-import pt.iscte.paddle.model.IModule;
+import pt.iscte.paddle.javaeditor.api.IJavardiseService;
 
 public class DemoView2 implements IPaddleView {
 	private IPaddleService paddleService;

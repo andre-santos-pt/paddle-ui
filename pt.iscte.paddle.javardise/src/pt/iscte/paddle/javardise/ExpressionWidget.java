@@ -2,24 +2,18 @@ package pt.iscte.paddle.javardise;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.widgets.Composite;
 
-import pt.iscte.paddle.model.IExpression;
-import pt.iscte.paddle.model.IProgramElement;
+import pt.iscte.paddle.javardise.Expression.SubstitutableExpression;
 
-public class ExpressionWidget extends EditorWidget implements Expression {
+public class ExpressionWidget<T> extends EditorWidget<T> implements SubstitutableExpression {
 	Expression expression;
 
-	public ExpressionWidget(Composite parent, Expression.Creator f, IProgramElement e) {
+	public ExpressionWidget(Composite parent, Expression.Creator f, T e) {
 		super(parent, e);
 		setLayout(Constants.ROW_LAYOUT_H_ZERO);
 		expression = f.apply(this);
 	}
 
-	public void set(String expression) {
-		this.expression.dispose();
-		this.expression = new SimpleExpressionWidget(this, expression);
-		this.expression.requestLayout();
-	}
-
+	@Override
 	public void substitute(Expression current, Expression newExpression) {
 		current.dispose();
 		this.expression = newExpression;
@@ -36,7 +30,6 @@ public class ExpressionWidget extends EditorWidget implements Expression {
 	public boolean setFocus() {
 		return expression.setFocus();
 	}
-
 
 	@Override
 	public void addKeyListener(KeyListener listener) {
@@ -57,8 +50,4 @@ public class ExpressionWidget extends EditorWidget implements Expression {
 		return expression instanceof SimpleExpressionWidget && ((SimpleExpressionWidget) expression).isEmpty();
 	}
 
-	@Override
-	public IExpression toModel() {
-		return expression.toModel();
-	}
 }

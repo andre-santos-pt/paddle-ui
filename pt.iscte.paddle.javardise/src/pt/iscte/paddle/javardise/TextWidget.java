@@ -1,5 +1,7 @@
 package pt.iscte.paddle.javardise;
 
+
+import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
@@ -42,6 +44,14 @@ public interface TextWidget {
 		return getWidget().getText().isBlank();
 	}
 
+	default int  getCaretPosition() {
+		return getWidget().getCaretPosition();
+	}
+	
+	default int getSelectionCount() {
+		return getWidget().getSelectionCount();
+	}
+	
 	default boolean isAtBeginning() {
 		return getWidget().getCaretPosition() == 0 && getWidget().getSelectionCount() == 0;
 	}
@@ -70,6 +80,10 @@ public interface TextWidget {
 		getWidget().setToolTipText(text);
 	}
 
+	default void clean() {
+		getWidget().setText("");
+	}
+	
 	static TextWidget create(Text text) {
 		return new TextWidget() {
 			public Text getWidget() {
@@ -83,6 +97,10 @@ public interface TextWidget {
 		getWidget().addKeyListener(listener);
 	}
 
+	default void addFocusListener(FocusListener listener) {
+		getWidget().addFocusListener(listener);
+	}
+	
 	default KeyListener addDeleteListener(Runnable action) {
 		KeyListener l = new KeyAdapter() { 
 			public void keyPressed(KeyEvent e) {
@@ -100,5 +118,12 @@ public interface TextWidget {
 		getWidget().addKeyListener(l);
 		return l;
 	}
+
+
+	default boolean isKeyword() {
+		return LanguageConfiguration.INSTANCE.isKeyword(getWidget().getText());
+	}
+
+
 }
 

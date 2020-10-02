@@ -25,8 +25,8 @@ import javax.tools.ToolProvider;
 import org.eclipse.swt.widgets.Shell;
 import org.junit.Test;
 
-import pt.iscte.paddle.javardise.service.IClassWidget;
-import pt.iscte.paddle.javardise.service.IJavardiseService;
+import pt.iscte.paddle.javaeditor.api.IClassWidget;
+import pt.iscte.paddle.javaeditor.api.IJavardiseService;
 import pt.iscte.paddle.model.IModule;
 import pt.iscte.paddle.model.javaparser.Java2Paddle;
 import pt.iscte.paddle.model.tests.BaseTest;
