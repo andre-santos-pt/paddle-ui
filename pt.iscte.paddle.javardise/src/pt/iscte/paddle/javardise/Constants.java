@@ -21,9 +21,6 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
 public interface Constants {
-
-	int TAB = 25;
-	int METHOD_SPACING = 30;
 	
 	String FONT_FACE = "Monospace";
 
@@ -41,7 +38,7 @@ public interface Constants {
 	int DEL_KEY = SWT.BS;
 	Font FONT_TINY = new Font(null, FONT_FACE, 10, SWT.NONE);
 	Font FONT = new Font(null, FONT_FACE, FONT_SIZE, SWT.NONE);
-	Font FONT_DOT = new Font(null, "Arial", FONT_SIZE, SWT.BOLD);
+	Font FONT_DOT = new Font(null, FONT_FACE, FONT_SIZE, SWT.BOLD);
 	Font FONT_KEYWORD = new Font(null, FONT_FACE, FONT_SIZE, SWT.BOLD);
 	Font FONT_PH = new Font(null, FONT_FACE, FONT_SIZE, SWT.NONE);
 
@@ -82,7 +79,7 @@ public interface Constants {
 	static void setFont(Control control, boolean init) {
 		assert control instanceof Text || control instanceof Label;
 		String text = control instanceof Text ? ((Text) control).getText() : ((Label) control).getText();
-		if (LanguageConfiguration.INSTANCE.isKeyword(text)) {
+		if (ILanguageConfiguration.INSTANCE.isKeyword(text)) {
 			control.setFont(FONT_KEYWORD);
 			control.setForeground(COLOR_KEYWORD);
 

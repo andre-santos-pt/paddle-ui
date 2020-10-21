@@ -37,7 +37,7 @@ public class TokenWidget implements TextWidget, ICodeElement {
 		text.setEditable(false);
 		text.setBackground(Constants.COLOR_BACKGROUND);
 
-		if(LanguageConfiguration.INSTANCE.isKeyword(token)) {
+		if(ILanguageConfiguration.INSTANCE.isKeyword(token)) {
 			text.setFont(Constants.FONT_KEYWORD);
 			text.setForeground(Constants.COLOR_KEYWORD);
 		}

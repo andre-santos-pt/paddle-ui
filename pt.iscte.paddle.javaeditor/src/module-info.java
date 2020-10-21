@@ -1,7 +1,9 @@
 import pt.iscte.paddle.javaeditor.Configuration;
+import pt.iscte.paddle.javaeditor.EditorConfiguration;
 import pt.iscte.paddle.javaeditor.JavardiseService;
 import pt.iscte.paddle.javaeditor.api.IJavardiseService;
-import pt.iscte.paddle.javardise.LanguageConfiguration;
+import pt.iscte.paddle.javardise.ILanguageConfiguration;
+import pt.iscte.paddle.javardise.api.IEditorConfiguration;
 
 module pt.iscte.paddle.javaeditor {
 	requires transitive pt.iscte.paddle.javardise;
@@ -13,6 +15,7 @@ module pt.iscte.paddle.javaeditor {
 	
 	provides IJavardiseService with JavardiseService;
 	
-	uses LanguageConfiguration;
-	provides LanguageConfiguration with Configuration;
+	uses ILanguageConfiguration;
+	provides ILanguageConfiguration with Configuration;
+	provides IEditorConfiguration with EditorConfiguration;
 }

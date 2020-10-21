@@ -97,7 +97,7 @@ public class MethodWidget extends ModiferWidget<IProgramElement> implements Sequ
 			params.addEmptyParam();
 
 		new FixedToken(header, "{");
-		body = new SequenceWidget(this, Constants.TAB);
+		body = new SequenceWidget(this, 1);
 		BlockAction.addBlockListener(procedure.getBody(), body);
 		body.addActions(BlockAction.all(procedure.getBody()));
 		new FixedToken(this, "}");
@@ -107,9 +107,6 @@ public class MethodWidget extends ModiferWidget<IProgramElement> implements Sequ
 			BlockAction.addModelElement(e, i++, body);
 	}
 
-//	public IProcedure getProcedure() {
-//		return element;
-//	}
 
 	private class ParamList extends Composite {
 		public ParamList(Composite parent) {

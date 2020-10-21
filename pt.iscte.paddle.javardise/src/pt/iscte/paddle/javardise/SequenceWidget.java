@@ -1,5 +1,8 @@
 package pt.iscte.paddle.javardise;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -8,85 +11,97 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Layout;
+import org.eclipse.swt.widgets.Text;
 
 import pt.iscte.paddle.javardise.api.ICodeElement;
+import pt.iscte.paddle.javardise.api.IEditorConfiguration;
 
 public class SequenceWidget extends Composite {
 
 	private final InsertWidget insertWidget;
-
-	public SequenceWidget(Composite parent, int margin) {
-		this(parent, margin, 3, false, token -> false);
+	private final int tabs;
+	
+	public SequenceWidget(Composite parent, int tabs) {
+		this(parent, tabs, false, token -> false);
 	}
 
-	public SequenceWidget(Composite parent, int marginLeft, int verticalSpacing, boolean type, Predicate<String> tokenAccept) {
+	public SequenceWidget(Composite parent, int tabs, boolean type, Predicate<String> tokenAccept) {
 		super(parent, SWT.NONE);
+		this.tabs = tabs;
+		
 		GridLayout layout = new GridLayout(1, true);
-		layout.marginLeft = marginLeft;
-		layout.verticalSpacing = verticalSpacing;
+		layout.marginLeft = tabs * IEditorConfiguration.INSTANCE.getTabCharacters() * 5;
+		layout.verticalSpacing = 5;
 		layout.horizontalSpacing = 2;
 		setBackground(Constants.COLOR_BACKGROUND);
 		setLayout(layout);
 
 		insertWidget = new InsertWidget(this, true, type, tokenAccept);
-		insertWidget.setHideMode();
+		//		insertWidget.setHideMode();
 		addMouseListener(new MouseAdapter() {
 			public void mouseDown(MouseEvent e) {
 				insertWidget.setFocus();
 			}
 		});
-//
-//		Supplier<List<Action>> sup = () -> {
-//			ArrayList<Action> list = new ArrayList<>();
-//			list.add(new Action() {
-//				public void run() {
-//					System.out.println("!!");
-//				}
-//				public String getText() {
-//					return "action";
-//				}
-//			});
-//			return list;
-//		};
-//		
-//		Menu menu = new Menu(insertWidget);
-//		menu.addListener(SWT.Show, new Listener() {
-//			public void handleEvent(Event event) {
-//				for(MenuItem i : menu.getItems())
-//					i.dispose();
-//				for(Action a : sup.get()) {
-//					MenuItem i = new MenuItem(menu, SWT.PUSH);
-//					i.setText(a.getText());
-//					i.addSelectionListener(new SelectionAdapter() {
-//						public void widgetSelected(SelectionEvent e) {
-//							a.run();
-//						}
-//					});
-//				}
-//
-//			}
-//		});
-//		insertWidget.setMenu(menu);
+		//
+		//		Supplier<List<Action>> sup = () -> {
+		//			ArrayList<Action> list = new ArrayList<>();
+		//			list.add(new Action() {
+		//				public void run() {
+		//					System.out.println("!!");
+		//				}
+		//				public String getText() {
+		//					return "action";
+		//				}
+		//			});
+		//			return list;
+		//		};
+		//		
+		//		Menu menu = new Menu(insertWidget);
+		//		menu.addListener(SWT.Show, new Listener() {
+		//			public void handleEvent(Event event) {
+		//				for(MenuItem i : menu.getItems())
+		//					i.dispose();
+		//				for(Action a : sup.get()) {
+		//					MenuItem i = new MenuItem(menu, SWT.PUSH);
+		//					i.setText(a.getText());
+		//					i.addSelectionListener(new SelectionAdapter() {
+		//						public void widgetSelected(SelectionEvent e) {
+		//							a.run();
+		//						}
+		//					});
+		//				}
+		//
+		//			}
+		//		});
+		//		insertWidget.setMenu(menu);
 	}
 
-//	interface Action {
-//		String getText();
-//		void run();
-//	}
+	//	interface Action {
+	//		String getText();
+	//		void run();
+	//	}
 
-//	void setDeleteAction(Consumer<Integer> action) {
-//		deleteAction = action;
-//	}
+	//	void setDeleteAction(Consumer<Integer> action) {
+	//		deleteAction = action;
+	//	}
 
+	public int getTabs() {
+		return tabs;
+	}
+	
 	void insertLineAt(Control location) {
 		InsertWidget insert = insertWidget.copyTo(this);
 		insert.moveAbove(location);
 		requestLayout();
 		insert.setFocus();
 	}
-	
+
 	void insertLineAfter(Control location) {
 		InsertWidget insert = insertWidget.copyTo(this);
 		insert.moveBelow(location);
@@ -108,7 +123,7 @@ public class SequenceWidget extends Composite {
 	}
 
 
-	int totalElements() {
+	public int totalElements() {
 		Control[] children = getChildren();
 		int inserts = 0;
 		for (Control c : children)
@@ -134,18 +149,18 @@ public class SequenceWidget extends Composite {
 		insertLineAt(e);
 		return e;
 	}
-	
-	public <T extends EditorWidget> T addElement(Function<Composite, T> f) {
+
+	public <T extends Control> T addElement(Function<Composite, T> f) {
 		return addElement(f, totalElements());
 	}
 
-	public <T extends EditorWidget> T addElement(Function<Composite, T> f, int modelIndex) {
+	public <T extends Control> T addElement(Function<Composite, T> f, int modelIndex) {
 		Control el = viewElement(modelIndex);
 		T w = f.apply(this);
 		w.moveAbove(el);
 		return w;
 	}
-	
+
 	private Control viewElement(int modelIndex) {
 		assert modelIndex < getChildren().length : modelIndex;
 		int inserts = 0;
@@ -155,7 +170,7 @@ public class SequenceWidget extends Composite {
 				inserts++;
 			else
 				m++;
-		
+
 		int v = modelIndex + inserts;
 		return v < children.length ? children[v] : insertWidget;
 	}
@@ -241,4 +256,8 @@ public class SequenceWidget extends Composite {
 	public List<String> getInsertTokens() {
 		return insertWidget.getTokens();
 	}
+
+	
+
+
 }

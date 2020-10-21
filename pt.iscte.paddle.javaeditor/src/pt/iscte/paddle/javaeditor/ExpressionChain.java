@@ -23,7 +23,8 @@ import pt.iscte.paddle.javardise.EditorWidget;
 import pt.iscte.paddle.javardise.Expression;
 import pt.iscte.paddle.javardise.ExpressionWidget;
 import pt.iscte.paddle.javardise.FixedToken;
-import pt.iscte.paddle.javardise.LanguageConfiguration;
+import pt.iscte.paddle.javardise.ILanguageConfiguration;
+import pt.iscte.paddle.javardise.InsertWidget;
 import pt.iscte.paddle.javardise.SimpleExpressionWidget;
 import pt.iscte.paddle.javardise.TextWidget;
 import pt.iscte.paddle.javardise.TokenWidget;
@@ -107,7 +108,7 @@ public class ExpressionChain extends EditorWidget<IProgramElement> implements Te
 		setLayout(Constants.ROW_LAYOUT_H_SHRINK);
 		text = Constants.createText(this, id);
 		verifyListener = e -> e.doit = 
-				LanguageConfiguration.INSTANCE.isValidIdCharacter(e.character) || 
+				ILanguageConfiguration.INSTANCE.isValidIdCharacter(e.character) || 
 				e.character == Constants.DEL_KEY || 
 				e.character == SWT.CR ||
 				!type && e.character == '/' && (text.getText().isEmpty() || text.getText().startsWith("/")) ||
@@ -139,11 +140,11 @@ public class ExpressionChain extends EditorWidget<IProgramElement> implements Te
 				c.setForeground(Constants.COLOR_COMMENT);
 				c.setBackground(Constants.COLOR_BACKGROUND);
 			}
-//			else if(!text.getText().isBlank() && ExpressionChain.this.getParent() instanceof InsertWidget){
-//				c.setForeground(Constants.COLOR_BACKGROUND);
-//				c.setBackground(Constants.COLOR_ERROR);
-//			}
-			else if(c instanceof Text && LanguageConfiguration.INSTANCE.isKeyword(((Text)c).getText())) {
+			else if(!text.getText().isBlank() && ExpressionChain.this.getParent() instanceof InsertWidget){
+				c.setForeground(Constants.COLOR_BACKGROUND);
+				c.setBackground(Constants.COLOR_ERROR);
+			}
+			else if(c instanceof Text && ILanguageConfiguration.INSTANCE.isKeyword(((Text)c).getText())) {
 				c.setForeground(Constants.COLOR_KEYWORD);
 				c.setBackground(Constants.COLOR_BACKGROUND);
 			}
@@ -177,7 +178,7 @@ public class ExpressionChain extends EditorWidget<IProgramElement> implements Te
 	}
 
 	public boolean isKeyword() {
-		return isSingleId() && LanguageConfiguration.INSTANCE.isKeyword(text.getText());
+		return isSingleId() && ILanguageConfiguration.INSTANCE.isKeyword(text.getText());
 	}
 //
 //	public boolean isKeyword(Keyword ... keywords) {

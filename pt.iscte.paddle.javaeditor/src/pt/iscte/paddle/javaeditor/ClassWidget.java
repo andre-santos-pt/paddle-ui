@@ -77,11 +77,11 @@ public class ClassWidget extends ModiferWidget<IRecordType> implements SequenceC
 			new FixedToken(header, "{");
 		}
 
-		int margin = UiMode.editorMode() == UiMode.Editor.STATIC ? 0 : Constants.TAB;
+		int tabs = UiMode.editorMode() == UiMode.Editor.STATIC ? 0 : 1;
 
 		Predicate<String> tokenAccept = token -> acceptModifier(token) || BlockAction.isType(token) || IType.VOID.getId().equals(token);
-		methods = new SequenceWidget(this, margin, 5, true, tokenAccept);
-		methods.addAction(new InsertWidget.Action("field") {
+		methods = new SequenceWidget(this, tabs, true, tokenAccept);
+		methods.addAction(new InsertWidget.Action("add field") {
 			public boolean isEnabled(char c, TextWidget id, int index, int caret, int selection, List<String> tokens) {
 				if(tokens.size() < 1)
 					return false;
@@ -99,7 +99,7 @@ public class ClassWidget extends ModiferWidget<IRecordType> implements SequenceC
 			}
 		});
 
-		methods.addAction(new InsertWidget.Action("constructor") {
+		methods.addAction(new InsertWidget.Action("add constructor") {
 			public boolean isEnabled(char c, TextWidget id, int index, int caret, int selection, List<String> tokens) {
 				return c == '(' && id.getText().equals(module.getId());
 			}
@@ -125,15 +125,13 @@ public class ClassWidget extends ModiferWidget<IRecordType> implements SequenceC
 				if(tokens.size() < 1)
 					return false;
 				String last = tokens.get(tokens.size()-1);
+				System.out.println(tokens);
 				return c == '(' && !id.isKeyword() && text.length() > 0 && tokens.size() > 0 && (BlockAction.isType(last) || IType.VOID.getId().equals(last));
 			}
 
 			public void run(char c, TextWidget id, int index, int caret, int selection, List<String> tokens) {
 				String last = tokens.get(tokens.size()-1);
 				IType t = last.equals(IType.VOID.getId()) ? IType.VOID : IType.match(last);
-//				IProcedure p = module.addProcedure(id.getId(), t, tokens.toArray(new String[tokens.size()]));
-//				p.setNamespace(namespace);
-				
 				module.addProcedure(t, p -> {
 					p.setId(id.getText());
 					p.setNamespace(namespace);

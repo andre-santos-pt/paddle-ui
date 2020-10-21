@@ -1,6 +1,5 @@
 package pt.iscte.paddle.javaeditor;
 
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.widgets.Composite;
@@ -9,7 +8,7 @@ import pt.iscte.paddle.javardise.Constants;
 import pt.iscte.paddle.javardise.EditorWidget;
 import pt.iscte.paddle.javardise.ExpressionWidget;
 import pt.iscte.paddle.javardise.FixedToken;
-import pt.iscte.paddle.javardise.LanguageConfiguration;
+import pt.iscte.paddle.javardise.ILanguageConfiguration;
 import pt.iscte.paddle.javardise.SequenceContainer;
 import pt.iscte.paddle.javardise.SequenceWidget;
 import pt.iscte.paddle.javardise.TokenWidget;
@@ -48,31 +47,31 @@ class ControlWidget extends EditorWidget<IProgramElement> implements SequenceCon
 		header.setBackground(Constants.COLOR_BACKGROUND);
 		this.keyword = new TokenWidget(header, keyword.keyword());
 
-		if(guard != null) {
+		if (guard != null) {
 			new FixedToken(header, "(");
 			fillHeader(guard, header);
 			new FixedToken(header, ")");
 
 			Constants.addInsertLine(this.keyword);
-			if(delAction != null) {
+			if (delAction != null) {
 				delListener = this.keyword.addDeleteListener(delAction);
 			}
 		}
 
 		openBracket = new FixedToken(header, "{");
-		blockSeq = new SequenceWidget(this, Constants.TAB);
+		blockSeq = new SequenceWidget(this, 1);
 		blockSeq.addActions(BlockAction.all(block));
 		BlockAction.addBlockListener(block, blockSeq);
 		closeBracket = new FixedToken(this, "}");
 
 		int i = 0;
-		for(IBlockElement e : block)
+		for (IBlockElement e : block)
 			BlockAction.addModelElement(e, i++, blockSeq);
 	}
 
 	void fillHeader(IExpression expression, Composite header) {
 		this.expression = new ExpressionWidget(header, Configuration.match(expression), expression);
-		if(delListener != null)
+		if (delListener != null)
 			this.expression.addKeyListener(delListener);
 	}
 
@@ -83,7 +82,7 @@ class ControlWidget extends EditorWidget<IProgramElement> implements SequenceCon
 	}
 
 	public void focusIn() {
-		if(expression != null)
+		if (expression != null)
 			expression.setFocus();
 		else
 			blockSeq.setFocus();
@@ -93,7 +92,7 @@ class ControlWidget extends EditorWidget<IProgramElement> implements SequenceCon
 	public void toCode(StringBuffer buffer, int level) {
 		appendTabs(buffer, level);
 		buffer.append(keyword.toString());
-		if(!isElse()) {
+		if (!isElse()) {
 			buffer.append("(");
 			expression.toCode(buffer);
 			buffer.append(")");
@@ -104,10 +103,6 @@ class ControlWidget extends EditorWidget<IProgramElement> implements SequenceCon
 		buffer.append("}").append(System.lineSeparator());
 	}
 
-	public boolean is(Keyword keyword) {
-		return this.keyword.isKeyword(keyword.keyword());
-	}
-
 	boolean isElse() {
 		return this.keyword.isKeyword(Keyword.ELSE.keyword());
 	}
@@ -115,6 +110,5 @@ class ControlWidget extends EditorWidget<IProgramElement> implements SequenceCon
 	public SequenceWidget getBody() {
 		return blockSeq;
 	}
-
 
 }

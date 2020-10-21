@@ -84,6 +84,11 @@ public interface TextWidget {
 		getWidget().setText("");
 	}
 	
+	default boolean setFocus() {
+		return getWidget().setFocus();
+	}
+
+	
 	static TextWidget create(Text text) {
 		return new TextWidget() {
 			public Text getWidget() {
@@ -121,9 +126,11 @@ public interface TextWidget {
 
 
 	default boolean isKeyword() {
-		return LanguageConfiguration.INSTANCE.isKeyword(getWidget().getText());
+		return ILanguageConfiguration.INSTANCE.isKeyword(getWidget().getText());
 	}
 
+
+	
 
 }
 

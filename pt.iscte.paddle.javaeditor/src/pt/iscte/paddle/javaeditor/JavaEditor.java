@@ -39,7 +39,6 @@ import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
 
 import pt.iscte.paddle.javaeditor.UiMode.Syntax;
-import pt.iscte.paddle.javardise.Constants;
 import pt.iscte.paddle.javardise.InsertWidget;
 import pt.iscte.paddle.javardise.SequenceWidget;
 import pt.iscte.paddle.javardise.TextWidget;
@@ -47,12 +46,12 @@ import pt.iscte.paddle.model.IModule;
 import pt.iscte.paddle.model.commands.ICommand;
 import pt.iscte.paddle.model.javaparser.Java2Paddle;
 
-public class StandaloneEditor {
+public class JavaEditor {
 	private IModule module;
 	private ClassWidget classWidget;
 	private Shell shell;
 
-	public StandaloneEditor(File file) {
+	public JavaEditor(File file) {
 		if(file.exists() && (!file.isFile() || !file.getName().endsWith(".java"))) {
 			throw new RuntimeException("The provided argument is not a .java file");
 		}
@@ -80,12 +79,6 @@ public class StandaloneEditor {
 			module = IModule.create();
 			module.setId(className);
 		}
-	}
-
-	public StandaloneEditor(IModule module) {
-		if(module == null)
-			throw new IllegalArgumentException("null");
-		this.module = module;
 	}
 
 
@@ -122,7 +115,7 @@ public class StandaloneEditor {
 			}
 		});		
 
-		SequenceWidget seq = new SequenceWidget(area, 0, Constants.METHOD_SPACING, false, token -> Keyword.isClassModifier(token));
+		SequenceWidget seq = new SequenceWidget(area, 0, false, token -> Keyword.isClassModifier(token));
 		seq.addAction(new InsertWidget.Action("class") {
 			public boolean isEnabled(char c, TextWidget id, int index, int caret, int selection, List<String> tokens) {
 				return seq.getChildren().length == 1 && c == SWT.SPACE && id.getText().equals(Keyword.CLASS.keyword());
@@ -275,7 +268,7 @@ public class StandaloneEditor {
 		else
 			filePath = args[0];
 		
-		StandaloneEditor editor = new StandaloneEditor(new File(filePath));
+		JavaEditor editor = new JavaEditor(new File(filePath));
 		Shell shell = editor.launch(display);
 		while (!shell.isDisposed()) {
 			if (!display.readAndDispatch()) {

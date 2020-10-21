@@ -19,20 +19,6 @@ public class SimpleExpressionWidget extends EditorWidget implements TextWidget, 
 	private Text text;
 	private Class<?> literalType;
 
-//	public SimpleExpressionWidget(Composite parent, ILiteral l) {
-//		super(parent, l);
-//		init(parent, l.getStringValue());
-//	}
-//
-//	public SimpleExpressionWidget(Composite parent, IVariableExpression e) {
-//		super(parent, e);
-//		init(parent, e.getVariable().getId());
-//	}
-//
-//	public SimpleExpressionWidget(Composite parent, IConstantExpression c) {
-//		super(parent, c);
-//		init(parent, c.getConstant().getId());
-//	}
 
 	public SimpleExpressionWidget(Composite parent, String literal) {
 		super(parent);
@@ -60,7 +46,7 @@ public class SimpleExpressionWidget extends EditorWidget implements TextWidget, 
 		});
 
 		Constants.addArrowKeys(text, this);
-		LanguageConfiguration.INSTANCE.configure(this);
+		ILanguageConfiguration.INSTANCE.configure(this);
 		addTransformationKeyListener2();
 		text.addModifyListener(Constants.MODIFY_PACK);
 		text.setMenu(new Menu(text));
@@ -183,7 +169,7 @@ public class SimpleExpressionWidget extends EditorWidget implements TextWidget, 
 	}
 
 	private boolean validCharacter(char c) {
-		return LanguageConfiguration.INSTANCE.isValidIdCharacter(c) || c >= '0' && c <= '9';
+		return ILanguageConfiguration.INSTANCE.isValidIdCharacter(c) || c >= '0' && c <= '9';
 	}
 
 	@Override
@@ -249,7 +235,7 @@ public class SimpleExpressionWidget extends EditorWidget implements TextWidget, 
 					literalType = Boolean.class;
 					text.setForeground(Constants.COLOR_KEYWORD);
 				}
-				else if(LanguageConfiguration.INSTANCE.isValidId(text.getText()))
+				else if(ILanguageConfiguration.INSTANCE.isValidId(text.getText()))
 					literalType = null;
 				else {
 					text.setBackground(Constants.COLOR_ERROR);

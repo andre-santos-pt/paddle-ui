@@ -27,7 +27,7 @@ public class Id extends EditorWidget implements TextWidget {
 		if(id.isBlank() && !allowEmpty.get())
 			text.setBackground(Constants.COLOR_ERROR);
 		text.addVerifyListener(e -> e.doit =
-				!readOnly && (LanguageConfiguration.INSTANCE.isValidIdCharacter(e.character) || e.character == Constants.DEL_KEY || e.character == SWT.CR));	
+				!readOnly && (ILanguageConfiguration.INSTANCE.isValidIdCharacter(e.character) || e.character == Constants.DEL_KEY || e.character == SWT.CR));	
 	
 		text.addFocusListener(new FocusListener() {
 			public void focusGained(FocusEvent e) {

@@ -8,7 +8,7 @@ import pt.iscte.paddle.javardise.Constants;
 import pt.iscte.paddle.javardise.EditorWidget;
 import pt.iscte.paddle.javardise.ExpressionWidget;
 import pt.iscte.paddle.javardise.FixedToken;
-import pt.iscte.paddle.javardise.LanguageConfiguration;
+import pt.iscte.paddle.javardise.ILanguageConfiguration;
 import pt.iscte.paddle.javardise.TextWidget;
 import pt.iscte.paddle.javardise.TokenWidget;
 import pt.iscte.paddle.model.IExpression;

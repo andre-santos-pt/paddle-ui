@@ -19,7 +19,7 @@ import pt.iscte.paddle.javardise.api.ICodeElement;
 
 public class InsertWidget extends Composite implements TextWidget, ICodeElement {
 
-	private final TextWidget complexId;
+	private final TextWidget insert;
 	private final boolean permanent;
 	private final boolean type;
 	private List<Action> actions;
@@ -31,32 +31,43 @@ public class InsertWidget extends Composite implements TextWidget, ICodeElement 
 		setBackground(Constants.COLOR_BACKGROUND);
 		this.permanent = permanent;
 		this.type = type;
-		this.complexId = createInsertWidget(type);
+		this.insert = createInsertWidget(type);
 		this.tokenAccept = tokenAccept;
 		this.actions = new ArrayList<>();
 	}
 
 	private TextWidget createInsertWidget(boolean type) {
-		TextWidget complexId = LanguageConfiguration.INSTANCE.createInsertWidget(this, true);//new ExpressionChain(this, "", type);
-		complexId.addKeyListener(new KeyAdapter() {
+		TextWidget insert = ILanguageConfiguration.INSTANCE.createInsertWidget(this, true);
+		insert.getWidget().setBackground(Constants.COLOR_BACKGROUND);
+		insert.addKeyListener(new KeyAdapter() {
 			public void keyPressed(KeyEvent e) {
-				String last = complexId.getText();
+				String last = insert.getText();
 				if(e.character == SWT.SPACE && tokenAccept.test(last)) {
 					TokenWidget token = new TokenWidget(InsertWidget.this, last);
-//					token.moveAbove(complexId);
+					token.moveAbove((Control) insert);
 					token.addKeyListener(new KeyAdapter() {
 						public void keyPressed(KeyEvent e) {
 							if(e.keyCode == Constants.DEL_KEY) {
 								token.dispose();
-//								complexId.setFocus();
+								insert.setFocus();
 								requestLayout();
 							}
 						}
 					});
-					complexId.clean();
+					insert.clean();
 					requestLayout();
 					e.doit = false;
 					return;
+				}
+				// TODO suggestion
+				else if(e.character == SWT.SPACE && last.isBlank()) {
+					List<String> tokens = getTokens();
+					for(Action a : actions) {
+						String suggestion = a.getSuggestion(insert);
+						if(suggestion != null) {
+							System.out.println("help " + suggestion);
+						}
+					}
 				}
 				else if(!permanent && e.character == Constants.DEL_KEY && last.isBlank()) {
 					Composite parent = getParent();
@@ -69,8 +80,8 @@ public class InsertWidget extends Composite implements TextWidget, ICodeElement 
 				int index = getParent() instanceof SequenceWidget ? ((SequenceWidget) getParent()).findModelIndex(InsertWidget.this) : 0; 
 				List<String> tokens = getTokens();
 				for(Action a : actions) {
-					if(a.isEnabled(e.character, complexId, index, complexId.getCaretPosition(), complexId.getSelectionCount(), tokens)) {
-						a.run(e.character, complexId, index, complexId.getCaretPosition(), complexId.getSelectionCount(), tokens);
+					if(a.isEnabled(e.character, insert, index, insert.getCaretPosition(), insert.getSelectionCount(), tokens)) {
+						a.run(e.character, insert, index, insert.getCaretPosition(), insert.getSelectionCount(), tokens);
 						clearTokens();
 						if(!permanent)
 							dispose();
@@ -81,20 +92,11 @@ public class InsertWidget extends Composite implements TextWidget, ICodeElement 
 			}
 			
 		});
-//		complexId.setAllowEmpty(() -> true);
-		
-//		complexId.addFocusListener(new FocusAdapter() {
-//			public void focusLost(FocusEvent e) {
-//				System.out.println(Display.getDefault().getFocusControl());
-//				complexId.clean();
-//				clearTokens();
-//			}
-//		});
-		return complexId;
+		return insert;
 	}
 
 	public boolean hasTokens() {
-		return getChildren()[0] != complexId;
+		return getChildren()[0] != insert;
 	}
 	
 	public InsertWidget copyTo(Composite parent) {
@@ -104,13 +106,13 @@ public class InsertWidget extends Composite implements TextWidget, ICodeElement 
 	}
 	
 	void setHideMode() {
-		complexId.addFocusListener(new FocusAdapter() {
+		insert.addFocusListener(new FocusAdapter() {
 			public void focusGained(FocusEvent e) {
 				setLayoutData(getParent().getLayout() instanceof GridLayout ? GridDatas.SHOW_GRID : GridDatas.SHOW_ROW);
 				requestLayout();
 			}
 			public void focusLost(FocusEvent e) {
-				if(complexId.isEmpty() && !hasTokens()) {
+				if(insert.isEmpty() && !hasTokens()) {
 					setLayoutData(getParent().getLayout() instanceof GridLayout ? GridDatas.HIDE_GRID : GridDatas.HIDE_ROW);
 					requestLayout();
 				}
@@ -127,7 +129,7 @@ public class InsertWidget extends Composite implements TextWidget, ICodeElement 
 			Control[] children = getChildren();
 			for(int i = 0; i < children.length-1; i++)
 				children[i].dispose();
-			complexId.clean();
+			insert.clean();
 		}
 	}
 
@@ -141,6 +143,10 @@ public class InsertWidget extends Composite implements TextWidget, ICodeElement 
 			return true;
 		}
 		public abstract void run(char c, TextWidget id, int index, int caret, int selection, List<String> tokens);
+		
+		public String getSuggestion(TextWidget id) {
+			return null;
+		}
 	}
 
 
@@ -154,23 +160,26 @@ public class InsertWidget extends Composite implements TextWidget, ICodeElement 
 		Control[] children = getChildren();
 		List<String> tokens = new ArrayList<>(children.length-1);
 		for(int i = 0; i < children.length-1; i++)
-			tokens.add(((TextWidget) children[i]).getText()); // TODO Bug
+			if(children[i] instanceof Text)
+				tokens.add(((Text) children[i]).getText());
+			else
+				tokens.add(((TextWidget) children[i]).getText()); // TODO Bug
 		return tokens;
 	}
 
 	@Override
 	public Text getWidget() {
-		return complexId.getWidget();
+		return insert.getWidget();
 	}
 	
 	@Override
 	public void toCode(StringBuffer buffer) {
 //		if(complexId.isComment())
-			buffer.append(complexId.getText());
+			buffer.append(insert.getText());
 	}
 
 	@Override
 	public Control getControl() {
-		return complexId.getWidget();
+		return insert.getWidget();
 	}
 }

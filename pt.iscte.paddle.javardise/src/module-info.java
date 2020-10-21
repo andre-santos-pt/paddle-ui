@@ -1,4 +1,5 @@
-import pt.iscte.paddle.javardise.LanguageConfiguration;
+import pt.iscte.paddle.javardise.ILanguageConfiguration;
+import pt.iscte.paddle.javardise.api.IEditorConfiguration;
 
 
 module pt.iscte.paddle.javardise {
@@ -13,7 +14,9 @@ module pt.iscte.paddle.javardise {
 	exports pt.iscte.paddle.javardise.api;
 	exports pt.iscte.paddle.javardise;
 	
-	uses LanguageConfiguration;
+	uses ILanguageConfiguration;
+	uses IEditorConfiguration;
+	
 //	provides IJavardiseService with JavardiseService;
 //	provides LanguageConfiguration with Configuration;
 }
