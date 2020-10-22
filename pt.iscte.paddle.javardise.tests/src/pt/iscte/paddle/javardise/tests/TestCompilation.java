@@ -86,7 +86,7 @@ public class TestCompilation {
 			IJavardiseService javarService = serv.get();
 			
 			IClassWidget w = javarService.createClassWidget(shell, mod, mod.getId());
-			boolean compile = compile(mod.getId(), w.getCode());
+			boolean compile = compile(mod.getId(), w.getSource());
 				
 			assertTrue("Errors on " + mod.getId(), compile);
 			File file = new File("src-gen/" + mod.getId() + ".java");
@@ -108,12 +108,10 @@ public class TestCompilation {
 	
 	
 	public static void saveToFile(IClassWidget classWidget, File file) {
-		StringBuffer buffer = new StringBuffer();
-		classWidget.toCode(buffer);
+		String source = classWidget.getSource();
 		try {
-		
 			PrintWriter w = new PrintWriter(file);
-			w.append(buffer);
+			w.append(source);
 			w.close();
 		} 
 		catch (FileNotFoundException e) {

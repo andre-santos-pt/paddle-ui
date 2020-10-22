@@ -15,9 +15,8 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 
 import pt.iscte.paddle.javardise.Constants.GridDatas;
-import pt.iscte.paddle.javardise.api.ICodeElement;
 
-public class InsertWidget extends Composite implements TextWidget, ICodeElement {
+public class InsertWidget extends Composite implements TextWidget {
 
 	private final TextWidget insert;
 	private final boolean permanent;
@@ -61,7 +60,6 @@ public class InsertWidget extends Composite implements TextWidget, ICodeElement 
 				}
 				// TODO suggestion
 				else if(e.character == SWT.SPACE && last.isBlank()) {
-					List<String> tokens = getTokens();
 					for(Action a : actions) {
 						String suggestion = a.getSuggestion(insert);
 						if(suggestion != null) {
@@ -173,13 +171,8 @@ public class InsertWidget extends Composite implements TextWidget, ICodeElement 
 	}
 	
 	@Override
-	public void toCode(StringBuffer buffer) {
-//		if(complexId.isComment())
-			buffer.append(insert.getText());
+	public String getTextToSerialize() {
+		return "";
 	}
-
-	@Override
-	public Control getControl() {
-		return insert.getWidget();
-	}
+	
 }

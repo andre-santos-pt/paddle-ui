@@ -186,7 +186,7 @@ public class PaddleIDE implements IPaddleService
 	
 		w.addSelectionListener(sel -> {
 			if(modulesFolder.getItem(modulesFolder.getSelectionIndex()).getData() == w)
-				listeners.forEach(e -> e.accept(sel.getProgramElement())); // TODO send only not null?
+				listeners.forEach(e -> e.accept((IProgramElement) sel.getProgramElement())); // TODO send only not null?
 		});	
 		tabItem.setData(w);
 		return tabItem;

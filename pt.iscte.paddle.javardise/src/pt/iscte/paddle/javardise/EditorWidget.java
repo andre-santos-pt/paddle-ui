@@ -1,6 +1,4 @@
 package pt.iscte.paddle.javardise;
-import static java.lang.System.lineSeparator;
-
 import java.util.WeakHashMap;
 import java.util.function.BiFunction;
 
@@ -12,23 +10,29 @@ import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Path;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Layout;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Text;
 
 import pt.iscte.paddle.javardise.api.ICodeDecoration;
-import pt.iscte.paddle.javardise.api.ICodeElement;
 import pt.iscte.paddle.javardise.api.IWidget;
 
-public class EditorWidget<T> extends Composite implements ICodeElement, IWidget<T> {
+public class EditorWidget extends Composite implements IWidget {
 
-	public static final WeakHashMap<Object, EditorWidget> map = new WeakHashMap<>();
+	private static final WeakHashMap<Object, EditorWidget> map = new WeakHashMap<>();
 
-	public final T element;
+	public static IWidget getWidget(Object e) {
+		return map.get(e);
+	}
+
+	
+	private final Object element;
 
 	protected EditorWidget(Composite parent) {
 		super(parent, SWT.NONE);
@@ -37,7 +41,7 @@ public class EditorWidget<T> extends Composite implements ICodeElement, IWidget<
 		element = null;
 	}
 
-	protected EditorWidget(Composite parent, T element) {
+	protected EditorWidget(Composite parent, Object element) {
 		super(parent, SWT.NONE);
 		setLayout(Constants.ROW_LAYOUT_H_ZERO);
 		setBackground(Constants.COLOR_BACKGROUND);
@@ -58,7 +62,7 @@ public class EditorWidget<T> extends Composite implements ICodeElement, IWidget<
 	}
 	
 	@Override
-	public T getProgramElement() {
+	public Object getProgramElement() {
 		return element;
 	}
 
@@ -66,29 +70,6 @@ public class EditorWidget<T> extends Composite implements ICodeElement, IWidget<
 		menu.setLocation(control.toDisplay(0, 40));
 	}
 
-	protected void appendTabs(StringBuffer buffer, int n) {
-		while(n-- > 0)
-			buffer.append("\t");
-	}
-
-	public void toCode(StringBuffer buffer, int level) {
-		appendTabs(buffer, level);
-		toCode(buffer);
-		buffer.append(lineSeparator());
-	}
-
-	// to override
-	//	public void toCode(StringBuffer buffer) {
-	//		buffer.append("#TODO" + this.getClass().getSimpleName() + "#");
-	//		System.err.println("missing toCode " + this.getClass());
-	//	}
-
-	@Override
-	public String toString() {
-		StringBuffer b = new StringBuffer();
-		toCode(b);
-		return b.toString();
-	}
 
 	SequenceWidget getOwnerSequence() {
 		Composite parent = getParent();
@@ -215,11 +196,9 @@ public class EditorWidget<T> extends Composite implements ICodeElement, IWidget<
 	public ICodeDecoration<Canvas> addArrow(IWidget targetWidget) {
 		final int W = 40;
 		class Arrow extends Canvas {
-			Control from;
 			Control target;
 			Arrow(Composite parent, Control from) {
 				super(parent, SWT.NONE);
-				this.from = from;
 				this.target = targetWidget.getControl();
 				Point dim;
 				int arrowY;
@@ -295,4 +274,76 @@ public class EditorWidget<T> extends Composite implements ICodeElement, IWidget<
 	public <T extends Control> ICodeDecoration<T> addDecoration(BiFunction<Composite,Control,T> f, BiFunction<Point, Point, Point> loc) {
 		return new Decoration<T>(getControl(), f, loc);
 	}
+	
+	
+	@Override
+	public String getSource() {
+		return getSource(this).toString();
+	}
+	
+	public static StringBuffer getSource(Control c) {
+		c.setFocus();
+		StringBuffer buffer = new StringBuffer();
+		if(c instanceof Composite)
+			getSourceAuxComposite((Composite) c, buffer);
+		else
+			getSourceAuxControl(c, buffer);
+		return buffer;
+	}
+	
+	private static boolean getSourceAuxControl(Control child, StringBuffer writer) {
+		boolean text = (child instanceof Text || child instanceof Label);
+//			if(text && i == 0) {
+//				for(int d = tabs; d > 0; d--)
+//					writer.print("\t");
+//			}
+		if(child instanceof Text && !((Text) child).getBackground().equals(Constants.COLOR_ERROR)) {
+			String src = ((Text) child).getText();
+//			if(child.getParent() instanceof TextWidget)
+//				src = ((TextWidget) child.getParent()).getTextToSerialize();
+			
+//			else if(child.getParent() instanceof ExpressionWidget)
+//				src = ((ExpressionWidget) child.getParent()).getTextToSerialize();
+			
+//			TextWidget w = (TextWidget) child.getParent();
+//			if(src.isBlank() && !(child.getParent() instanceof InsertWidget))
+//				src = Constants.EMPTY_EXPRESSION_SERIALIZE + child.getParent().getClass();
+			writer.append(src);
+		}
+		else if(child instanceof Label)
+			writer.append(((Label) child).getText());
+		return text;
+	}
+	
+	private static void getSourceAuxComposite(Composite c, StringBuffer writer) {
+		Layout layout = c.getLayout();
+		Control[] children = c.getChildren();
+		for (int i = 0; i < children.length; i++) {
+			Control child = children[i];
+			boolean text = getSourceAuxControl(child, writer);
+
+			if(text) {
+				if(layout instanceof GridLayout) // || layout instanceof RowLayout && i == children.length-1)
+					writer.append(System.lineSeparator());
+				else
+					writer.append(" ");
+			}
+			
+			if(child instanceof Composite) {
+				getSourceAuxComposite((Composite) child, writer);
+			}
+
+			if(layout instanceof GridLayout) { // || layout instanceof RowLayout && i == children.length-1)
+				writer.append(System.lineSeparator());
+//				if(child instanceof SequenceWidget)
+//					for(int d = ((SequenceWidget) child).getTabs(); d > 0; d--)
+//						writer.print("\t");
+			}
+		}
+	}
+
+	
+	
+
+
 }

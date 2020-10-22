@@ -242,4 +242,6 @@ public interface Constants {
 
 	
 	String EMPTY_EXPRESSION_SERIALIZE = "$EMPTY$";
+
+	String EMPTY_ID_SERIALIZE = "$ID$";
 }

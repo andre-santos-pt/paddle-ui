@@ -92,11 +92,6 @@ class FieldWidget extends ModiferWidget<IProgramElement> {
 	}
 	
 	@Override
-	public String toString() {
-		return type + " " + id + " = " + expression + ";";
-	}
-	
-	@Override
 	public boolean setFocus() {
 		id.setFocus();
 		return true;
@@ -105,18 +100,5 @@ class FieldWidget extends ModiferWidget<IProgramElement> {
 	public void focusExpression() {
 		if(expression != null)
 			expression.setFocus();
-	}
-	
-	@Override
-	public void toCode(StringBuffer buffer) {
-		super.toCode(buffer);
-		type.toCode(buffer);
-		buffer.append(' ');
-		id.toCode(buffer);
-		if(expression != null) {
-			buffer.append(" = ");
-			expression.toCode(buffer);
-		}
-		buffer.append(";");
 	}
 }

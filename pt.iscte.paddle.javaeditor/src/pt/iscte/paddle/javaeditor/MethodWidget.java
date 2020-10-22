@@ -1,7 +1,5 @@
 package pt.iscte.paddle.javaeditor;
 
-import static java.lang.System.lineSeparator;
-
 import java.util.List;
 import java.util.function.Function;
 
@@ -9,7 +7,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 
 import pt.iscte.paddle.javaeditor.api.IDeclarationWidget;
 import pt.iscte.paddle.javaeditor.api.IMethodWidget;
@@ -28,8 +25,6 @@ import pt.iscte.paddle.model.IType;
 import pt.iscte.paddle.model.IVariableDeclaration;
 
 public class MethodWidget extends ModiferWidget<IProgramElement> implements SequenceContainer, IMethodWidget {
-
-//	private final IProcedure procedure;
 	private ExpressionChain retType;
 	private Id id;
 	private SequenceWidget body;
@@ -115,19 +110,7 @@ public class MethodWidget extends ModiferWidget<IProgramElement> implements Sequ
 			setBackground(Constants.COLOR_BACKGROUND);
 		}
 
-		public void toCode(StringBuffer buffer) {
-			Control[] children = getChildren();
-			if (children.length == 1 && ((Param) children[0]).isEmpty())
-				return;
-
-			for (Control c : children)
-				if (c instanceof Param)
-					((Param) c).toCode(buffer);
-				else
-					buffer.append(", ");
-		}
-
-		private class Param extends EditorWidget<IProgramElement> implements IDeclarationWidget {
+		private class Param extends EditorWidget implements IDeclarationWidget {
 			private ExpressionChain type;
 			private Id id;
 			private FixedToken comma;
@@ -198,14 +181,6 @@ public class MethodWidget extends ModiferWidget<IProgramElement> implements Sequ
 				id.setFocus();
 			}
 
-			public void toCode(StringBuffer buffer) {
-				if(comma != null)
-					buffer.append(", ");
-				type.toCode(buffer);
-				buffer.append(' ');
-				id.toCode(buffer);
-			}
-
 			@Override
 			public boolean setFocus() {
 				type.setFocus();
@@ -236,22 +211,6 @@ public class MethodWidget extends ModiferWidget<IProgramElement> implements Sequ
 			else
 				param.focusVariable();
 		}
-	}
-
-	public void toCode(StringBuffer buffer) {
-		buffer.append(lineSeparator()).append('\t');
-
-		super.toCode(buffer);
-		
-		if (retType != null) {
-			retType.toCode(buffer);
-			buffer.append(' ');
-		}
-		buffer.append(id.toString()).append("(");
-		params.toCode(buffer);
-		buffer.append(") {").append(lineSeparator());
-		body.toCode(buffer, 2);
-		buffer.append("\t}").append(lineSeparator());
 	}
 
 	public SequenceWidget getBody() {

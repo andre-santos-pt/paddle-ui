@@ -2,6 +2,7 @@ package pt.iscte.paddle.javaeditor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.eclipse.swt.SWT;
@@ -24,23 +25,27 @@ import pt.iscte.paddle.javardise.Expression;
 import pt.iscte.paddle.javardise.ExpressionWidget;
 import pt.iscte.paddle.javardise.FixedToken;
 import pt.iscte.paddle.javardise.ILanguageConfiguration;
+import pt.iscte.paddle.javardise.InfixExpressionWidget;
 import pt.iscte.paddle.javardise.InsertWidget;
 import pt.iscte.paddle.javardise.SimpleExpressionWidget;
 import pt.iscte.paddle.javardise.TextWidget;
 import pt.iscte.paddle.javardise.TokenWidget;
-import pt.iscte.paddle.javardise.api.ICodeElement;
+import pt.iscte.paddle.javardise.Expression.SubstitutableExpression;
 import pt.iscte.paddle.model.IArrayElement;
 import pt.iscte.paddle.model.IArrayLength;
 import pt.iscte.paddle.model.IArrayType;
 import pt.iscte.paddle.model.IExpression;
+import pt.iscte.paddle.model.IProcedure;
 import pt.iscte.paddle.model.IProcedureCall;
 import pt.iscte.paddle.model.IProgramElement;
 import pt.iscte.paddle.model.IRecordFieldExpression;
 import pt.iscte.paddle.model.IReferenceType;
+import pt.iscte.paddle.model.ITargetExpression;
 import pt.iscte.paddle.model.IType;
+import pt.iscte.paddle.model.IVariableDeclaration;
 import pt.iscte.paddle.model.IVariableExpression;
 
-public class ExpressionChain extends EditorWidget<IProgramElement> implements TextWidget, Expression {
+public class ExpressionChain extends EditorWidget implements TextWidget, Expression {
 
 	private Text text;
 	private boolean type;
@@ -87,7 +92,7 @@ public class ExpressionChain extends EditorWidget<IProgramElement> implements Te
 
 	public ExpressionChain(Composite p, IProcedureCall c) {
 		this(p, c.getId() != null ? c.getId() : 
-			c.getProcedure() != null ? c.getProcedure().getId() : 
+			c.getProcedure().getId() != null ? c.getProcedure().getId() : 
 				"procedure", false);
 	}
 	public ExpressionChain(Composite parent, IProgramElement e, String id) {
@@ -102,11 +107,12 @@ public class ExpressionChain extends EditorWidget<IProgramElement> implements Te
 		init(id);
 	}
 
-	
+
 	private void init(String id) {
 		this.elements = new ArrayList<>();
 		setLayout(Constants.ROW_LAYOUT_H_SHRINK);
 		text = Constants.createText(this, id);
+		text.setBackground(Constants.COLOR_BACKGROUND);
 		verifyListener = e -> e.doit = 
 				ILanguageConfiguration.INSTANCE.isValidIdCharacter(e.character) || 
 				e.character == Constants.DEL_KEY || 
@@ -121,7 +127,7 @@ public class ExpressionChain extends EditorWidget<IProgramElement> implements Te
 				text.selectAll();
 			}
 			public void focusLost(FocusEvent e) {
-				setBackgroundColor();
+				//				setBackgroundColor();
 			}
 		});
 
@@ -130,9 +136,9 @@ public class ExpressionChain extends EditorWidget<IProgramElement> implements Te
 		text.setMenu(new Menu(text)); // prevent system menu
 		Constants.addArrowKeys(text, this);
 		Constants.addInsertLine(this);
-		setBackgroundColor();
+		//		setBackgroundColor();
 	}
-	
+
 	// TODO to fw
 	private void setBackgroundColor() {
 		for(Control c : getChildren()) {
@@ -180,18 +186,7 @@ public class ExpressionChain extends EditorWidget<IProgramElement> implements Te
 	public boolean isKeyword() {
 		return isSingleId() && ILanguageConfiguration.INSTANCE.isKeyword(text.getText());
 	}
-//
-//	public boolean isKeyword(Keyword ... keywords) {
-//		for(Keyword k : keywords)
-//			if(k.isEqual(text))
-//				return true;
-//		return false;
-//	}
-//
-//	public boolean isKeyword(Keyword keyword) {
-//		return isSingleId() && keyword.isEqual(text);
-//	}
-	
+
 	public String getId() {
 		return text.getText();
 	}
@@ -215,11 +210,11 @@ public class ExpressionChain extends EditorWidget<IProgramElement> implements Te
 		field.setFocus();
 		requestLayout();
 	}
-	
+
 	public void addDimension() {
 		CodeElementControl e = type ? new EmptyDimension(this) : new Dimension(this, null);
 		e.setFocus();
-		e.getControl().requestLayout();
+		e.getWidget().requestLayout();
 	}
 
 	public void addDimensionIndex(Expression.Creator f) {
@@ -228,9 +223,10 @@ public class ExpressionChain extends EditorWidget<IProgramElement> implements Te
 	}
 
 
-	private interface CodeElementControl extends ICodeElement {
+	private interface CodeElementControl {
 		void dispose();
 		boolean setFocus();
+		Control getWidget();
 	}
 
 	private class EmptyDimension implements CodeElementControl {
@@ -251,10 +247,6 @@ public class ExpressionChain extends EditorWidget<IProgramElement> implements Te
 				}
 			});
 		}
-		@Override
-		public Control getControl() {
-			return token.getControl();
-		}
 
 		@Override
 		public void dispose() {
@@ -268,11 +260,11 @@ public class ExpressionChain extends EditorWidget<IProgramElement> implements Te
 		}
 
 		@Override
-		public void toCode(StringBuffer buffer) {
-			token.toCode(buffer);
+		public Control getWidget() {
+			return token.getWidget();
 		}
-
 	}
+
 
 	private class Dimension implements CodeElementControl {
 		private TokenWidget left;
@@ -290,6 +282,14 @@ public class ExpressionChain extends EditorWidget<IProgramElement> implements Te
 					public void keyPressed(KeyEvent e) {
 						if(e.character == '[') {
 							addDimension();
+						}
+						else if(ExpressionChain.this.getParent() instanceof ExpressionWidget &&
+								Configuration.match(e.character, JavaConstants.BINARY_OPERATORS) != null) {
+							InfixExpressionWidget w = new InfixExpressionWidget(getParent(),null,
+									Configuration.match(e.character, JavaConstants.BINARY_OPERATORS),
+									p -> ExpressionChain.this.copyTo(p));
+							ExpressionChain.this.requestLayout();
+							w.focusRight();
 						}
 						else if(e.character == Constants.DEL_KEY) {
 							elements.remove(Dimension.this);
@@ -309,19 +309,8 @@ public class ExpressionChain extends EditorWidget<IProgramElement> implements Te
 
 		}
 
-		@Override
-		public Control getControl() {
-			return expression;
-		}
-
 		public boolean setFocus() {
 			return expression.setFocus();
-		}
-
-		public void toCode(StringBuffer buffer) {
-			buffer.append('[');
-			expression.toCode(buffer);
-			buffer.append(']');
 		}
 
 		@Override
@@ -330,7 +319,13 @@ public class ExpressionChain extends EditorWidget<IProgramElement> implements Te
 			expression.dispose();
 			right.dispose();
 		}
+
+		@Override
+		public Control getWidget() {
+			return expression.getControl();
+		}
 	}
+
 
 	private class Field implements CodeElementControl {
 		FixedToken dot;
@@ -341,7 +336,15 @@ public class ExpressionChain extends EditorWidget<IProgramElement> implements Te
 			field = new ExpressionChain(parent, id, false);
 			field.addKeyListener(new KeyAdapter() {
 				public void keyPressed(KeyEvent e) {
-					if(e.character == Constants.DEL_KEY && field.getCaretPosition() == 0) {
+					if(ExpressionChain.this.getParent() instanceof ExpressionWidget &&
+							Configuration.match(e.character, JavaConstants.BINARY_OPERATORS) != null) {
+						InfixExpressionWidget w = new InfixExpressionWidget(getParent(),null,
+								Configuration.match(e.character, JavaConstants.BINARY_OPERATORS),
+								p -> ExpressionChain.this.copyTo(p));
+						ExpressionChain.this.requestLayout();
+						w.focusRight();
+					}
+					else if(e.character == Constants.DEL_KEY && field.getCaretPosition() == 0) {
 						elements.remove(Field.this);
 						dispose();
 						ExpressionChain.this.requestLayout();
@@ -355,11 +358,6 @@ public class ExpressionChain extends EditorWidget<IProgramElement> implements Te
 			return field.setFocus();
 		}
 
-		public void toCode(StringBuffer buffer) {
-			buffer.append('.');
-			field.toCode(buffer);
-		}
-
 		@Override
 		public void dispose() {
 			dot.dispose();
@@ -367,9 +365,10 @@ public class ExpressionChain extends EditorWidget<IProgramElement> implements Te
 		}
 
 		@Override
-		public Control getControl() {
-			return field;
+		public Control getWidget() {
+			return field.getWidget();
 		}
+
 	}
 
 
@@ -384,7 +383,7 @@ public class ExpressionChain extends EditorWidget<IProgramElement> implements Te
 	public boolean setFocus() {
 		return text.setFocus();
 	}
-	
+
 
 	public void setMenu(Menu menu) {
 		text.setMenu(menu);
@@ -394,14 +393,6 @@ public class ExpressionChain extends EditorWidget<IProgramElement> implements Te
 	public String toString() {
 		return text.getText();
 	}
-
-	@Override
-	public void toCode(StringBuffer buffer) {
-		ICodeElement.toCode(text, buffer);
-		for(ICodeElement e : elements)
-			e.toCode(buffer);
-	}
-
 
 	@Override
 	public void addKeyListener(KeyListener listener) {
@@ -432,15 +423,6 @@ public class ExpressionChain extends EditorWidget<IProgramElement> implements Te
 		return elements.get(elements.size()-1) instanceof Dimension;
 	}
 
-//	public List<IExpression> getArrayModelExpressions() {
-//		assert isArrayAccess();
-//		List<IExpression> list = new ArrayList<>();
-//		for(int i = elements.size()-1; i >= 0 && elements.get(i) instanceof Dimension; i--)
-//			list.add(0, ((Dimension) elements.get(i)).expression.toModel());
-//		return list;
-//	}
-
-
 	public boolean isFieldAccess() {
 		return elements.get(elements.size()-1) instanceof Field;
 	}
@@ -467,4 +449,56 @@ public class ExpressionChain extends EditorWidget<IProgramElement> implements Te
 		return text.getCaretPosition();
 	}
 
+	@Override
+	public void accept(Consumer<String> visitor) {
+		visitor.accept(text.getText());
+		//		for(CodeElementControl e : elements)
+		//			visitor.accept(e.getWidget());
+	}
+
+	public ITargetExpression getTargetExpression(IProcedure p) {
+		assert !type;
+		IVariableDeclaration var = p.getVariable(text.getText());
+		if(var == null)
+			var = new IVariableDeclaration.UnboundVariable(text.getText());
+
+		ITargetExpression e = var.expression();
+//		for(int i = 0; i < elements.size()-1; i++) {
+//			if(elements.get(i) instanceof Dimension) {
+//				Expression exp = ((Dimension) elements.get(i)).expression.getExpression();
+//				IExpression t = extracted(p, exp);
+//				e = e.element(t);
+//			}
+//		}
+		return e;
+	}
+
+	private IExpression extracted(IProcedure p, ExpressionWidget exp) {
+		IExpression t;
+		Expression expression = exp.getExpression();
+		if(expression instanceof SimpleExpressionWidget) {
+			SimpleExpressionWidget w = (SimpleExpressionWidget) expression;
+			if(ILanguageConfiguration.INSTANCE.isValidId(w.getText())) {
+				String id = w.getText();
+				IVariableDeclaration ivar = p.getVariable(id);
+				if(ivar == null)
+					ivar = new IVariableDeclaration.UnboundVariable(id);
+				t = ivar.expression();
+			}
+			else
+				t = IType.INT.literal(Integer.parseInt(w.getText()));
+		}
+		else {// if(expression instanceof ExpressionChain) {
+			t = getTargetExpression(p);
+		}
+		return t;
+	}
+
+	public List<IExpression> getArrayModelExpressions(IProcedure p) {
+		assert isArrayAccess();
+		List<IExpression> list = new ArrayList<>();
+		for(int i = elements.size()-1; i >= 0 && elements.get(i) instanceof Dimension; i--)
+			list.add(0, extracted(p, ((Dimension) elements.get(i)).expression));
+		return list;
+	}
 }

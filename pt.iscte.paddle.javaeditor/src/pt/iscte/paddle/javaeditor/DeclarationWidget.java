@@ -12,13 +12,11 @@ import pt.iscte.paddle.javardise.EditorWidget;
 import pt.iscte.paddle.javardise.ExpressionWidget;
 import pt.iscte.paddle.javardise.FixedToken;
 import pt.iscte.paddle.javardise.Id;
-import pt.iscte.paddle.javardise.ILanguageConfiguration;
 import pt.iscte.paddle.javardise.api.IWidget;
 import pt.iscte.paddle.model.IExpression;
-import pt.iscte.paddle.model.IProgramElement;
 import pt.iscte.paddle.model.IVariableDeclaration;
 
-class DeclarationWidget extends EditorWidget<IProgramElement> implements IDeclarationWidget {
+class DeclarationWidget extends EditorWidget implements IDeclarationWidget {
 	private final ExpressionChain type;
 	private final Id id;
 	private ExpressionWidget expression;
@@ -64,7 +62,7 @@ class DeclarationWidget extends EditorWidget<IProgramElement> implements IDeclar
 				}
 			}
 		});
-		semiColon.getControl().moveBelow(expression);
+//		semiColon.getControl().moveBelow(expression);
 		expression.requestLayout();
 	}
 	
@@ -75,18 +73,6 @@ class DeclarationWidget extends EditorWidget<IProgramElement> implements IDeclar
 	
 	public void focusId() {
 		id.setFocus();
-	}
-	
-	@Override
-	public void toCode(StringBuffer buffer) {
-		type.toCode(buffer);
-		buffer.append(" ");
-		id.toCode(buffer);
-		if(expression != null) {
-			buffer.append(" = ");
-			expression.toCode(buffer);
-		}
-		buffer.append(";");
 	}
 	
 	@Override

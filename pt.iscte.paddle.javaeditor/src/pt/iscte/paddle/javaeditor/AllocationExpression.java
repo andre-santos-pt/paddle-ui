@@ -2,6 +2,7 @@ package pt.iscte.paddle.javaeditor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.eclipse.swt.widgets.Composite;
 
@@ -15,7 +16,7 @@ import pt.iscte.paddle.model.IArrayType;
 
 // TODO add dim
 public class AllocationExpression extends EditorWidget implements Expression {
-	private Id id; // ComplexId
+	private Id id;
 	private List<ExpressionWidget> expressions;
 
 	public AllocationExpression(Composite parent, IArrayType type, Expression.Creator ... f) {
@@ -37,26 +38,23 @@ public class AllocationExpression extends EditorWidget implements Expression {
 	}
 
 	@Override
-	public void toCode(StringBuffer buffer) {
-		Keyword.NEW.toCode(buffer);
-		buffer.append(' ');
-		id.toCode(buffer);
-		for(Expression e : expressions) {
-			buffer.append('[');
-			e.toCode(buffer);
-			buffer.append(']');
-		}
-	}
-
-	@Override
 	public Expression copyTo(Composite parent) {
-		IArrayType type = null; // TODO null
-		Expression.Creator[] f = new Expression.Creator[type.getDimensions()];
-		for(int i = 0; i < f.length; i++) {
-			int j = i;
-			f[i] = p -> expressions.get(j).copyTo(p);
-		}
-		return new AllocationExpression(parent, type, f);
+//		IArrayType type = null; // TODO null
+//		Expression.Creator[] f = new Expression.Creator[type.getDimensions()];
+//		for(int i = 0; i < f.length; i++) {
+//			int j = i;
+//			f[i] = p -> expressions.get(j).copyTo(p);
+//		}
+//		return new AllocationExpression(parent, type, f);
+		return null;
+	}
+	
+	@Override
+	public void accept(Consumer<String> visitor) {
+		// TODO Auto-generated method stub
+		visitor.accept(id.getText());
+		for(ExpressionWidget e : expressions)
+			e.accept(visitor);
 	}
 	
 }

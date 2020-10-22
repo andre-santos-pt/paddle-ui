@@ -10,10 +10,10 @@ import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.widgets.Composite;
 
-public abstract class ModiferWidget<T> extends EditorWidget<T> {
+public abstract class ModiferWidget<T> extends EditorWidget {
 	private List<TokenWidget> modifiers;
 
-	public ModiferWidget(Composite parent, T e) {
+	public ModiferWidget(Composite parent, Object e) {
 		super(parent, e);
 		modifiers = new ArrayList<>();
 	}
@@ -65,16 +65,10 @@ public abstract class ModiferWidget<T> extends EditorWidget<T> {
 		if(modifiers.isEmpty())
 			modifier.moveAbove(getHeader().getChildren()[0]);
 		else
-			modifier.moveBelow(modifiers.get(modifiers.size()-1).getControl());
-		modifier.getControl().requestLayout();
+			modifier.moveBelow(modifiers.get(modifiers.size()-1).getWidget());
+		modifier.getWidget().requestLayout();
 		modifier.setFocus();
 		modifiers.add(modifier);
-	}
-	
-	@Override
-	public void toCode(StringBuffer buffer) {
-		for (TokenWidget k : modifiers)
-			buffer.append(k.getText()).append(' ');
 	}
 	
 	List<String> getModifiers() {

@@ -26,4 +26,6 @@ public interface ILanguageConfiguration {
 	
 	TextWidget createInsertWidget(InsertWidget parent, boolean permanent);
 	
+	void compile(StringBuffer src, File binDest);
+	
 }

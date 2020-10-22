@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry excluding="pt/iscte/paddle/javardise/javaeditor/IncrementationWidget.java|pt/iscte/paddle/javaeditor/ForWidget.java|pt/iscte/paddle/javaeditor/IncrementationWidget.java" kind="src" path="src"/>
+	<classpathentry excluding="pt/iscte/paddle/javardise/javaeditor/IncrementationWidget.java" kind="src" path="src"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/pt.iscte.paddle.model">
 		<attributes>
 			<attribute name="module" value="true"/>

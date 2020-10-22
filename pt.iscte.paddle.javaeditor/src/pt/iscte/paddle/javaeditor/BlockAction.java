@@ -20,10 +20,12 @@ import org.eclipse.swt.widgets.Composite;
 
 import pt.iscte.paddle.javardise.InsertWidget;
 import pt.iscte.paddle.javardise.SequenceWidget;
+import pt.iscte.paddle.javardise.SimpleExpressionWidget;
 import pt.iscte.paddle.javardise.TextWidget;
 import pt.iscte.paddle.model.IArrayElementAssignment;
 import pt.iscte.paddle.model.IArrayType;
 import pt.iscte.paddle.model.IBlock;
+import pt.iscte.paddle.model.IBlock.IVisitor;
 import pt.iscte.paddle.model.IBlockElement;
 import pt.iscte.paddle.model.IBreak;
 import pt.iscte.paddle.model.IContinue;
@@ -37,6 +39,7 @@ import pt.iscte.paddle.model.IRecordFieldExpression;
 import pt.iscte.paddle.model.IReferenceType;
 import pt.iscte.paddle.model.IReturn;
 import pt.iscte.paddle.model.ISelection;
+import pt.iscte.paddle.model.ITargetExpression;
 import pt.iscte.paddle.model.IType;
 import pt.iscte.paddle.model.IVariableAssignment;
 import pt.iscte.paddle.model.IVariableDeclaration;
@@ -46,20 +49,20 @@ abstract class BlockAction extends InsertWidget.Action {
 
 	final IBlock block;
 	final Supplier<Boolean> enabled;
-	
+
 	public BlockAction(CharSequence text, IBlock block, Supplier<Boolean> enabled) {
 		super(text);
 		this.block = block;
 		this.enabled = enabled;
 	}
-	
+
 
 	public boolean isEnabled(char c, TextWidget id, int index, int caret, int selection, List<String> tokens) {
 		return enabled.get() && isEnabledInternal(c, id, index, caret, selection, tokens);
 	}
-	
+
 	abstract boolean isEnabledInternal (char c, TextWidget id, int index, int caret, int selection, List<String> tokens);
-	
+
 	public static List<BlockAction> all(IBlock block) {
 		List<BlockAction> all = new ArrayList<>();
 		all.add(declaration(block));
@@ -71,22 +74,21 @@ abstract class BlockAction extends InsertWidget.Action {
 		all.add(returnStatement(block));
 		all.add(breakStatement(block));
 		all.add(continueStatement(block));
-		
-//		all.add(forLoop(block));
-//		all.add(incrementStatement(block));
+		all.add(incrementStatement(block));
+		all.add(forLoop(block));
 		return all;
 	}
 
 	private static boolean atEnd(String text, int caret) {
 		return caret == text.length();
 	}
-	
+
 	static BlockAction declaration(IBlock block) {
 		return new BlockAction("variable", block, () -> UiMode.hasSyntax(UiMode.Syntax.ASSIGNMENT)) {
 			public boolean isEnabledInternal(char c, TextWidget id, int index, int caret, int selection, List<String> tokens) {
 				return isType(id.getText()) && atEnd(id.getText(), caret) && (c == SWT.SPACE || c == '[');
 			}
-			
+
 			public void run(char c, TextWidget id, int index, int caret, int selection, List<String> tokens) {
 				IType t = IType.match(id.getText());
 				if(c == '[')
@@ -96,9 +98,10 @@ abstract class BlockAction extends InsertWidget.Action {
 			}
 		};
 	}
-	
+
 	static BlockAction assignment(IBlock block) {
 		return new BlockAction("assignment", block, () -> UiMode.hasSyntax(UiMode.Syntax.ASSIGNMENT)) {
+			private ExpressionChain chain;
 			public boolean isEnabledInternal(char c, TextWidget id, int index, int caret, int selection, List<String> tokens) {
 				return c == '=' && !isType(id.getText()) && !id.isKeyword() && !id.isEmpty();
 			}
@@ -106,23 +109,23 @@ abstract class BlockAction extends InsertWidget.Action {
 				IVariableDeclaration var = block.getOwnerProcedure().getVariable(id.getText());
 				if(var == null)
 					var = new IVariableDeclaration.UnboundVariable(id.getText());
-				
-				ExpressionChain chain = (ExpressionChain) id;
-				
+
+				IExpression exp = new IVariableDeclaration.UnboundVariable("expression").expression();
+				chain = (ExpressionChain) id;
+
 				if(chain.isSingleId())
-					block.addAssignmentAt(var, null, index);
+					block.addAssignmentAt(var, exp, index);
 				else if(chain.isArrayAccess()) {
-//					List<IExpression> indexes = id.getArrayModelExpressions();
-					// TODO indexes
-					List<IExpression> indexes = Collections.emptyList();
-					block.addArrayElementAssignmentAt(var.expression(), null, index, indexes);
+					ITargetExpression target = chain.getTargetExpression(block.getOwnerProcedure());
+					List<IExpression> indexes = chain.getArrayModelExpressions(block.getOwnerProcedure());
+					block.addArrayElementAssignmentAt(target, exp, index, indexes);
 				}
 				else if(chain.isFieldAccess()) {
 					Iterator<String> fields = chain.getFields().iterator();
-					IRecordFieldExpression exp = var.field(new IVariableDeclaration.UnboundVariable(fields.next()));
+					IRecordFieldExpression e = var.field(new IVariableDeclaration.UnboundVariable(fields.next()));
 					while(fields.hasNext())
-						exp = exp.field(new IVariableDeclaration.UnboundVariable(fields.next()));
-					block.addRecordFieldAssignmentAt(exp, null, index);
+						e = e.field(new IVariableDeclaration.UnboundVariable(fields.next()));
+					block.addRecordFieldAssignmentAt(e, null, index);
 					// TODO mix resolve
 				}
 			}
@@ -134,14 +137,14 @@ abstract class BlockAction extends InsertWidget.Action {
 			public boolean isEnabledInternal(char c, TextWidget id, int index, int caret, int selection, List<String> tokens) {
 				return isKeyword(id, Keyword.IF) && (c == '(' || c == SWT.SPACE) && atEnd(id.getText(), caret);
 			}
-			
+
 			public void run(char c, TextWidget id, int index, int caret, int selection, List<String> tokens) {
 				IVariableExpression exp = new IVariableDeclaration.UnboundVariable("expression").expression();
 				block.addSelectionAt(exp, index);
 			}
 		};
 	}
-	
+
 	static BlockAction elseStatement(IBlock block) {
 		return new BlockAction(Keyword.ELSE.keyword(), block, () -> UiMode.hasSyntax(UiMode.Syntax.SELECTION)) {
 			public boolean isEnabledInternal(char c, TextWidget id, int index, int caret, int selection, List<String> tokens) {
@@ -151,15 +154,15 @@ abstract class BlockAction extends InsertWidget.Action {
 				}
 				return false;
 			}
-			
+
 			public void run(char c, TextWidget id, int index, int caret, int selection, List<String> tokens) {
 				IBlockElement e = block.getChildren().get(index - 1);
 				((ISelection) e).createAlternativeBlock();
 			}
 		};
 	}
-	
-	
+
+
 	static BlockAction whileLoop(IBlock block) {
 		return new BlockAction(Keyword.WHILE, block, () -> UiMode.hasSyntax(UiMode.Syntax.WHILE_LOOP)) {
 			public boolean isEnabledInternal(char c, TextWidget id, int index, int caret, int selection, List<String> tokens) {
@@ -172,7 +175,7 @@ abstract class BlockAction extends InsertWidget.Action {
 			}
 		};
 	}
-	
+
 	static BlockAction forLoop(IBlock block) {
 		return new BlockAction(Keyword.FOR, block, () -> UiMode.hasSyntax(UiMode.Syntax.FOR_LOOP)) {
 			public boolean isEnabledInternal(char c, TextWidget id, int index, int caret, int selection, List<String> tokens) {
@@ -182,12 +185,14 @@ abstract class BlockAction extends InsertWidget.Action {
 			public void run(char c, TextWidget id, int index, int caret, int selection, List<String> tokens) {
 				IBlock forBlock = block.addBlockAt(index, Flag.FOR.name());
 				IVariableDeclaration progVar = forBlock.addVariable(INT, Flag.FOR.name());
+				progVar.setId("id");
+				forBlock.addAssignment(progVar, INT.literal(0), Flag.FOR.name());
 				ILoop loop = forBlock.addLoop(BOOLEAN.literal(true), Flag.FOR.name());
 				loop.addAssignment(progVar, IOperator.ADD.on(progVar, INT.literal(1)), Flag.FOR.name());
 			}
 		};
 	}
-	
+
 	static BlockAction call(IBlock block) {
 		return new BlockAction("call(...)", block, () -> UiMode.hasSyntax(UiMode.Syntax.CALLS)) {
 			public boolean isEnabledInternal(char c, TextWidget id, int index, int caret, int selection, List<String> tokens) {
@@ -198,12 +203,12 @@ abstract class BlockAction extends InsertWidget.Action {
 			public void run(char c, TextWidget id, int index, int caret, int selection, List<String> tokens) {
 				IProcedure p = block.getOwnerProcedure().getModule().getProcedure(id.getText());
 				if(p == null)
-					p = IProcedure.createUnbound(id.getText(), null);
+					p = IProcedure.createUnbound(null, id.getText());
 				block.addCallAt(p, index);
 			}
 		};
 	}
-	
+
 	static BlockAction returnStatement(IBlock block) {
 		return new BlockAction(Keyword.RETURN, block, () -> true) {
 			public boolean isEnabledInternal(char c, TextWidget id, int index, int caret, int selection, List<String> tokens) {
@@ -222,7 +227,7 @@ abstract class BlockAction extends InsertWidget.Action {
 		};
 	}
 
-	
+
 	static BlockAction breakStatement(IBlock block) {
 		return new BlockAction(Keyword.BREAK, block, () -> UiMode.hasSyntax(UiMode.Syntax.WHILE_LOOP)) {
 			public boolean isEnabledInternal(char c, TextWidget id, int index, int caret, int selection, List<String> tokens) {
@@ -234,7 +239,7 @@ abstract class BlockAction extends InsertWidget.Action {
 			}
 		};
 	}
-	
+
 	static BlockAction continueStatement(IBlock block) {
 		return new BlockAction(Keyword.CONTINUE, block, () -> UiMode.hasSyntax(UiMode.Syntax.WHILE_LOOP)) {
 			public boolean isEnabledInternal(char c, TextWidget id, int index, int caret, int selection, List<String> tokens) {
@@ -246,26 +251,32 @@ abstract class BlockAction extends InsertWidget.Action {
 			}
 		};
 	}
-	
+
 	static BlockAction incrementStatement(IBlock block) {
 		return new BlockAction("incrementation", block, () -> UiMode.hasSyntax(UiMode.Syntax.ASSIGN_SIMPLIFICATION)) {
 			public boolean isEnabledInternal(char c, TextWidget id, int index, int caret, int selection, List<String> tokens) {
-				return !id.isKeyword() && c == '+' && atEnd(id.getText(), caret);
+				return !id.isKeyword() && (c == '+' || c == '-') && atEnd(id.getText(), caret);
 			}
 
 			public void run(char c, TextWidget id, int index, int caret, int selection, List<String> tokens) {
 				IVariableDeclaration var = block.getOwnerProcedure().getVariable(id.getText());
 				if(var == null)
 					var = new IVariableDeclaration.UnboundVariable(id.getText());
-				block.addIncrementAt(var, index);
+				if(c == '+')
+					block.addIncrementAt(var, index);
+				else
+					block.addDecrementAt(var, index);
 			}
 		};
 	}
-	
+
+
+
+
 	static void addModelElement(IProgramElement element, int index, SequenceWidget seq) {
 		if(Flag.CONSTRUCTOR.is(element))
 			return;
-		
+
 		if (element instanceof IVariableDeclaration && Flag.FOR.isNot(element)) {
 			IVariableDeclaration v = (IVariableDeclaration) element;
 			DeclarationWidget w = seq.addElement(p -> new DeclarationWidget(p, v, null), index);
@@ -274,8 +285,14 @@ abstract class BlockAction extends InsertWidget.Action {
 
 		else if (element instanceof IVariableAssignment && Flag.FOR.isNot(element)) {
 			IVariableAssignment a = (IVariableAssignment) element;
-			AssignmentWidget w = seq.addElement(p -> new AssignmentWidget(p, a), index);
-			w.focusExpression();
+			if(Flag.INC.is(a) || Flag.DEC.is(a)) {
+				IncrementationWidget w = seq.addElement(p -> new IncrementationWidget(p, a));
+				//				w.setFocus();
+			}
+			else {
+				AssignmentWidget w = seq.addElement(p -> new AssignmentWidget(p, a), index);
+				w.focusExpression();
+			}
 		} 
 
 		else if (element instanceof IArrayElementAssignment) {
@@ -289,18 +306,36 @@ abstract class BlockAction extends InsertWidget.Action {
 			IfElseWidget w = seq.addElement(p -> new IfElseWidget(p, s), index);
 			w.focusIn();
 		} 
-		
+
 		else if (element instanceof ILoop && Flag.FOR.isNot(element)) {
 			ILoop l = (ILoop) element;
 			ControlWidget w =  seq.addElement(p -> new ControlWidget(p, WHILE, l), index);
 			w.focusIn();
 		} 
 
-		//		else if (element instanceof IBlock && element.is(Constants.FOR_FLAG)) { 
-		//			ForWidget w = new ForWidget(SequenceWidget.this, null, (IBlock) element);   // TODO guard
-		//			addElement(w, index);
-		//			w.focusDeclaration();
-		//		} 
+		else if (element instanceof IBlock && Flag.FOR.is(element)) {
+			addBlockListener((IBlock) element, seq);
+		} 
+
+
+
+		else if (element instanceof ILoop && Flag.FOR.is(element)) {
+			class ForV implements IVisitor {
+				IVariableDeclaration var;
+				IVariableAssignment ass;
+				public void visit(IVariableDeclaration variable) {
+					var = variable;
+				}
+				public boolean visit(IVariableAssignment assignment) {
+					ass = assignment;
+					return false;
+				}
+			}
+			ForV v = new ForV();
+			((ILoop) element).getParent().accept(v);
+			ForWidget w =  seq.addElement(p -> new ForWidget(p, (ILoop) element, v.var, v.ass));
+			w.focusDeclaration();
+		} 
 
 		else if (element instanceof IBreak) {
 			seq.addElement(p -> new InstructionWidget(p, BREAK, (IBreak) element), index);
@@ -334,11 +369,12 @@ abstract class BlockAction extends InsertWidget.Action {
 			assert false;
 		}
 	}
-	
+
 	static void addBlockListener(IBlock block, SequenceWidget seq) {
 		block.addListener(new IBlock.IListener() {
 			public void elementAdded(IProgramElement element, int index) {
 				addModelElement(element, index, seq);
+				System.out.println(element);
 			}
 
 			public void elementRemoved(IProgramElement element, int index) {
@@ -346,7 +382,7 @@ abstract class BlockAction extends InsertWidget.Action {
 			}
 		});
 	}
-	
+
 
 
 	public boolean isKeyword(TextWidget id, Keyword ... keywords) {
@@ -359,7 +395,7 @@ abstract class BlockAction extends InsertWidget.Action {
 	public boolean isKeyword(TextWidget id, Keyword keyword) {
 		return keyword.isEqual(id.getText());
 	}
-	
+
 	static String variableId(IVariableDeclaration var) {
 		return var.getId() == null ? "var$" + var.procedureIndex() :  var.getId();
 	}
@@ -368,7 +404,7 @@ abstract class BlockAction extends InsertWidget.Action {
 	static boolean isType(String text) {
 		return  IType.match(text) != null;
 	}
-	
+
 	public static ExpressionChain matchType(Composite parent, IType t) {
 		ExpressionChain id = null;
 		if(t.isReference())

@@ -8,7 +8,6 @@ import pt.iscte.paddle.javardise.Constants;
 import pt.iscte.paddle.javardise.EditorWidget;
 import pt.iscte.paddle.javardise.ExpressionWidget;
 import pt.iscte.paddle.javardise.FixedToken;
-import pt.iscte.paddle.javardise.ILanguageConfiguration;
 import pt.iscte.paddle.javardise.SequenceContainer;
 import pt.iscte.paddle.javardise.SequenceWidget;
 import pt.iscte.paddle.javardise.TokenWidget;
@@ -18,20 +17,18 @@ import pt.iscte.paddle.model.IControlStructure;
 import pt.iscte.paddle.model.IExpression;
 import pt.iscte.paddle.model.IProgramElement;
 
-class ControlWidget extends EditorWidget<IProgramElement> implements SequenceContainer {
+class ControlWidget extends EditorWidget implements SequenceContainer {
 
 	public TokenWidget keyword;
 	private ExpressionWidget expression;
 	protected SequenceWidget blockSeq;
-	private FixedToken openBracket;
-	private FixedToken closeBracket;
 	private Runnable delAction;
 	private KeyListener delListener;
 
-	public ControlWidget(Composite parent, Keyword keyword, IControlStructure structure) {
+	public ControlWidget(Composite parent, Keyword keyword, IControlStructure structure, IProgramElement ...extras ) {
 		super(parent, structure);
 		delAction = () -> structure.remove();
-		create(keyword, structure.getGuard(), structure.getBlock());
+		create(keyword, structure.getGuard(), structure.getBlock(), extras);
 	}
 
 	// for else
@@ -40,7 +37,7 @@ class ControlWidget extends EditorWidget<IProgramElement> implements SequenceCon
 		create(keyword, null, block);
 	}
 
-	private void create(Keyword keyword, IExpression guard, IBlock block) {
+	private void create(Keyword keyword, IExpression guard, IBlock block,IProgramElement ...extras) {
 		setLayout(Constants.ROW_LAYOUT_V_ZERO);
 		Composite header = new Composite(this, SWT.NONE);
 		header.setLayout(Constants.ROW_LAYOUT_H_ZERO);
@@ -49,7 +46,7 @@ class ControlWidget extends EditorWidget<IProgramElement> implements SequenceCon
 
 		if (guard != null) {
 			new FixedToken(header, "(");
-			fillHeader(guard, header);
+			fillHeader(guard, header, extras);
 			new FixedToken(header, ")");
 
 			Constants.addInsertLine(this.keyword);
@@ -58,18 +55,18 @@ class ControlWidget extends EditorWidget<IProgramElement> implements SequenceCon
 			}
 		}
 
-		openBracket = new FixedToken(header, "{");
+		new FixedToken(header, "{");
 		blockSeq = new SequenceWidget(this, 1);
 		blockSeq.addActions(BlockAction.all(block));
 		BlockAction.addBlockListener(block, blockSeq);
-		closeBracket = new FixedToken(this, "}");
+		new FixedToken(this, "}");
 
 		int i = 0;
 		for (IBlockElement e : block)
 			BlockAction.addModelElement(e, i++, blockSeq);
 	}
 
-	void fillHeader(IExpression expression, Composite header) {
+	void fillHeader(IExpression expression, Composite header, IProgramElement ... extras) {
 		this.expression = new ExpressionWidget(header, Configuration.match(expression), expression);
 		if (delListener != null)
 			this.expression.addKeyListener(delListener);
@@ -88,21 +85,6 @@ class ControlWidget extends EditorWidget<IProgramElement> implements SequenceCon
 			blockSeq.setFocus();
 	}
 
-	@Override
-	public void toCode(StringBuffer buffer, int level) {
-		appendTabs(buffer, level);
-		buffer.append(keyword.toString());
-		if (!isElse()) {
-			buffer.append("(");
-			expression.toCode(buffer);
-			buffer.append(")");
-		}
-		buffer.append(" {").append(System.lineSeparator());
-		blockSeq.toCode(buffer, level + 1);
-		appendTabs(buffer, level);
-		buffer.append("}").append(System.lineSeparator());
-	}
-
 	boolean isElse() {
 		return this.keyword.isKeyword(Keyword.ELSE.keyword());
 	}
@@ -110,5 +92,4 @@ class ControlWidget extends EditorWidget<IProgramElement> implements SequenceCon
 	public SequenceWidget getBody() {
 		return blockSeq;
 	}
-
 }

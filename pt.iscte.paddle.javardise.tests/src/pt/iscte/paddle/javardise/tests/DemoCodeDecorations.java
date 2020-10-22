@@ -88,7 +88,7 @@ public class DemoCodeDecorations {
 //		cfg.setInput(proc.getCFG());
 //		cfg.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		
-		IWidget<IRecordType> widget2 = javarService.getWidget(mainType);
+		IWidget widget2 = javarService.getWidget(mainType);
 		ICodeDecoration<Text> dec = widget2.addDecoration((parent, control) -> {
 			Text text = new Text(parent, SWT.BORDER);
 			text.setText("???");

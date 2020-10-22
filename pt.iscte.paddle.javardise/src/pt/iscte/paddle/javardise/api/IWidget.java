@@ -11,11 +11,11 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
-public interface IWidget<T> {
+public interface IWidget {
 
 	Control getControl();
 	
-	T getProgramElement();
+	Object getProgramElement();
 	
 	void setReadOnly(boolean readonly);
 	
@@ -30,5 +30,7 @@ public interface IWidget<T> {
 	ICodeDecoration<Canvas> addArrow(IWidget target);
 	
 	<T extends Control> ICodeDecoration<T> addDecoration(BiFunction<Composite,Control,T> f, BiFunction<Point, Point, Point> loc);
+
+	String getSource();
 }
 

@@ -24,16 +24,11 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Layout;
-import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Text;
 
-import pt.iscte.paddle.javardise.Constants;
+import pt.iscte.paddle.javardise.EditorWidget;
 import pt.iscte.paddle.javardise.ILanguageConfiguration;
 import pt.iscte.paddle.javardise.SequenceWidget;
 
@@ -50,7 +45,6 @@ public class StandaloneEditor {
 		}
 		this.file = file;
 	}
-
 
 
 	public Shell launch(Display display) {
@@ -109,63 +103,9 @@ public class StandaloneEditor {
 
 	public void save(File file) throws FileNotFoundException {
 		PrintWriter writer = new PrintWriter(file);
-		print(seq, writer);
+		writer.append(EditorWidget.getSource(seq));
 		writer.close();
 
-	}
-
-	private static void print(Composite c, PrintWriter writer) {
-		Layout layout = c.getLayout();
-		Control[] children = c.getChildren();
-		for (int i = 0; i < children.length; i++) {
-			Control child = children[i];
-			boolean text = (child instanceof Text || child instanceof Label);
-//			if(text && i == 0) {
-//				for(int d = tabs; d > 0; d--)
-//					writer.print("\t");
-//			}
-			if(child instanceof Text && !((Text) child).getBackground().equals(Constants.COLOR_ERROR))
-				writer.print(((Text) child).getText());
-			else if(child instanceof Label)
-				writer.print(((Label) child).getText());
-
-			if(text) {
-				if(layout instanceof GridLayout) // || layout instanceof RowLayout && i == children.length-1)
-					writer.println();
-				else
-					writer.print(" ");
-			}
-			
-			if(child instanceof Composite) {
-				print((Composite) child, writer);
-			}
-
-			if(layout instanceof GridLayout) { // || layout instanceof RowLayout && i == children.length-1)
-				writer.println();
-//				if(child instanceof SequenceWidget)
-//					for(int d = ((SequenceWidget) child).getTabs(); d > 0; d--)
-//						writer.print("\t");
-			}
-		}
-	}
-	
-	public File saveToFile() {
-		saveToFile(file);
-		return file;
-	}
-
-	public void saveToFile(File file) {
-		StringBuffer buffer = new StringBuffer();
-		//		classWidget.toCode(buffer, 0);
-		try {
-
-			PrintWriter w = new PrintWriter(file);
-			w.append(buffer);
-			w.close();
-		} 
-		catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
 	}
 
 

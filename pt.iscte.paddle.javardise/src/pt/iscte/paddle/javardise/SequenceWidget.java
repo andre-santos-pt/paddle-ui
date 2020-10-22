@@ -1,8 +1,5 @@
 package pt.iscte.paddle.javardise;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -11,14 +8,9 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Layout;
-import org.eclipse.swt.widgets.Text;
 
-import pt.iscte.paddle.javardise.api.ICodeElement;
 import pt.iscte.paddle.javardise.api.IEditorConfiguration;
 
 public class SequenceWidget extends Composite {
@@ -48,48 +40,7 @@ public class SequenceWidget extends Composite {
 				insertWidget.setFocus();
 			}
 		});
-		//
-		//		Supplier<List<Action>> sup = () -> {
-		//			ArrayList<Action> list = new ArrayList<>();
-		//			list.add(new Action() {
-		//				public void run() {
-		//					System.out.println("!!");
-		//				}
-		//				public String getText() {
-		//					return "action";
-		//				}
-		//			});
-		//			return list;
-		//		};
-		//		
-		//		Menu menu = new Menu(insertWidget);
-		//		menu.addListener(SWT.Show, new Listener() {
-		//			public void handleEvent(Event event) {
-		//				for(MenuItem i : menu.getItems())
-		//					i.dispose();
-		//				for(Action a : sup.get()) {
-		//					MenuItem i = new MenuItem(menu, SWT.PUSH);
-		//					i.setText(a.getText());
-		//					i.addSelectionListener(new SelectionAdapter() {
-		//						public void widgetSelected(SelectionEvent e) {
-		//							a.run();
-		//						}
-		//					});
-		//				}
-		//
-		//			}
-		//		});
-		//		insertWidget.setMenu(menu);
 	}
-
-	//	interface Action {
-	//		String getText();
-	//		void run();
-	//	}
-
-	//	void setDeleteAction(Consumer<Integer> action) {
-	//		deleteAction = action;
-	//	}
 
 	public int getTabs() {
 		return tabs;
@@ -178,7 +129,7 @@ public class SequenceWidget extends Composite {
 	public void removeElement(Object e) {
 		Control[] children = getChildren();
 		for (int i = 0; i < children.length-1; i++) {
-			if (children[i] instanceof EditorWidget && ((EditorWidget) children[i]).element == e) {
+			if (children[i] instanceof EditorWidget && ((EditorWidget) children[i]).getProgramElement() == e) {
 				children[i].dispose();
 				children[i+1].setFocus();
 				break;
@@ -243,21 +194,9 @@ public class SequenceWidget extends Composite {
 	}
 
 
-	public void toCode(StringBuffer buffer) {
-		buffer.append("#" + this.getClass().getSimpleName() + "#");
-	}
-
-	public void toCode(StringBuffer buffer, int level) {
-		for (Control control : getChildren())
-			if (control instanceof ICodeElement)
-				((ICodeElement) control).toCode(buffer, level);
-	}
-
 	public List<String> getInsertTokens() {
 		return insertWidget.getTokens();
 	}
-
-	
 
 
 }

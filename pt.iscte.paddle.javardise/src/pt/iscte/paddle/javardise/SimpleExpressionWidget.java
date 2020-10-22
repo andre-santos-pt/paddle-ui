@@ -2,6 +2,7 @@ package pt.iscte.paddle.javardise;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiPredicate;
+import java.util.function.Consumer;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusAdapter;
@@ -100,72 +101,10 @@ public class SimpleExpressionWidget extends EditorWidget implements TextWidget, 
 			}
 		});
 	}
-//	private void addTransformationKeyListener() {
-//		text.addKeyListener(new KeyAdapter() {
-//			public void keyPressed(KeyEvent e) {
-//				if(text.isDisposed())
-//					return;
-//				String match = null;
-//				Expression w = null;
-//				if(text.getCaretPosition() == 0 && (match = match(e.character, Constants.UNARY_OPERATORS)) != null) {
-//					w = new UnaryExpressionWidget((EditorWidget) getParent(), match, p -> new SimpleExpressionWidget(p, text.getText()));
-//					w.setFocus();
-//				}
-//				else if(text.getCaretPosition() == text.getText().length() && (match = match(e.character, Constants.BINARY_OPERATORS)) != null) {
-//					BinaryExpressionWidget b = new BinaryExpressionWidget((EditorWidget) getParent(), p -> new SimpleExpressionWidget(p, text.getText()) , match);
-//					b.focusRight();
-//					w = b;
-//				}
-//				else if(e.character == SWT.SPACE && Keyword.NEW.isEqual(text)) {
-//					AllocationExpression a = new AllocationExpression((EditorWidget) getParent(), IType.INT.array(), p -> new SimpleExpressionWidget(p, "expression"));
-//					a.setFocus();
-//					w = a;
-//				}
-//				else if(e.character == '(' && Constants.CONF.isValidId(text.getText()) && text.getCaretPosition() == text.getText().length() && text.getSelectionCount() == 0) {
-//					CallWidget c = new CallWidget((EditorWidget) getParent(), IProcedureCall.unboundExpression(text.getText()), false);
-//					c.focusArgument();
-//					w = c;
-//				}
-//				else if(e.character == '(' && (text.getText().isBlank() || text.getSelectionCount() == text.getText().length())) {
-//					BracketExpressionWidget b = new BracketExpressionWidget((EditorWidget) getParent(), p -> new SimpleExpressionWidget(p, "expression"),"(",")");
-//					b.setFocus();
-//					w = b;
-//				}
-//				else if(e.character == '[' && Constants.CONF.isValidId(text.getText()) && text.getCaretPosition() == text.getText().length() && text.getSelectionCount() == 0) {
-//					ExpressionChain id = new ExpressionChain((EditorWidget) getParent(), text.getText(), false);
-//					id.addDimension();
-//					id.focusLastElement();
-//					w = id;
-//				}
-//				else if(e.character == '.' && Constants.CONF.isValidId(text.getText()) && text.getCaretPosition() == text.getText().length() && text.getSelectionCount() == 0) {
-//					ExpressionChain id = new ExpressionChain((EditorWidget) getParent(), text.getText(), false);
-//					id.addField("field");
-//					id.focusLastElement();
-//					w = id;
-//				}
-//				else if(e.character == SWT.CR) {
-//					text.traverse(SWT.TRAVERSE_TAB_NEXT);
-//				}
-//
-//				if(w != null) {
-//					Expression p = (Expression) getParent();
-//					if(p.isSubstitutable())
-//						((SubstitutableExpression)p).substitute(SimpleExpressionWidget.this, w);
-//				}
-//			}
-//		});
-//	}
 
 	@Override
 	public void setData(Object data) {
 		text.setData(data);
-	}
-
-	private String match(char character, List<String> operators) {
-		for(String o : operators)
-			if(o.charAt(0) == character)
-				return o;
-		return null;
 	}
 
 	private boolean validCharacter(char c) {
@@ -205,12 +144,15 @@ public class SimpleExpressionWidget extends EditorWidget implements TextWidget, 
 	public void addKeyListener(KeyListener listener) {
 		text.addKeyListener(listener);
 	}
-
-	@Override
-	public void toCode(StringBuffer buffer) {
-		buffer.append(text.getText().isBlank() ? Constants.EMPTY_EXPRESSION_SERIALIZE : text.getText());
+	
+	public Class<?> getLiteralType() {
+		return literalType;
 	}
 
+	@Override
+	public String getTextToSerialize() {
+		return text.getText().isBlank() ? Constants.EMPTY_EXPRESSION_SERIALIZE : text.getText();
+	}
 
 	private void updateContent() {
 		Constants.setFont(text, false);
@@ -246,5 +188,10 @@ public class SimpleExpressionWidget extends EditorWidget implements TextWidget, 
 			}
 		}
 		text.requestLayout();
+	}
+	
+	@Override
+	public void accept(Consumer<String> visitor) {
+		visitor.accept(text.getText());
 	}
 }

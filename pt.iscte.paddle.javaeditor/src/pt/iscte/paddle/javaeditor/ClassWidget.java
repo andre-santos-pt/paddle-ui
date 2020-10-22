@@ -1,7 +1,5 @@
 package pt.iscte.paddle.javaeditor;
 
-import static java.lang.System.lineSeparator;
-
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -39,7 +37,6 @@ import pt.iscte.paddle.model.IVariableDeclaration;
 public class ClassWidget extends ModiferWidget<IRecordType> implements SequenceContainer, IClassWidget {
 
 	private IModule module;
-	private String namespace;
 	private IRecordType mainType;
 
 	private Id id;
@@ -59,7 +56,6 @@ public class ClassWidget extends ModiferWidget<IRecordType> implements SequenceC
 	public ClassWidget(Composite parent, IModule module, String namespace, Keyword ... modifiers) {
 		super(parent, module.getRecordType(namespace));
 		this.module = module;
-		this.namespace = namespace;
 		mainType = module.getRecordType(namespace);
 
 		GridLayout layout = new GridLayout(1, true);
@@ -90,8 +86,8 @@ public class ClassWidget extends ModiferWidget<IRecordType> implements SequenceC
 			}
 
 			public void run(char c, TextWidget id, int index, int caret, int selection, List<String> tokens) {
-				IType t = IType.match(tokens.get(tokens.size()-1));
-				boolean assign = c == '=';
+//				IType t = IType.match(tokens.get(tokens.size()-1));
+//				boolean assign = c == '=';
 				String last = tokens.get(tokens.size()-1);
 				mainType.addField(IType.match(last), id.getText(), tokens.subList(0, tokens.size()-1));
 				//				if(assign)
@@ -238,7 +234,7 @@ public class ClassWidget extends ModiferWidget<IRecordType> implements SequenceC
 
 	
 	@Override
-	public void addSelectionListener(Consumer<IWidget<IRecordType>> l) {
+	public void addSelectionListener(Consumer<IWidget> l) {
 		Display.getDefault().addFilter(SWT.FocusIn, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
@@ -249,21 +245,21 @@ public class ClassWidget extends ModiferWidget<IRecordType> implements SequenceC
 		});
 	}
 	
-	private IRecordType getMainType() {
-		IRecordType mainType = module.getProperty(IRecordType.class);
-		if(mainType == null) {
-			mainType = module.addRecordType();
-			mainType.setId(module.getId());
-			module.setProperty(IRecordType.class, mainType);
-			IRecordType t = mainType;
-			mainType.addListener(new IRecordType.IListener() {
-				public void fieldAdded(IVariableDeclaration field) {
-					methods.addElement(p -> new FieldWidget(p, field), t.getFields().size());
-				}
-			});
-		}
-		return mainType;
-	}
+//	private IRecordType getMainType() {
+//		IRecordType mainType = module.getProperty(IRecordType.class);
+//		if(mainType == null) {
+//			mainType = module.addRecordType();
+//			mainType.setId(module.getId());
+//			module.setProperty(IRecordType.class, mainType);
+//			IRecordType t = mainType;
+//			mainType.addListener(new IRecordType.IListener() {
+//				public void fieldAdded(IVariableDeclaration field) {
+//					methods.addElement(p -> new FieldWidget(p, field), t.getFields().size());
+//				}
+//			});
+//		}
+//		return mainType;
+//	}
 
 	private boolean acceptModifier(String token) {
 		return Keyword.isMethodModifier(token) && 
@@ -290,15 +286,6 @@ public class ClassWidget extends ModiferWidget<IRecordType> implements SequenceC
 		});
 	}
 
-	public void toCode(StringBuffer buffer) {
-		super.toCode(buffer);
-		Keyword.CLASS.toCode(buffer);
-		buffer.append(' ').append(id.toString()).append(" {").append(lineSeparator());
-		methods.toCode(buffer, 1);
-		//		methods.toCode(buffer, 1);
-		buffer.append("}").append(lineSeparator()).append(lineSeparator());
-	}
-
 	@Override
 	public IWidget getClassName() {
 		return id;
@@ -307,7 +294,7 @@ public class ClassWidget extends ModiferWidget<IRecordType> implements SequenceC
 	@Override
 	public IMethodWidget getProcedure(IProcedure procedure) {
 		for(Control c : methods.getChildren())
-			if(c instanceof MethodWidget && ((MethodWidget) c).element == procedure)
+			if(c instanceof MethodWidget && ((MethodWidget) c).getProgramElement() == procedure)
 				return (IMethodWidget) c;
 
 		return null;

@@ -11,13 +11,12 @@ import pt.iscte.paddle.javardise.FixedToken;
 import pt.iscte.paddle.javardise.SimpleExpressionWidget;
 import pt.iscte.paddle.model.IArrayElementAssignment;
 import pt.iscte.paddle.model.IExpression;
-import pt.iscte.paddle.model.IProgramElement;
 import pt.iscte.paddle.model.IStatement;
 import pt.iscte.paddle.model.IVariableAssignment;
 import pt.iscte.paddle.model.IVariableDeclaration;
 import pt.iscte.paddle.model.IVariableExpression;
 
-class AssignmentWidget extends EditorWidget<IProgramElement> {
+class AssignmentWidget extends EditorWidget {
 
 	private ExpressionChain id;
 	private ExpressionWidget expression;
@@ -62,12 +61,4 @@ class AssignmentWidget extends EditorWidget<IProgramElement> {
 		id.addField(field);
 	}
 	
-	@Override
-	public void toCode(StringBuffer buffer) {
-		id.toCode(buffer);
-		buffer.append(" = ");
-		expression.toCode(buffer);
-		buffer.append(";");
-	}
-
 }

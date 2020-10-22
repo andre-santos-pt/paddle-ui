@@ -1,13 +1,15 @@
 package pt.iscte.paddle.javardise;
+import java.util.function.Consumer;
+
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.widgets.Composite;
 
 import pt.iscte.paddle.javardise.Expression.SubstitutableExpression;
 
-public class ExpressionWidget<T> extends EditorWidget<T> implements SubstitutableExpression {
-	Expression expression;
+public class ExpressionWidget extends EditorWidget implements SubstitutableExpression {
+	private Expression expression;
 
-	public ExpressionWidget(Composite parent, Expression.Creator f, T e) {
+	public ExpressionWidget(Composite parent, Expression.Creator f, Object e) {
 		super(parent, e);
 		setLayout(Constants.ROW_LAYOUT_H_ZERO);
 		expression = f.apply(this);
@@ -41,13 +43,16 @@ public class ExpressionWidget<T> extends EditorWidget<T> implements Substitutabl
 		return expression.copyTo(parent);
 	}	
 
-	@Override
-	public void toCode(StringBuffer buffer) {
-		expression.toCode(buffer);
-	}
-
 	public boolean isEmpty() {
 		return expression instanceof SimpleExpressionWidget && ((SimpleExpressionWidget) expression).isEmpty();
 	}
-
+	
+	public Expression getExpression() {
+		return expression;
+	}
+	
+	@Override
+	public void accept(Consumer<String> visitor) {
+		expression.accept(visitor);
+	}
 }

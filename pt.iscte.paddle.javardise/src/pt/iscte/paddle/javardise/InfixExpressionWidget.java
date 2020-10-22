@@ -1,5 +1,7 @@
 package pt.iscte.paddle.javardise;
 
+import java.util.function.Consumer;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.widgets.Composite;
@@ -8,16 +10,16 @@ import org.eclipse.swt.widgets.MenuItem;
 
 import pt.iscte.paddle.javardise.Expression.SubstitutableExpression;
 
-public class InfixExpressionWidget<T> extends EditorWidget<T> implements SubstitutableExpression {
+public class InfixExpressionWidget extends EditorWidget implements SubstitutableExpression {
 	private Expression left;
 	private Expression right;
 	private TokenWidget op;
 
-	public InfixExpressionWidget(Composite parent, T element, String operator, Expression.Creator left) {
+	public InfixExpressionWidget(Composite parent, Object element, String operator, Expression.Creator left) {
 		this(parent, element, operator, left, p -> new SimpleExpressionWidget(p, ""));
 	}
 
-	public InfixExpressionWidget(Composite parent, T element, String operator, Expression.Creator left, Expression.Creator right) {
+	public InfixExpressionWidget(Composite parent, Object element, String operator, Expression.Creator left, Expression.Creator right) {
 		super(parent, element);
 		this.left = new ExpressionWidget(this, left, null);
 		this.op = new TokenWidget(this, operator);
@@ -51,15 +53,6 @@ public class InfixExpressionWidget<T> extends EditorWidget<T> implements Substit
 	}
 
 	@Override
-	public void toCode(StringBuffer buffer) {
-		left.toCode(buffer);
-		buffer.append(' ');
-		op.toCode(buffer);
-		buffer.append(' ');
-		right.toCode(buffer);
-	}
-
-	@Override
 	public void setData(Object data) {
 		left.setData(data);
 		right.setData(data);
@@ -67,8 +60,8 @@ public class InfixExpressionWidget<T> extends EditorWidget<T> implements Substit
 
 
 	@Override
-	public InfixExpressionWidget<T> copyTo(Composite parent) {
-		return new InfixExpressionWidget<T>(parent, element, op.getText(), p -> left.copyTo(p));
+	public InfixExpressionWidget copyTo(Composite parent) {
+		return new InfixExpressionWidget(parent, getProgramElement(), op.getText(), p -> left.copyTo(p));
 	}
 
 	@Override
@@ -77,5 +70,12 @@ public class InfixExpressionWidget<T> extends EditorWidget<T> implements Substit
 			left.dispose();
 			left = newExpression;
 		}
+	}
+	
+	@Override
+	public void accept(Consumer<String> visitor) {
+		left.accept(visitor);
+		right.accept(visitor);
+		visitor.accept(op.getText());
 	}
 }

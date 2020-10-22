@@ -1,5 +1,8 @@
 package pt.iscte.paddle.javardise;
 
+import java.util.function.Consumer;
+
+import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.widgets.Composite;
 
 public class BracketExpressionWidget extends EditorWidget implements Expression  {
@@ -12,6 +15,16 @@ public class BracketExpressionWidget extends EditorWidget implements Expression 
 		left = new TokenWidget(this, open);
 		expression = new ExpressionWidget(this, f, null);
 		right = new TokenWidget(this, close);
+		
+		KeyListener delListener = right.addDeleteListener(() -> {
+			Expression e = this.expression.copyTo(getParent());
+			Expression p = (Expression) getParent();
+			if(p.isSubstitutable())
+				((SubstitutableExpression) p).substitute(this, e);
+			e.setFocus();
+		});
+		left.addKeyListener(delListener);
+		expression.addKeyListener(delListener);
 	}
 
 	@Override
@@ -26,9 +39,7 @@ public class BracketExpressionWidget extends EditorWidget implements Expression 
 	}
 
 	@Override
-	public void toCode(StringBuffer buffer) {
-		left.toCode(buffer);
-		expression.toCode(buffer);
-		right.toCode(buffer);
+	public void accept(Consumer<String> visitor) {
+		expression.accept(visitor);
 	}
 }

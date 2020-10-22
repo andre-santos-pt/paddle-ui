@@ -1,8 +1,7 @@
 package pt.iscte.paddle.javardise;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyAdapter;
@@ -17,21 +16,16 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Text;
 
-import pt.iscte.paddle.javardise.api.ICodeElement;
 
-
-public class TokenWidget implements TextWidget, ICodeElement {
+public class TokenWidget implements TextWidget {
 	private final Text text;
 	private MultiMapList<Character, String> map;
 
-	private static final List<String>[] EMPTY_ARRAY  = new List[0];
-
 	public TokenWidget(Composite parent, String token) {
-		this(parent, token, EMPTY_ARRAY);
+		this(parent, token, Collections.emptyList());
 	}
 
-
-	public TokenWidget(Composite parent, String token, List<String> ... alternatives) {
+	public TokenWidget(Composite parent, String token, List<String> alternatives) {
 		text = new Text(parent, SWT.NONE);
 		text.setText(token);
 		text.setEditable(false);
@@ -48,22 +42,20 @@ public class TokenWidget implements TextWidget, ICodeElement {
 		map = new MultiMapList<>();
 
 		Menu menu = new Menu(text);
-		for(List<String> set : alternatives) {
-			for(String t : set) {
-				MenuItem item = new MenuItem(menu, SWT.NONE);
-				item.setText(t);
-				map.put(t.charAt(0), t);
-				item.addSelectionListener(new SelectionAdapter() {
-					public void widgetSelected(SelectionEvent e) {
-						((Text) text).setText(item.getText());
-						text.requestLayout();
-						text.selectAll();
-						text.setFocus();
-					}
-				});
-			}
-			new MenuItem(menu, SWT.SEPARATOR);
+		for(String t : alternatives) {
+			MenuItem item = new MenuItem(menu, SWT.NONE);
+			item.setText(t);
+			map.put(t.charAt(0), t);
+			item.addSelectionListener(new SelectionAdapter() {
+				public void widgetSelected(SelectionEvent e) {
+					((Text) text).setText(item.getText());
+					text.requestLayout();
+					text.selectAll();
+					text.setFocus();
+				}
+			});
 		}
+		new MenuItem(menu, SWT.SEPARATOR);
 
 		text.addKeyListener(new KeyAdapter() {
 			public void keyPressed(KeyEvent e) {
@@ -85,8 +77,8 @@ public class TokenWidget implements TextWidget, ICodeElement {
 		text.setMenu(menu);
 		Constants.addFocusSelectAll(text);
 
-//		if(!Keyword.ELSE.isEqual(token))
-			Constants.addArrowKeys(text, this);
+		//		if(!Keyword.ELSE.isEqual(token))
+		Constants.addArrowKeys(text, this);
 	}
 
 	@Override
@@ -115,10 +107,6 @@ public class TokenWidget implements TextWidget, ICodeElement {
 		return getText().equals(keyword);
 	}
 
-//	public boolean isKeyword(Keyword keyword) {
-//		return getText().equals(keyword.toString());
-//	}
-
 	public void setLayoutData(RowData data) {
 		text.setLayoutData(data);
 	}
@@ -142,54 +130,5 @@ public class TokenWidget implements TextWidget, ICodeElement {
 
 	public void moveBelow(Control c) {
 		text.moveBelow(c);
-	}
-	
-	@Override
-	public void toCode(StringBuffer buffer) {
-		buffer.append(text.getText());
-	}
-
-	@Override
-	public Control getControl() {
-		return text;
-	}
-
-	private static class MultiMapList<K, V> {
-
-		private Map<K, List<V>> map = new HashMap<>();
-		
-		public int size() {
-			return map.size();
-		}
-
-		public boolean isEmpty() {
-			return map.isEmpty();
-		}
-
-		public boolean containsKey(K key) {
-			return map.containsKey(key);
-		}
-
-		public List<V> get(K key) {
-			return map.get(key);
-		}
-
-		public void put(K key, V value) {
-			List<V> list = map.get(key);
-			if(list == null) {
-				list = new ArrayList<>();
-				map.put(key, list);
-			}
-			list.add(value);
-		}
-
-		public void remove(K key) {
-			map.remove(key);	
-		}
-
-
-		public void clear() {
-			map.clear();
-		}
 	}
 }

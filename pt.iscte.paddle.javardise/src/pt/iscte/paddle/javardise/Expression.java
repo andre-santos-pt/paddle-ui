@@ -1,13 +1,12 @@
 package pt.iscte.paddle.javardise;
 
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.widgets.Composite;
 
-import pt.iscte.paddle.javardise.api.ICodeElement;
-
-public interface Expression extends ICodeElement {
+public interface Expression {
 
 	interface Creator extends Function<Composite, Expression> {  }
 
@@ -20,6 +19,7 @@ public interface Expression extends ICodeElement {
 
 	void addKeyListener(KeyListener listener);
 
+	void accept(Consumer<String> visitor);
 
 	default boolean isSubstitutable() {
 		return this instanceof SubstitutableExpression;
@@ -28,11 +28,5 @@ public interface Expression extends ICodeElement {
 	interface SubstitutableExpression extends Expression {
 		void substitute(Expression current, Expression newExpression);
 	}
-	
-
-	
-
-	
-
 	
 }

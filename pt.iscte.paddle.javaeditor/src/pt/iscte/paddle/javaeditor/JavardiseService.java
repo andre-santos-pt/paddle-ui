@@ -25,10 +25,10 @@ public class JavardiseService implements IJavardiseService {
 	// TODO record
 	
 	public IDeclarationWidget getDeclarationWidget(IVariableDeclaration varDeclaration) {
-		return (IDeclarationWidget) EditorWidget.map.get(varDeclaration);
+		return (IDeclarationWidget) EditorWidget.getWidget(varDeclaration);
 	}
 	
 	public IWidget getWidget(IProgramElement element) {
-		return EditorWidget.map.get(element);
+		return EditorWidget.getWidget(element);
 	}
 }

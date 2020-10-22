@@ -14,6 +14,10 @@ public interface TextWidget {
 
 	Text getWidget();
 
+	default String getTextToSerialize() {
+		System.out.println(this + " _- " + getWidget() + "  " + this.getClass());
+		return getWidget().getText();
+	}
 
 	default Composite getParent() {
 		return getWidget().getParent();
@@ -94,6 +98,7 @@ public interface TextWidget {
 			public Text getWidget() {
 				return text;
 			}
+			
 		};
 	}
 

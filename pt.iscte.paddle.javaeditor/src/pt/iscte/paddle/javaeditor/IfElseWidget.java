@@ -47,13 +47,4 @@ class IfElseWidget extends ControlWidget {
 			}
 		});
 	}
-	
-	
-	@Override
-	public void toCode(StringBuffer buffer, int level) {
-		super.toCode(buffer, level);
-		if(elseBlock != null)
-			elseBlock.toCode(buffer, level);
-	}
-
 }

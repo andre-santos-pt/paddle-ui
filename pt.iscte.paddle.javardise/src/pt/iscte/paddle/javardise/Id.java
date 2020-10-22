@@ -9,8 +9,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Text;
 
-import pt.iscte.paddle.javardise.api.ICodeElement;
-
 public class Id extends EditorWidget implements TextWidget {
 
 	private boolean readOnly;
@@ -83,11 +81,6 @@ public class Id extends EditorWidget implements TextWidget {
 		text.setMenu(menu);
 	}
 	
-	@Override
-	public void toCode(StringBuffer buffer) {
-		ICodeElement.toCode(text, buffer);
-	}
-
 	public void set(String id) {
 		text.setText(id);
 	}
@@ -95,5 +88,10 @@ public class Id extends EditorWidget implements TextWidget {
 	@Override
 	public void addKeyListener(KeyListener listener) {
 		text.addKeyListener(listener);
+	}
+	
+	@Override
+	public String getTextToSerialize() {
+		return text.getText().isBlank() ? Constants.EMPTY_ID_SERIALIZE : text.getText();
 	}
 }

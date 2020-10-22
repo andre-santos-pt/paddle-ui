@@ -10,6 +10,8 @@ module pt.iscte.paddle.javaeditor {
 	requires org.eclipse.swt;
 	requires pt.iscte.paddle.model;
 	requires pt.iscte.paddle.model.javaparser;
+	requires jdk.compiler;
+	requires java.compiler;
 	
 	exports pt.iscte.paddle.javaeditor.api;
 	

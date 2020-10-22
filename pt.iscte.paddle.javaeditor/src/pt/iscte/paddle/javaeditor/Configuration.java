@@ -2,24 +2,35 @@ package pt.iscte.paddle.javaeditor;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.util.Arrays;
 import java.util.List;
+import java.util.function.Consumer;
+
+import javax.tools.DiagnosticCollector;
+import javax.tools.JavaCompiler;
+import javax.tools.JavaFileObject;
+import javax.tools.SimpleJavaFileObject;
+import javax.tools.StandardJavaFileManager;
+import javax.tools.StandardLocation;
+import javax.tools.ToolProvider;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 
 import pt.iscte.paddle.javardise.BracketExpressionWidget;
 import pt.iscte.paddle.javardise.Expression;
 import pt.iscte.paddle.javardise.Expression.Creator;
+import pt.iscte.paddle.javardise.ILanguageConfiguration;
 import pt.iscte.paddle.javardise.InfixExpressionWidget;
 import pt.iscte.paddle.javardise.InsertWidget;
-import pt.iscte.paddle.javardise.ILanguageConfiguration;
 import pt.iscte.paddle.javardise.PrefixExpressionWidget;
 import pt.iscte.paddle.javardise.SequenceWidget;
 import pt.iscte.paddle.javardise.SimpleExpressionWidget;
+import pt.iscte.paddle.javardise.SimpleExpressionWidget.TriFunction;
 import pt.iscte.paddle.javardise.TextWidget;
 import pt.iscte.paddle.model.IArrayAllocation;
 import pt.iscte.paddle.model.IArrayElement;
@@ -57,61 +68,29 @@ public class Configuration implements ILanguageConfiguration {
 		return new ExpressionChain(parent, "", false);
 	}
 
-	static class Unsupported implements Expression {
-		Label label;
-		public Unsupported(Composite p, IExpression e) {
-			label = new Label(p, SWT.NONE);
-			label.setBackground(Display.getDefault().getSystemColor(SWT.COLOR_RED));
-			label.setText(e.toString());
-		}
-		@Override
-		public Control getControl() {
-			return label;
-		}
-
-		@Override
-		public Expression copyTo(Composite parent) {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-		@Override
-		public void dispose() {
-			label.dispose();
-		}
-
-		@Override
-		public boolean setFocus() {
-			return label.setFocus();
-		}
-
-		@Override
-		public void requestLayout() {
-			label.requestLayout();
-		}
-
-		@Override
-		public void setData(Object data) {
-			// TODO Auto-generated method stub
-
-		}
-
-		@Override
-		public void addKeyListener(KeyListener listener) {
-			// TODO Auto-generated method stub
-
-		}
-
-	}
-
-
+	static TriFunction<Composite, TextWidget, Character, Expression> binopRule =
+			(p,t,c) -> {
+				InfixExpressionWidget w = new InfixExpressionWidget(p, 
+						null, // TODO? ??? create model?
+						match(c, JavaConstants.BINARY_OPERATORS), p2 -> new SimpleExpressionWidget(p2, t.getText()));
+				w.focusRight();
+				return w;
+			};	
+		
+	
 	@Override
 	public void configure(SimpleExpressionWidget expression) {
-		//		if(text.getCaretPosition() == 0 && (match = match(e.character, Constants.UNARY_OPERATORS)) != null) {
-		//			w = new UnaryExpressionWidget((EditorWidget) getParent(), match, p -> new SimpleExpressionWidget(p, text.getText()));
-		//			w.setFocus();
-		//		}
-		expression.addRule((t,c) -> t.isAtEnd() && match(c, JavaConstants.BINARY_OPERATORS) != null,
+		// TODO set valid id
+		expression.addRule((t,c) -> t.isAtBeginning() && match(c, JavaConstants.UNARY_OPERATORS) != null, 
+				(p,t,c) -> {
+					PrefixExpressionWidget w = new PrefixExpressionWidget(p,
+							null, match(c, JavaConstants.UNARY_OPERATORS),
+							p2 -> new SimpleExpressionWidget(p2, t.getText()));
+					w.setFocus();
+					return w;
+				});
+		
+		expression.addRule((t,c) -> t.isAtEnd() && match(c, JavaConstants.BINARY_OPERATORS) != null, 
 				(p,t,c) -> {
 					InfixExpressionWidget w = new InfixExpressionWidget(p, 
 							null, // TODO? ??? create model?
@@ -119,7 +98,6 @@ public class Configuration implements ILanguageConfiguration {
 					w.focusRight();
 					return w;
 				});
-
 
 		expression.addRule((t,c) -> c == SWT.SPACE && Keyword.NEW.isEqual(t.getText()),
 				(p,t,c) -> {
@@ -150,7 +128,7 @@ public class Configuration implements ILanguageConfiguration {
 					e.focusLastElement();
 					return e;
 				});
-		
+
 		expression.addRule((t, c) -> c == '.' && isValidId(t.getText()) && t.isAtEnd(),
 				(p,t,c) -> {
 					ExpressionChain e = new ExpressionChain(p, t.getText(), false);
@@ -158,21 +136,6 @@ public class Configuration implements ILanguageConfiguration {
 					e.focusLastElement();
 					return e;
 				});
-		
-//		else if(e.character == '[' && Constants.CONF.isValidId(text.getText()) && text.getCaretPosition() == text.getText().length() && text.getSelectionCount() == 0) {
-//			ExpressionChain id = new ExpressionChain((EditorWidget) getParent(), text.getText(), false);
-//			id.addDimension();
-//			id.focusLastElement();
-//			w = id;
-//		}
-//		else if(e.character == '.' && Constants.CONF.isValidId(text.getText()) && text.getCaretPosition() == text.getText().length() && text.getSelectionCount() == 0) {
-//			ExpressionChain id = new ExpressionChain((EditorWidget) getParent(), text.getText(), false);
-//			id.addField("field");
-//			id.focusLastElement();
-//			w = id;
-//		}
-
-
 
 	}
 
@@ -180,6 +143,7 @@ public class Configuration implements ILanguageConfiguration {
 
 	@Override
 	public void configureRoot(File file, SequenceWidget sequence) {
+		
 		String className = file.getName().substring(0, file.getName().indexOf('.'));
 
 		if(file.exists()) {
@@ -287,7 +251,8 @@ public class Configuration implements ILanguageConfiguration {
 			f[i] = match(arguments.get(i));
 		return f;
 	}
-	private static String match(char character, List<String> operators) {
+	
+	static String match(char character, List<String> operators) {
 		for(String o : operators)
 			if(o.charAt(0) == character)
 				return o;
@@ -295,4 +260,89 @@ public class Configuration implements ILanguageConfiguration {
 	}
 
 
+	@Override
+	public void compile(StringBuffer src, File binDest) {
+		JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+		DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
+		JavaStringObject stringObject = new JavaStringObject(module.getId(), src);
+		StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
+		try {
+			fileManager.setLocation(StandardLocation.CLASS_OUTPUT, Arrays.asList(binDest));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		JavaCompiler.CompilationTask task = compiler.getTask(null,
+				fileManager, diagnostics, null, null, Arrays.asList(stringObject));
+		if (!task.call()) {
+			diagnostics.getDiagnostics().forEach(d -> System.err.println(d));
+		}
+	}
+	
+	private static class JavaStringObject extends SimpleJavaFileObject {
+	    private final StringBuffer source;
+
+	    protected JavaStringObject(String name, String src) {
+	    	this(name, new StringBuffer(src));
+	    }
+	    
+	    protected JavaStringObject(String name, StringBuffer source) {
+	        super(URI.create("string:///" + name.replaceAll("\\.", "/") +
+	                Kind.SOURCE.extension), Kind.SOURCE);
+	        this.source = source;
+	    }
+
+	    @Override
+	    public CharSequence getCharContent(boolean ignoreEncodingErrors) throws IOException {
+	        return source;
+	    }
+	}
+
+	static class Unsupported implements Expression {
+		Label label;
+		public Unsupported(Composite p, IExpression e) {
+			label = new Label(p, SWT.NONE);
+			label.setBackground(Display.getDefault().getSystemColor(SWT.COLOR_RED));
+			label.setText(e.toString());
+		}
+
+		@Override
+		public Expression copyTo(Composite parent) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public void dispose() {
+			label.dispose();
+		}
+
+		@Override
+		public boolean setFocus() {
+			return label.setFocus();
+		}
+
+		@Override
+		public void requestLayout() {
+			label.requestLayout();
+		}
+
+		@Override
+		public void setData(Object data) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void addKeyListener(KeyListener listener) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void accept(Consumer<String> visitor) {
+			// TODO Auto-generated method stub
+			
+		}
+
+	}
 }

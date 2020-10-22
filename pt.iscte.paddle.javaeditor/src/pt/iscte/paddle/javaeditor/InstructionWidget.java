@@ -8,15 +8,12 @@ import pt.iscte.paddle.javardise.Constants;
 import pt.iscte.paddle.javardise.EditorWidget;
 import pt.iscte.paddle.javardise.ExpressionWidget;
 import pt.iscte.paddle.javardise.FixedToken;
-import pt.iscte.paddle.javardise.ILanguageConfiguration;
 import pt.iscte.paddle.javardise.TextWidget;
 import pt.iscte.paddle.javardise.TokenWidget;
 import pt.iscte.paddle.model.IExpression;
-import pt.iscte.paddle.model.IProgramElement;
 import pt.iscte.paddle.model.IStatement;
 
- class InstructionWidget extends EditorWidget<IProgramElement> implements TextWidget {
-	private final Keyword keyword;
+ class InstructionWidget extends EditorWidget implements TextWidget {
 	private final TokenWidget keywordToken;
 	private ExpressionWidget expressionWidget;
 	private FixedToken semiColon;
@@ -28,7 +25,6 @@ import pt.iscte.paddle.model.IStatement;
 
 	public InstructionWidget(Composite parent, Keyword keyword, IStatement statement, IExpression expression) {
 		super(parent, statement);
-		this.keyword = keyword;
 		setLayout(Constants.ROW_LAYOUT_H);
 		keywordToken = new TokenWidget(this, keyword.keyword());
 		delListener = keywordToken.addDeleteListener(() -> statement.remove());
@@ -60,19 +56,6 @@ import pt.iscte.paddle.model.IStatement;
 
 	boolean is(String keyword) {
 		return this.keywordToken.isKeyword(keyword);
-	}
-
-
-	@Override
-	public void toCode(StringBuffer buffer) {
-		keyword.toCode(buffer);
-		if(expressionWidget != null) {
-			if(!expressionWidget.isEmpty() || keyword != Keyword.RETURN) {
-				buffer.append(" ");
-				expressionWidget.toCode(buffer);
-			}
-		}
-		buffer.append(";").append(System.lineSeparator());
 	}
 
 	@Override
